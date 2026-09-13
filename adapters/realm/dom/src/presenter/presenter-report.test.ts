@@ -7,6 +7,7 @@ import {
 } from '@reticlehq/core';
 import type { ImpactDefect, ImpactScope, ImpactSnapshot } from '@reticlehq/core';
 import { PresenterReport, reportBodyHtml, reportPanelHtml } from './presenter-report.js';
+import { Presenter } from './presenter.js';
 import {
   buildLinkedInShareUrl,
   buildShareText,
@@ -148,9 +149,8 @@ describe('the share text', () => {
  * machine accepts a presenter push - and must have something to show the moment it is opened.
  */
 describe('the pushed impact record reaches the panel', () => {
-  it('renders what the daemon pushed', async () => {
+  it('renders what the daemon pushed', () => {
     document.body.innerHTML = '';
-    const { Presenter } = await import('./presenter.js');
     const p = new Presenter({});
     p.mount();
     p.sessionStart();
@@ -196,9 +196,8 @@ describe('the pushed impact record reaches the panel', () => {
  * through the same path a person uses closed the report every time the agent touched the app.
  */
 describe('the report survives agent activity', () => {
-  it('stays open while the agent drives, and yields when a person asks for the chat', async () => {
+  it('stays open while the agent drives, and yields when a person asks for the chat', () => {
     document.body.innerHTML = '';
-    const { Presenter } = await import('./presenter.js');
     const p = new Presenter({});
     p.mount();
     p.sessionStart();
@@ -226,9 +225,8 @@ describe('the report survives agent activity', () => {
  * any of them from the toolbar has to clear the other two. Anything less stacks glass on glass.
  */
 describe('the slot above the toolbar holds one panel', () => {
-  it('each toolbar panel closes the others', async () => {
+  it('each toolbar panel closes the others', () => {
     document.body.innerHTML = '';
-    const { Presenter } = await import('./presenter.js');
     const p = new Presenter({});
     p.mount();
     p.sessionStart();
@@ -259,7 +257,6 @@ describe('the slot above the toolbar holds one panel', () => {
 describe('the toolbar shows which panel is open', () => {
   it('lights exactly one toggle as panels replace each other', async () => {
     document.body.innerHTML = '';
-    const { Presenter } = await import('./presenter.js');
     const p = new Presenter({});
     p.mount();
     p.sessionStart();
