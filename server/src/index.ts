@@ -945,7 +945,7 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
   };
 }
 
-// The OpenReality binding, exported so a conformance run can be driven from outside this package.
+// The OpenVerification binding, exported so a conformance run can be driven from outside this package.
 //
 // It was written and then not reachable: `conformanceClient` takes a `WebRealm`, a `WebRealm`
 // takes a live `Session`, and a `Session` exists only inside a running daemon. A runner that

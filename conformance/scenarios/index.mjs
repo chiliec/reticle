@@ -23,7 +23,7 @@
  * that is wrong, loudly and in public, which is the worst possible place for this particular
  * mistake to surface.
  */
-import { Verdict, Profile, CHANNELS_REQUIRED } from '@reticlehq/openreality';
+import { Verdict, Profile, CHANNELS_REQUIRED } from '@reticlehq/openverification';
 
 export { Verdict, Profile, CHANNELS_REQUIRED };
 

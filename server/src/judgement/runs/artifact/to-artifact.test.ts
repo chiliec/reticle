@@ -11,7 +11,7 @@ import {
   VerdictStatus,
   type ReticleVerificationRun,
 } from '@reticlehq/core';
-import { OPENREALITY_ARTIFACT_KIND, toArtifact } from './to-artifact.js';
+import { OVP_ARTIFACT_KIND, toArtifact } from './to-artifact.js';
 
 /**
  * Turning what a run recorded into something somebody else can read.
@@ -59,7 +59,7 @@ const RUN: ReticleVerificationRun = {
 describe('exporting a run for somebody else to read', () => {
   it('says what kind of document it is, so a reader need not guess', () => {
     const artifact = toArtifact(RUN);
-    expect(artifact.kind).toBe(OPENREALITY_ARTIFACT_KIND);
+    expect(artifact.kind).toBe(OVP_ARTIFACT_KIND);
     expect(artifact.specVersion).toBe(1);
   });
 

@@ -278,7 +278,7 @@ async function main() {
 }
 
 function print(report) {
-  console.log('\n=== OpenReality conformance: reticle on a DESKTOP shell ===\n');
+  console.log('\n=== OpenVerification conformance: reticle on a DESKTOP shell ===\n');
   console.log(`  earned  : ${String(report.earned ?? 'none')}`);
   if (report.failed.length > 0) console.log(`  failed  : ${report.failed.join(', ')}`);
   console.log(`  absent  : ${String(report.couldNotBePlanted.length)} scenario(s)`);

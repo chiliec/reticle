@@ -680,15 +680,15 @@ importers:
 
   conformance:
     dependencies:
-      '@reticlehq/openreality':
+      '@reticlehq/openverification':
         specifier: workspace:*
-        version: link:../openreality
+        version: link:../openverification
 
   core:
     dependencies:
-      '@reticlehq/openreality':
+      '@reticlehq/openverification':
         specifier: workspace:*
-        version: link:../openreality
+        version: link:../openverification
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -706,9 +706,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
-      '@reticlehq/openreality':
+      '@reticlehq/openverification':
         specifier: workspace:*
-        version: link:../openreality
+        version: link:../openverification
 
   init:
     dependencies:
@@ -716,7 +716,7 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  openreality:
+  openverification:
     dependencies:
       zod:
         specifier: ^3.23.8
@@ -740,9 +740,9 @@ importers:
       '@reticlehq/init':
         specifier: workspace:*
         version: link:../init
-      '@reticlehq/openreality':
+      '@reticlehq/openverification':
         specifier: workspace:*
-        version: link:../openreality
+        version: link:../openverification
       ws:
         specifier: ^8.21.3
         version: 8.21.3

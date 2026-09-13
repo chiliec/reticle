@@ -28,7 +28,7 @@ const SPEC = join(
     cwd: import.meta.dirname,
     encoding: 'utf8',
   }).trim(),
-  'openreality/SPEC.md',
+  'openverification/SPEC.md',
 );
 
 /** Every const-enum this package exports, as name -> its string values. */

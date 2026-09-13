@@ -10,7 +10,7 @@ import {
   ProvenanceClass,
   RefusalReason,
   Verdict,
-} from '@reticlehq/openreality';
+} from '@reticlehq/openverification';
 import { AppRuntime, ChannelId, MessageKind, ReticleCommand } from '@reticlehq/core';
 import { WebRealm } from './web-realm.js';
 import { createFakeSession } from '../session/fake-session.js';

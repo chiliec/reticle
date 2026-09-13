@@ -29,7 +29,7 @@ const PACKAGE = join(
     cwd: import.meta.dirname,
     encoding: 'utf8',
   }).trim(),
-  'openreality',
+  'openverification',
 );
 
 /** Every function the package's public entry exports. Classes count: they are extended. */

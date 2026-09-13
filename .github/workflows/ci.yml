@@ -501,7 +501,7 @@ jobs:
           # SPI; the two functions in core that build a protocol subject; and the two fixture apps
           # the scenarios are planted into. Narrower than `desktop` in some places and wider in
           # others, so it gets its own filter rather than borrowing one.
-          if echo "$CHANGED" | grep -qE '^(openreality/|conformance/|server/src/portal/realm/|core/src/realm/|core/src/verdict/verification-run\.ts|apps/bench-app/|apps/electron-smoke/|\.github/workflows/ci\.yml)'; then
+          if echo "$CHANGED" | grep -qE '^(openverification/|conformance/|server/src/portal/realm/|core/src/realm/|core/src/verdict/verification-run\.ts|apps/bench-app/|apps/electron-smoke/|\.github/workflows/ci\.yml)'; then
             echo "conformance=true" >> "$GITHUB_OUTPUT"
           else
             echo "conformance=false" >> "$GITHUB_OUTPUT"

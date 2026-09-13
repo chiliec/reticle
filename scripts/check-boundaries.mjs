@@ -78,7 +78,7 @@ export const SIDE = Object.freeze({
   // `schema/` are GENERATED from those definitions at build time, so an implementation in another
   // language validates against JSON and imports none of this. Hand-written JSON Schema beside
   // hand-written types is the drift problem wearing a solution's clothes.
-  '@reticlehq/openreality': 'iso',
+  '@reticlehq/openverification': 'iso',
 });
 
 /** Node-runtime npm packages a browser/build/iso package must never depend on (a "needs a server" proxy). */

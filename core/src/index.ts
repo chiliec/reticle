@@ -77,7 +77,7 @@ export * from './verdict/revision.js';
 export * from './realm/registry.js';
 // The protocol is NOT re-exported here, deliberately.
 //
-// `@reticlehq/openreality` is the specification this codebase implements, and it is a separate
+// `@reticlehq/openverification` is the specification this codebase implements, and it is a separate
 // package precisely so that somebody implementing it does not have to install the product. Blanket
 // re-exporting it from core erases that line: a consumer reaches a protocol name through Reticle
 // and now depends on Reticle for a contract that was written not to need it. Import the protocol

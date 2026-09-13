@@ -22,10 +22,10 @@ import {
  */
 
 /** What this document is, said in the document, so a reader never has to guess from its shape. */
-export const OPENREALITY_ARTIFACT_KIND = 'openreality.verification';
+export const OVP_ARTIFACT_KIND = 'ovp.verification';
 
-/** The version of the specification this document follows. See openreality/SPEC.md. */
-export const OPENREALITY_ARTIFACT_VERSION = 1;
+/** The version of the specification this document follows. See openverification/SPEC.md. */
+export const OVP_ARTIFACT_VERSION = 1;
 
 /** One thing that was claimed, and what checking it came out as. */
 export interface ExportedCheck {
@@ -77,8 +77,8 @@ export interface ExportedCheck {
 
 /** What was verified, and about what. */
 export interface ExportedArtifact {
-  readonly kind: typeof OPENREALITY_ARTIFACT_KIND;
-  readonly specVersion: typeof OPENREALITY_ARTIFACT_VERSION;
+  readonly kind: typeof OVP_ARTIFACT_KIND;
+  readonly specVersion: typeof OVP_ARTIFACT_VERSION;
   /** Which run this came from, so an export can be traced to what produced it. */
   readonly runId: string;
   /** What was being verified. */
@@ -161,8 +161,8 @@ function exportedChecks(run: ReticleVerificationRun): ExportedCheck[] {
  */
 export function toArtifact(run: ReticleVerificationRun): ExportedArtifact {
   return {
-    kind: OPENREALITY_ARTIFACT_KIND,
-    specVersion: OPENREALITY_ARTIFACT_VERSION,
+    kind: OVP_ARTIFACT_KIND,
+    specVersion: OVP_ARTIFACT_VERSION,
     runId: run.runId,
     subject: {
       name: run.project.name,

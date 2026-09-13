@@ -1,5 +1,5 @@
 {
-  "name": "@reticlehq/openreality",
+  "name": "@reticlehq/openverification",
   "version": "3.0.0",
   "description": "The Open Verification Protocol: the vocabulary, the rules and the interface an implementation answers, so that \"it works\" can be checked from outside the thing claiming it.",
   "keywords": [
@@ -15,7 +15,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/reticlehq/reticle.git",
-    "directory": "openreality"
+    "directory": "openverification"
   },
   "engines": {
     "node": ">=20.0.0"

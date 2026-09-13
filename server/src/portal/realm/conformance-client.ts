@@ -5,8 +5,8 @@ import {
   isDeterminismProfile,
   type Claim,
   type Coverage,
-} from '@reticlehq/openreality';
-import { CloseCondition, Grade, ProvenanceClass, type Evidence } from '@reticlehq/openreality';
+} from '@reticlehq/openverification';
+import { CloseCondition, Grade, ProvenanceClass, type Evidence } from '@reticlehq/openverification';
 import type { WebRealm } from './web-realm.js';
 
 /**

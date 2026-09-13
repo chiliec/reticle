@@ -1,6 +1,6 @@
 # Does your implementation behave like one?
 
-This is how an implementation of [the OpenReality specification](../openreality/SPEC.md) finds out whether it actually does what the specification says — and earns a name for what it can do.
+This is how an implementation of [the OpenVerification specification](../openverification/SPEC.md) finds out whether it actually does what the specification says — and earns a name for what it can do.
 
 It needs no browser, no app of ours, and no code from this repository.
 

@@ -95,7 +95,7 @@ const REACHES_FOR: Record<string, readonly string[]> = {
    * thing to re-examine is whether `facts` stayed a sink: the moment it reaches out to
    * anything, this trade stops being one.
    */
-  // One way, and it stays one way: the OpenReality adapter reads a live session to answer the
+  // One way, and it stays one way: the OpenVerification adapter reads a live session to answer the
   // protocol's eight questions, and nothing in `session` knows the adapter exists. The mutual-pair
   // count is unchanged by it, which is the test that matters -- a grouping that raises that number
   // is a shorter directory listing bought with a real property.

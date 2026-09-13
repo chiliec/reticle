@@ -1,5 +1,5 @@
 import { mayResumeByReplayingPrefix } from '@reticlehq/core';
-import { Surface, formatStepAddress } from '@reticlehq/openreality';
+import { Surface, formatStepAddress } from '@reticlehq/openverification';
 import { span } from '../../trace.js';
 import { routeOfEvent } from '@reticlehq/engine/question/predicate/predicate-route.js';
 import { stepEffect } from '@reticlehq/engine/evidence/step-effect.js';

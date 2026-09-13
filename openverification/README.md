@@ -1,4 +1,4 @@
-# @reticlehq/openreality
+# @reticlehq/openverification
 
 **The Open Verification Protocol** — a protocol for establishing machine-verifiable evidence that an intended action produced a claimed outcome in a real environment.
 
@@ -9,11 +9,11 @@
 ## Implementing it
 
 ```bash
-npm i @reticlehq/openreality
+npm i @reticlehq/openverification
 ```
 
 ```ts
-import { Realm } from '@reticlehq/openreality';
+import { Realm } from '@reticlehq/openverification';
 
 class MyRealm extends Realm {
   // The compiler tells you what you must answer.

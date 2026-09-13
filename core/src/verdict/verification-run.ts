@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { SubjectRefSchema } from '@reticlehq/openreality';
+import { SubjectRefSchema } from '@reticlehq/openverification';
 import { PredicateKind } from './consequence.js';
 import { Verified } from './verified-constants.js';
 

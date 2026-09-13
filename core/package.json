@@ -38,7 +38,7 @@
     "prepack": "tsc -b && node scripts/gen-schema.mjs && node scripts/gen-desktop-contract.mjs && node scripts/gen-source-constants.mjs && node ../scripts/prepare-dist.mjs dist"
   },
   "dependencies": {
-    "@reticlehq/openreality": "workspace:*",
+    "@reticlehq/openverification": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

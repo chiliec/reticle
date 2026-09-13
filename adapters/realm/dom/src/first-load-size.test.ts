@@ -124,7 +124,7 @@ const MAX_FIRST_LOAD_BYTES = 233_400;
  *
  *   adapters/realm/dom   126,941 -> 127,400   +459   the previous release's SDK work
  *   core                  31,745 ->  32,508   +763   see below
- *   @reticlehq/openreality 8,352 ->   8,658   +306   the `measure` predicate's schema
+ *   @reticlehq/openverification 8,352 ->   8,658   +306   the `measure` predicate's schema
  *   zod                   59,536 unchanged
  *
  * **328 B of core's growth is a server-only helper on every page load.** `global-press` answers
@@ -151,7 +151,7 @@ const MAX_FIRST_LOAD_BYTES = 233_400;
  *
  * The cause, attributed from the same metafile rather than guessed at: `core/index.js`
  * re-exports `verdict/verification-run`, and this release gave it an import of
- * `@reticlehq/openreality`, because a run artifact now carries a `SubjectRef`. That one import
+ * `@reticlehq/openverification`, because a run artifact now carries a `SubjectRef`. That one import
  * is of the protocol's barrel, and the barrel re-exports the whole vocabulary -- every one of
  * which builds a zod schema at module scope, so none of it can be shaken out. Ten protocol
  * files, 8,352 B minified, arrive on every page load to give one schema to one field.

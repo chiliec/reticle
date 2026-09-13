@@ -14,7 +14,7 @@ import { REPO_ROOT } from '../../machine/repo-root.js';
  *
  *   - `ReticleVerificationRun.subject` is `SubjectRefSchema.optional()` and **nothing writes
  *     it**. It is a field of the right type that no production path fills.
- *   - `toArtifact` — the thing stamped `kind: OPENREALITY_ARTIFACT_KIND` — carries a subject
+ *   - `toArtifact` — the thing stamped `kind: OVP_ARTIFACT_KIND` — carries a subject
  *     shaped `{ name, commit?, url? }`, which the protocol does not define. Not a SubjectRef.
  *   - The one function that builds a real `SubjectRef` is `core`'s `subjectOf`, reached only
  *     through `WebRealm.identity()`, and **`WebRealm` is constructed only by the two
@@ -105,7 +105,7 @@ describe('how much of the protocol the shipping product uses', () => {
     //   WebRealm                constructed only by conformance     (asserted above)
     //   toArtifact              exported, imported by nothing       (NO LONGER TRUE)
     //
-    // The third is joined: `reticle_run_export` gained `format:"openreality"`. The reason it took
+    // The third is joined: `reticle_run_export` gained `format:"openverification"`. The reason it took
     // so long is worth keeping, because the shape recurs -- each piece was individually honest
     // (`to-artifact.ts` sat in server's DECLARED_UNWIRED list with the reason "no production path
     // reaches it"), and no single declaration said that the three together meant the specification
@@ -121,7 +121,7 @@ describe('how much of the protocol the shipping product uses', () => {
     expect(
       callers,
       'the artifact exporter grew or lost a caller. One call site is the intended state — the ' +
-        '`format:"openreality"` branch of reticle_run_export. If the export now surfaces somewhere ' +
+        '`format:"openverification"` branch of reticle_run_export. If the export now surfaces somewhere ' +
         'else too, say so here and in the changelog.',
     ).toEqual(['server/src/judgement/runs/run-tools.ts']);
   });
@@ -130,7 +130,7 @@ describe('how much of the protocol the shipping product uses', () => {
     // Pinned so that changing one without the other is loud. The exported shape is Reticle's,
     // the protocol's is SubjectRef, and today they are different on purpose.
     const artifact = code('server/src/judgement/runs/artifact/to-artifact.ts');
-    expect(artifact).toContain('OPENREALITY_ARTIFACT_KIND');
+    expect(artifact).toContain('OVP_ARTIFACT_KIND');
     expect(artifact).not.toContain('SubjectRef');
   });
 });

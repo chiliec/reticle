@@ -3,7 +3,7 @@ import {
   ChannelId,
   Independence,
   disagreementCanConvict as protocolRule,
-} from '@reticlehq/openreality';
+} from '@reticlehq/openverification';
 import { PredicateKind } from '../verdict/consequence.js';
 
 /**
@@ -81,7 +81,7 @@ export function channelsRead(kind: PredicateKind): readonly ChannelId[] {
 /**
  * The independence rule, and where it lives.
  *
- * It is not defined here. It is defined in `@reticlehq/openreality`, which is the specification
+ * It is not defined here. It is defined in `@reticlehq/openverification`, which is the specification
  * this codebase implements, and re-exported so the rest of the repository can reach it by the name
  * it has always used.
  *

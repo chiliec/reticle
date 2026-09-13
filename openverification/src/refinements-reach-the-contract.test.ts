@@ -50,7 +50,7 @@ function code(file: string): string {
 }
 
 function sourceFiles(): string[] {
-  return execFileSync('git', ['ls-files', 'openreality/src'], { cwd: REPO, encoding: 'utf8' })
+  return execFileSync('git', ['ls-files', 'openverification/src'], { cwd: REPO, encoding: 'utf8' })
     .split('\n')
     .filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts'));
 }
@@ -63,9 +63,11 @@ describe('every published rule survives the trip to JSON Schema', () => {
     const files = sourceFiles();
     expect(files.length).toBeGreaterThan(5);
     // The stripper must not eat the code along with the comments.
-    expect(code('openreality/src/vocabulary/intent.ts')).toContain('discriminatedUnion');
+    expect(code('openverification/src/vocabulary/intent.ts')).toContain('discriminatedUnion');
     // ...and it must actually strip: this phrase exists only inside a comment block.
-    expect(code('openreality/src/vocabulary/intent.ts')).not.toContain('quietly stopped moving');
+    expect(code('openverification/src/vocabulary/intent.ts')).not.toContain(
+      'quietly stopped moving',
+    );
   });
 
   it('has no refinement that is not a declared divergence', () => {
@@ -74,7 +76,7 @@ describe('every published rule survives the trip to JSON Schema', () => {
   });
 
   it('points each declared divergence at prose that exists in the specification', () => {
-    const spec = readFileSync(join(REPO, 'openreality', 'SPEC.md'), 'utf8');
+    const spec = readFileSync(join(REPO, 'openverification', 'SPEC.md'), 'utf8');
     for (const entry of DECLARED_DIVERGENCES) {
       expect(spec.includes(entry.specSays), `SPEC.md never says "${entry.specSays}"`).toBe(true);
     }
@@ -84,7 +86,7 @@ describe('every published rule survives the trip to JSON Schema', () => {
     // The point of the rewrite, asserted against the generated artefact rather than the source.
     for (const name of ['match', 'predicate', 'intent']) {
       const schema = readFileSync(
-        join(REPO, 'openreality', 'dist', 'schema', `${name}.json`),
+        join(REPO, 'openverification', 'dist', 'schema', `${name}.json`),
         'utf8',
       );
       expect(schema, `${name}.json carries no conditional requirement`).toMatch(

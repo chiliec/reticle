@@ -355,7 +355,9 @@ async function liveRealm(server, page) {
 }
 
 function print(report) {
-  console.log('\n=== OpenReality conformance: reticle, scored against its own specification ===\n');
+  console.log(
+    '\n=== OpenVerification conformance: reticle, scored against its own specification ===\n',
+  );
   console.log(`  claimed : ${String(report.claimed ?? '-')}`);
   console.log(`  earned  : ${String(report.earned ?? 'none')}`);
   // The rejection path returns before a single scenario is driven, and printing only "none"

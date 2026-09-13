@@ -35,7 +35,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..', 'dist', 'schema');
 
 /** The base every `$id` hangs off. Stable: a moved schema url is a broken contract. */
-const BASE = 'https://openreality.dev/schema/v1';
+const BASE = 'https://openverification.dev/schema/v1';
 
 /**
  * What gets published, and under what name.

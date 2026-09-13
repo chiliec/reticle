@@ -400,7 +400,7 @@ An implementation that cannot address things on screen is not a worse implementa
 
 ### Implementing it
 
-Extend `Realm` from `@reticlehq/openreality`. The compiler names what you must answer; the rules you must not break are already written and are not yours to override.
+Extend `Realm` from `@reticlehq/openverification`. The compiler names what you must answer; the rules you must not break are already written and are not yours to override.
 
 ```ts
 class MyRealm extends Realm {

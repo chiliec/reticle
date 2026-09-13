@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Surface } from '@reticlehq/openreality';
+import { Surface } from '@reticlehq/openverification';
 import { determinismFor, mayResumeByReplayingPrefix } from './registry.js';
 
 /**

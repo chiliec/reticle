@@ -16,7 +16,7 @@
  * realm or a flow file — and so it cannot quietly acquire a dependency on any of them.
  */
 
-import { gradeMutation, MutationOutcome, type Reversal } from '@reticlehq/openreality';
+import { gradeMutation, MutationOutcome, type Reversal } from '@reticlehq/openverification';
 
 export interface MutationTestDeps {
   /** Replay the flow and report its verdict. */
