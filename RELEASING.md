@@ -103,6 +103,9 @@ Two limits worth knowing before trusting a green run.
 5. `git commit -m "chore(release): v2.3.0"` → PR → merge.
 6. `git tag v2.3.0 && git push --tags`
 7. **Publish a GitHub Release** on that tag, body = the changelog section. This is what triggers publishing — [`.github/workflows/publish.yml`](.github/workflows/publish.yml) runs the gates again and `pnpm -r publish`es in dependency order with npm provenance. It skips versions already on npm, so a partial run is safe to re-trigger.
+
+   **Publish through the workflow, not from a laptop.** The workflow supplies `RETICLE_ISSUER_PUBLIC_KEY`, which `server`'s `prepack` stamps into the built artifact; without it the tarball ships in eval mode, where every enterprise licence key activates nothing and neither runtime nor any gate reports it. A local `pnpm -r publish` now REFUSES rather than producing that artifact quietly — `RETICLE_ALLOW_EVAL_PUBLISH=1` is the deliberate override. `--dry-run` is unaffected and stays the authority it is described as above.
+
 8. `npm view @reticlehq/server version` to confirm, then post the release in Discord `#announcements` with the one-line "why you'd care".
 
 If a release goes out broken: publish a patch. Never `npm unpublish` — installs in the wild break.

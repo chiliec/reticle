@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { generateKeyPairSync } from 'node:crypto';
 import { copyFileSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -31,18 +31,24 @@ import { REPO_ROOT } from '../../machine/repo-root.js';
 const SCRIPT = join(REPO_ROOT, 'scripts', 'stamp-issuer-key.mjs');
 const TARGET = join(REPO_ROOT, 'server', 'dist', 'features', 'license', 'license.js');
 
-function run(env: Record<string, string>): { out: string; code: number } {
-  try {
-    const out = execFileSync('node', [SCRIPT], {
-      encoding: 'utf8',
-      env: { ...process.env, ...env },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    return { out, code: 0 };
-  } catch (thrown) {
-    const e = thrown as { stdout?: string; stderr?: string; status?: number };
-    return { out: `${e.stdout ?? ''}${e.stderr ?? ''}`, code: e.status ?? -1 };
-  }
+/**
+ * Runs the stamp and keeps stdout and stderr APART.
+ *
+ * They used to be concatenated, so a test asserting the eval-mode message could not tell which
+ * stream carried it — and the script wrote it to stdout, which is what `npm pack --json` parses.
+ * Release tooling reading that JSON got a line of prose before the array and could not parse it.
+ * The same defect was found and fixed in openreality's prepack earlier in this release.
+ */
+function run(env: Record<string, string>): { out: string; err: string; code: number } {
+  // spawnSync, not execFileSync: the latter returns only stdout, and on a SUCCESSFUL run it hands
+  // back no stderr at all — so a test asking "was this said on the right stream" could not see the
+  // answer in the case that matters most, the one that exits 0.
+  const r = spawnSync('node', [SCRIPT], {
+    encoding: 'utf8',
+    env: { ...process.env, ...env },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return { out: r.stdout ?? '', err: r.stderr ?? '', code: r.status ?? -1 };
 }
 
 describe('the issuer key can actually be stamped into the built server', () => {
@@ -54,9 +60,40 @@ describe('the issuer key can actually be stamped into the built server', () => {
 
   it('leaves eval mode alone when no key is supplied, without touching the file', () => {
     const before = readFileSync(TARGET, 'utf8');
-    const { out } = run({ RETICLE_ISSUER_PUBLIC_KEY: '' });
-    expect(out).toContain('eval mode');
+    const { out, err, code } = run({ RETICLE_ISSUER_PUBLIC_KEY: '' });
+    expect(err).toContain('eval mode');
+    // Nothing on stdout, ever: `npm pack --json` parses that stream.
+    expect(out).toBe('');
+    expect(code).toBe(0);
     expect(readFileSync(TARGET, 'utf8')).toBe(before);
+  });
+
+  it('REFUSES a real publish with no key, and says what the artifact would have been', () => {
+    // The tarball would look normal and ship with enterprise enforcement off: every customer key
+    // activates nothing, and neither the runtime nor any gate reports it. A laptop `pnpm -r publish`
+    // produced exactly that, silently, and RELEASING.md never mentioned the variable.
+    const before = readFileSync(TARGET, 'utf8');
+    const { err, code } = run({ RETICLE_ISSUER_PUBLIC_KEY: '', npm_command: 'publish' });
+    expect(code).toBe(1);
+    expect(err).toContain('refusing to publish');
+    expect(readFileSync(TARGET, 'utf8')).toBe(before);
+  });
+
+  it('still allows a dry run, a plain build, and a deliberate eval-mode publish', () => {
+    // The refusal must not block the three things that are legitimately keyless, or it gets worked
+    // around and stops meaning anything.
+    expect(
+      run({ RETICLE_ISSUER_PUBLIC_KEY: '', npm_command: 'publish', npm_config_dry_run: 'true' })
+        .code,
+    ).toBe(0);
+    expect(run({ RETICLE_ISSUER_PUBLIC_KEY: '' }).code).toBe(0);
+    expect(
+      run({
+        RETICLE_ISSUER_PUBLIC_KEY: '',
+        npm_command: 'publish',
+        RETICLE_ALLOW_EVAL_PUBLISH: '1',
+      }).code,
+    ).toBe(0);
   });
 
   it('bakes a real key into the real path', () => {
@@ -80,8 +117,8 @@ describe('the issuer key can actually be stamped into the built server', () => {
 
   it('refuses something that is not a key, before it reaches the artifact', () => {
     const before = readFileSync(TARGET, 'utf8');
-    const { out } = run({ RETICLE_ISSUER_PUBLIC_KEY: 'not-a-key' });
-    expect(out).toContain('not a valid ed25519 public key');
+    const { err } = run({ RETICLE_ISSUER_PUBLIC_KEY: 'not-a-key' });
+    expect(err).toContain('not a valid ed25519 public key');
     expect(readFileSync(TARGET, 'utf8')).toBe(before);
   });
 });
