@@ -71,6 +71,7 @@ import {
   linkInlineIntent,
 } from '../../memory/intent/inline-intent.js';
 import { bodiesNotCaptured } from '@reticlehq/engine/evidence/uncaptured-bodies.js';
+import { bodyIsEvidence, type BodyMode } from '@reticlehq/engine/window/body-relevance.js';
 import { bodyClauseRefusal } from '@reticlehq/engine/evidence/body-capture-remedy.js';
 import { withControl } from '../../portal/session/control-envelope.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
@@ -586,7 +587,7 @@ export const OBSERVE_TOOLS: ToolDef[] = [
         .boolean()
         .optional()
         .describe(
-          'Include request/response bodies (default true). Pass false for a body-free listing — method, url, status, timing only — for the common "did POST /x return 200?" read. Bodies dominate the payload, so this cuts the cheap case by a large factor.',
+          'Body detail. OMITTED (the default) keeps a body only where it could decide a verdict — every failed call, every call whose outcome cannot be scored, and any call your filter named — and drops the body of a plain success nobody asked about, reporting `bodiesWithheld {count, why, how}` so the saving is never silent. `true` returns every captured body; `false` returns none, for a listing of method, url, status and timing only. Note bodies are only captured when the SDK is configured to capture them; with capture off, all three settings return the same bytes.',
         ),
       ...sessionIdShape,
     },
@@ -628,8 +629,22 @@ export const OBSERVE_TOOLS: ToolDef[] = [
       const status = asNumber(args['status']);
       const ok = 'boolean' === typeof args['ok'] ? args['ok'] : undefined;
       const limit = asNumber(args['limit']);
-      // Default true keeps the current shape; `bodies: false` returns the body-free listing (#401).
-      const bodies = 'boolean' === typeof args['bodies'] ? args['bodies'] : true;
+      /*
+       * The DEFAULT is now `auto`, which keeps a body only where it could decide a verdict.
+       *
+       * Measured on a connected drive of the bench app: this tool returned 59,458 bytes and was
+       * 90.9% of every byte that drive spent, nearly all of it the response bodies of successful
+       * asset fetches nobody asked about. `bodies: false` already existed and would have cut it —
+       * and defaulted the expensive way, which is the same defect in a different costume, because
+       * an optional saving nobody is told about is a saving nobody takes.
+       *
+       * `true` and `false` keep their exact old meanings, so a caller that already passes one is
+       * unaffected. Only the omitted case moves.
+       */
+      const bodyMode: BodyMode =
+        'boolean' === typeof args['bodies'] ? (args['bodies'] ? 'all' : 'none') : 'auto';
+      // A filter names specific calls, so under `auto` their bodies are the thing being asked about.
+      const named = method !== undefined || urlContains !== undefined || status !== undefined;
       const buffer = bufferEnvelope(session);
       // Completed calls + unresolved in-flight requests (a hung request shows as pending).
       const allNet = reconcileNet(
@@ -649,7 +664,27 @@ export const OBSERVE_TOOLS: ToolDef[] = [
         matched,
         limit ?? DEFAULT_QUERY_LIMIT,
       );
-      const calls = budgeted.map((e) => projectNetCall(e, bodies));
+      let withheld = 0;
+      const calls = budgeted.map((e) => {
+        const keep = bodyIsEvidence(
+          {
+            status: asNumber(e.data['status']) ?? asString(e.data['status']),
+            ok: 'boolean' === typeof e.data['ok'] ? e.data['ok'] : undefined,
+            method: asString(e.data['method']),
+            url: asString(e.data['url']),
+            contentType: asString(e.data['contentType']),
+          },
+          bodyMode,
+          { named },
+        );
+        if (
+          !keep &&
+          (e.data['responseBody'] !== undefined || e.data['requestBody'] !== undefined)
+        ) {
+          withheld += 1;
+        }
+        return projectNetCall(e, keep);
+      });
       // A zero-match FILTER already reports what did fire (netEmptyHint above). Zero calls at all
       // fell through as a bare `[]`, which is indistinguishable from an observer that is not
       // recording — and those need opposite responses. Say the look happened.
@@ -658,7 +693,22 @@ export const OBSERVE_TOOLS: ToolDef[] = [
           {
             calls,
             ...(droppedOldest > 0 ? { total: matched.length, droppedOldest } : {}),
-            ...(bodies ? bodiesNotCaptured(calls, session.sdkVersion) : {}),
+            ...('none' !== bodyMode ? bodiesNotCaptured(calls, session.sdkVersion) : {}),
+            /*
+             * Never silent. The agent has to be able to tell "this call had no body" from "the body
+             * is here and you were not shown it", and to know the exact way to get it — otherwise
+             * this is a capability that degrades without saying so, which is the failure mode that
+             * cost this project a feature that looked wired and was inert.
+             */
+            ...(withheld > 0
+              ? {
+                  bodiesWithheld: {
+                    count: withheld,
+                    why: 'these calls SUCCEEDED and no filter named them, so their bodies could not change a verdict. Status, method, url, timing and responseSize are all above.',
+                    how: 'pass bodies:true for every body, or name the call you mean (urlContains / method / status) to get just that one.',
+                  },
+                }
+              : {}),
             ...buffer,
           },
           'calls',
