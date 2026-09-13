@@ -82,6 +82,15 @@ const RUNTIME_GIVEAWAYS = [
     name: 'process',
   },
   { pattern: /from 'node:/, name: 'a node: module' },
+  /*
+   * `Buffer` is a Node global, not a language one. It needs no import, so the `node:` rule above
+   * never saw it — and it sat on a path exported from this package's front door, which means an
+   * adopter running the rules in a browser, a worker, a Deno process or an edge runtime got a
+   * ReferenceError from code this file claims stands alone.
+   *
+   * `TextEncoder` is the portable answer and is in every one of those runtimes.
+   */
+  { pattern: /(?<![\w.$])Buffer\s*\./, name: 'the Node Buffer global' },
 ];
 
 describe('the rules stand on their own', () => {

@@ -73,7 +73,7 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
     ],
   },
   description:
-    'Run multiple actions in order (fill -> fill -> submit) in ONE round-trip. Prefer this over repeating reticle_act for a multi-step journey, then assert its consequence once. Returns per-step effects[] (see reticle_act).',
+    "Drive a WHOLE journey in ONE round-trip, with NO snapshot first. Name each step's element by {testid} | {label} | {role,name} | {text} in `target` and Reticle resolves it AT THE MOMENT THAT STEP RUNS — so a control that does not exist yet (a modal an earlier step opens, a row it creates) is still addressable, and waits up to timeout_ms to appear. This is the fast path: snapshot -> act -> snapshot -> act costs a model turn per step and is the slowest thing an agent can do. Give each step an `expect` and the sequence stops at the first one that does not hold, returning the un-run `tail` verbatim so you re-plan only the failure. Returns per-step effects[] (see reticle_act).",
   inputSchema: {
     steps: z
       .array(z.record(z.unknown()))
@@ -159,7 +159,7 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
           // stale empty ref — the caller went looking for a re-render instead of a missing locator.
           const outcome = await runStepWithStaleRetry(
             async () => {
-              const resolved = await resolveActTarget(session, step);
+              const resolved = await resolveActTarget(session, step, perStepTimeout);
               if ('error' === resolved.kind) return { ok: false, error: resolved.message };
               return actCommand(
                 deps,

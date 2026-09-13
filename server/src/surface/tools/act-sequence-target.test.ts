@@ -57,6 +57,13 @@ function sessionThatResolvesTargets(matches: Record<string, { ref: string }[]>):
     }
     return Promise.resolve({ kind: 'command_result', id: 'c', ok: true, result: {} });
   };
+  return { session: fakeSessionFrom(command), calls };
+}
+
+/** The same stub, built from any command implementation, so a test can script the QUERY answers. */
+function fakeSessionFrom(
+  command: (name: string, args: Record<string, unknown>) => Promise<CommandResult>,
+): Session {
   const noEvents: ReticleEvent[] = [];
   const stub: Partial<Session> = {
     id: 'demo',
@@ -77,7 +84,7 @@ function sessionThatResolvesTargets(matches: Record<string, { ref: string }[]>):
     drainInbox: () => [],
     inboxSize: () => 0,
   };
-  return { session: stub as Session, calls };
+  return stub as Session;
 }
 
 function fakeDeps(session: Session): ToolDeps {
@@ -144,8 +151,17 @@ describe('act_sequence steps that name a target', () => {
   it('refuses a missed target as a locator miss, not a stale empty ref', async () => {
     const { session, calls } = sessionThatResolvesTargets({});
 
+    /*
+     * `timeout_ms: 0` because a named target is now WAITED for, not resolved in one shot: the
+     * element a later step acts on often does not exist when a batch is submitted, and refusing
+     * instantly is what made agents abandon batching and pay a model turn per step. Zero is the
+     * caller saying "do not wait", which is exactly the question this test is asking — does a
+     * genuinely absent element read as a locator miss rather than a stale ref. The waiting path has
+     * its own test below.
+     */
     const result = (await tool(ReticleTool.ACT_SEQUENCE).handler(fakeDeps(session), {
       steps: [{ target: { label: 'Email' }, action: 'fill' }],
+      timeout_ms: 0,
     })) as SequenceResult;
 
     expect(result.dispatched).toBe(false);
@@ -156,5 +172,35 @@ describe('act_sequence steps that name a target', () => {
       calls.some((c) => 'act' === c.name),
       'must not dispatch against a missing locator',
     ).toBe(false);
+  });
+
+  it('WAITS for a target that does not exist yet, then acts on it', async () => {
+    /*
+     * The case that makes batching usable: step 1 opens a modal and step 2 acts on something inside
+     * it. That element cannot be named by ref up front and does not exist at submit time, so a
+     * single-shot resolve fails the whole batch and the agent goes back to snapshot/act/snapshot.
+     */
+    let looks = 0;
+    const calls: ActCall[] = [];
+    const command = (name: string, args: Record<string, unknown>): Promise<CommandResult> => {
+      calls.push({ name, args });
+      if ('query' === name) {
+        looks += 1;
+        // Absent for the first two looks, then rendered — a modal finishing its animation.
+        const elements = looks > 2 ? [{ ref: 'e99' }] : [];
+        return Promise.resolve({ kind: 'command_result', id: 'c', ok: true, result: { elements } });
+      }
+      return Promise.resolve({ kind: 'command_result', id: 'c', ok: true, result: {} });
+    };
+    const session = fakeSessionFrom(command);
+
+    const result = (await tool(ReticleTool.ACT_SEQUENCE).handler(fakeDeps(session), {
+      steps: [{ target: { label: 'Confirm' }, action: 'click' }],
+      timeout_ms: 4000,
+    })) as SequenceResult;
+
+    expect(looks, 'must look more than once').toBeGreaterThan(1);
+    expect(result.steps?.[0]?.error, 'the late element is found, not refused').toBeUndefined();
+    expect(asString(calls.find((c) => 'act' === c.name)?.args['ref'])).toBe('e99');
   });
 });

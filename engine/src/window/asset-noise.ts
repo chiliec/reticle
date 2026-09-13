@@ -1,4 +1,5 @@
 import { ASSET_URL } from './body-relevance.js';
+import { byteSizeOf } from './byte-size.js';
 
 /**
  * Collapse the dev server's own traffic out of a network listing.
@@ -69,7 +70,7 @@ export function foldAssetNoise<T extends ListedCall>(
     calls: kept,
     folded: {
       count: folded.length,
-      bytes: Buffer.byteLength(JSON.stringify(folded), 'utf8'),
+      bytes: byteSizeOf(JSON.stringify(folded)),
       sample: folded.slice(0, SAMPLE).map((c) => c.url ?? ''),
       why: 'successful GETs of build output (modules, styles, maps, Vite plumbing). They carry no verdict — this is the bundler talking to itself, not the app under test.',
       how: 'pass assets:true to list them, or name what you mean with urlContains / method / status.',

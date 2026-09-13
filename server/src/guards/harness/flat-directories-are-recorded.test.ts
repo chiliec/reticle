@@ -62,6 +62,15 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // moving one to tidy the count would be a breaking change for somebody outside this repository.
   'engine/src/evidence': 15,
   'engine/src/question/predicate': 16,
+  /*
+   * Crossed ten when the fast-drive budget and a portable byte counter landed. The guard asks for
+   * grouping rather than recording at this moment, and grouping is the wrong move HERE specifically:
+   * `./window/*.js` is a published glob subpath, so every filename in this directory is an import
+   * path somebody outside this repository may already have written, and moving one is a breaking
+   * change dressed as tidying. Recorded on purpose; the grouping belongs in the same change that
+   * revisits engine's public subpaths, not in a feature commit.
+   */
+  'engine/src/window': 11,
   'init/src/patch': 14,
   // Crossed the line as the protocol grew the two things a subject must declare about ITSELF rather
   // than about what it can see: how it may be driven, and the state a suite starts from. Recorded

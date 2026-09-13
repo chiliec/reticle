@@ -1,4 +1,5 @@
 import { CHURN_TYPES, RING_BUFFER_DEFAULTS, type ReticleEvent } from '@reticlehq/core';
+import { byteSizeOf } from './byte-size.js';
 
 /** How far forward to look for a churn event to sacrifice before falling back to plain FIFO. */
 const CHURN_SCAN_LIMIT = 256;
@@ -56,7 +57,7 @@ export class RingBuffer {
     this.#events.push(event);
     // Prefer the size measured at the parse boundary (the raw wire frame the bridge already has) over
     // re-serializing here — a JSON.stringify per pushed event was the buffer's highest constant cost.
-    const bytes = byteSize ?? Buffer.byteLength(JSON.stringify(event), 'utf8');
+    const bytes = byteSize ?? byteSizeOf(JSON.stringify(event));
     this.#eventBytes.push(bytes);
     this.#totalBytes += bytes;
     this.#evict(now);
