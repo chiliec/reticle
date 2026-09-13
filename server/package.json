@@ -48,7 +48,7 @@
     "playwright": "^1.62.1",
     "pngjs": "^7.0.0"
   },
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "FSL-1.1-ALv2",
   "author": "Reticle contributors",
   "repository": {
     "type": "git",

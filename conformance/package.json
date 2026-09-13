@@ -5,8 +5,7 @@
   "description": "Does an implementation of the OpenReality specification actually behave like one? Scenarios drawn from failures this project has shipped and fixed.",
   "type": "module",
   "scripts": {
-    "test:unit": "vitest run",
-    "test:guards": "vitest run --passWithNoTests --dir does-not-exist"
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@reticlehq/openreality": "workspace:*"

@@ -212,7 +212,7 @@ export const SessionSummarySchema = z.object({
    * that id, or several with none named.
    *
    * The single biggest drop-off in the funnel, and it used to be reachable only by unpacking
-   * `errors[]` in HogQL. 74% of daemons never call a tool at all, and of the sessions that made
+   * `errors[]` in HogQL. Most daemons never call a tool at all, and of the sessions that made
    * exactly one call, most bounced on precisely this. Absent when it never happened, so the field's
    * PRESENCE is the signal.
    */

@@ -74,7 +74,14 @@ function textFiles(dir: string): string[] {
  */
 const FIELD_NUMBER_PATTERNS: readonly { pattern: RegExp; why: string }[] = [
   {
-    pattern: /\b\d+(\.\d+)?%\s+of\s+(users|installs|sessions|runs|agents|projects|tabs)\b/i,
+    /*
+     * A CLOSED list of nouns that mean people, and `daemons` is one of them — a daemon is a user's
+     * machine. It stays closed on purpose: widening it to `them`/`all` caught three BENCH numbers
+     * on the first run, and rule 12 says measurements of our own benchmark, suite and install gate
+     * are welcome and load-bearing. A guard that cannot tell our numbers from theirs gets an
+     * exemption list and then gets ignored.
+     */
+    pattern: /\b\d+(\.\d+)?%\s+of\s+(users|installs|sessions|runs|agents|projects|tabs|daemons)\b/i,
     why: 'a percentage of our users',
   },
   {
@@ -89,6 +96,19 @@ const FIELD_NUMBER_PATTERNS: readonly { pattern: RegExp; why: string }[] = [
   {
     pattern: /\bby\s+the\s+\d{4}-\d{2}(-\d{2})?\s+telemetry\b/i,
     why: 'a number dated to a telemetry export',
+  },
+  {
+    /*
+     * A share of one of OUR EVENTS is a statement about the people who produced it, so the noun
+     * that matters is the event name rather than the word "users". Found in the changelog, which
+     * rule 12 names explicitly and which npm ships inside every package.
+     */
+    pattern: /\b\d+(\.\d+)?%\s+of\s+(all\s+)?`?\w+_\w+`?\s*(events)?\b/i,
+    why: 'a share of one of our telemetry events',
+  },
+  {
+    pattern: /\b\d+\s+distinct\s+(brand-new\s+)?(users|installs|projects|machines)\b/i,
+    why: 'a count of distinct users',
   },
 ];
 
@@ -112,15 +132,23 @@ describe('no published file carries a field or user number', { timeout: 120_000 
       } catch {
         continue;
       }
-      text.split('\n').forEach((line, i) => {
-        for (const { pattern, why } of FIELD_NUMBER_PATTERNS) {
-          if (pattern.test(line)) {
-            found.push(
-              `${file.replace(REPO, '.')}:${i + 1}: ${why} — ${line.trim().slice(0, 120)}`,
-            );
-          }
-        }
-      });
+      /*
+       * Matched against a view with comment furniture and line breaks collapsed away, NOT line by
+       * line. A line-by-line scan asks "does this sentence fit on one line", and prettier answers
+       * that, not the author: `35% of them by the | 2026-08 telemetry` wrapped across two lines and
+       * walked past a pattern written to catch exactly it. Every phrase here is a sentence, and a
+       * sentence is not a line.
+       */
+      const flat = text
+        .split('\n')
+        .map((line) => line.replace(/^\s*(\/\/|\*|\/\*)?\s?/, ''))
+        .join(' ')
+        .replace(/\s+/g, ' ');
+      for (const { pattern, why } of FIELD_NUMBER_PATTERNS) {
+        const hit = flat.match(pattern);
+        if (hit !== null)
+          found.push(`${file.replace(REPO, '.')}: ${why} — ${hit[0].slice(0, 120)}`);
+      }
     }
 
     expect(

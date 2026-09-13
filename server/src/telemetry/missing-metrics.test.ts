@@ -5,8 +5,8 @@
  * point: the vocabulary was never too large, one event was firing for something it did not measure.
  *
  * 1. NO-SESSION ERRORS AS A FIRST-CLASS NUMBER.
- *    74% of daemons never call a tool, and of the 13 single-call sessions in one real day, 10
- *    bounced on "no browser session connected". The fact IS in the data — `session_errors[]`
+ *    Most daemons never call a tool, and most single-call sessions bounce on the same thing:
+ *    "no browser session connected". The fact IS in the data — `session_errors[]`
  *    fingerprints it — but only inside a nested array in the fat block, so no point-and-click tile
  *    can reach the biggest drop-off in the funnel.
  *

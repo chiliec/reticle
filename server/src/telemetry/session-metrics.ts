@@ -130,7 +130,7 @@ export class SessionMetrics {
   readonly #seenBugKinds = new Set<string>();
   /**
    * Tool errors meaning "the agent could not reach an app at all" — the single biggest drop-off in
-   * the funnel, and until now reachable only by unpacking `errors[]` in HogQL. 74% of daemons never
+   * the funnel, and until now reachable only by unpacking `errors[]` in HogQL. Most daemons never
    * call a tool, and of the sessions that made exactly one call, most bounced on this.
    */
   #noSessionErrors = 0;

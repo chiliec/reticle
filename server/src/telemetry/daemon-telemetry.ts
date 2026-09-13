@@ -46,8 +46,8 @@ const PROJECT_PROFILE_DELAY_MS = 5_000;
  * Exported because it is the BOUND ON WHAT IS LOST: a daemon that has served a tool never
  * idle-exits, so nothing calls shutdown, so its last partial window dies with the process. At 30
  * minutes against a median 28-minute session that meant the median session reported nothing at all.
- * Only non-empty windows emit, so a shorter interval costs nothing on the 74% of daemons that never
- * serve a tool.
+ * Only non-empty windows emit, so a shorter interval costs nothing on the large majority of daemons
+ * that never serve a tool.
  */
 export const SESSION_FLUSH_MS = 5 * 60 * 1000;
 
@@ -66,7 +66,7 @@ export const SESSION_FLUSH_MS = 5 * 60 * 1000;
  * Ninety seconds is chosen against what it protects: a session that did real work usually does it
  * early (snapshot -> act -> assert is seconds), so one early tick captures nearly all of it. It
  * costs nothing on the daemons that dominate the population, because only a NON-EMPTY window emits
- * and 74% of daemons never serve a tool at all.
+ * and most daemons never serve a tool at all.
  */
 export const FIRST_FLUSH_MS = 90 * 1000;
 

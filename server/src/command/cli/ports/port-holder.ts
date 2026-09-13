@@ -97,8 +97,8 @@ export function describeForeignHolder(
     "never the agent's mcp proxy), or run Reticle on a different port (`--port`), then retry.";
   if (null === holder) {
     /**
-     * We could not identify the holder — no `lsof` (every Windows user, and 35% of them by the
-     * 2026-08 telemetry; also a slim container), or the lookup timed out.
+     * We could not identify the holder — no `lsof` (every Windows user, a large share of the
+     * installed base; also a slim container), or the lookup timed out.
      *
      * This used to assert the port was held by "another process that is not a Reticle daemon",
      * which is a claim the null case has NO evidence for. It is also the likeliest thing to be

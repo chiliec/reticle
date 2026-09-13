@@ -9,7 +9,7 @@ Reticle is the **proof layer for AI agents** — it verifies a running web app f
 ## Monorepo layout
 
 ```
-core          @reticlehq/core         — bottom-of-graph foundation: wire contract, constants, zod schemas (deps: zod)
+core          @reticlehq/core         — bottom-of-graph foundation: wire contract, constants, zod schemas (deps: openreality, zod)
 openreality   @reticlehq/openreality  — the Open Verification Protocol: vocabulary, rules, `Realm`, `adjudicate()` (deps: zod)
 engine        @reticlehq/engine       — the rules that decide a verdict, with no browser, daemon or CLI attached
 conformance   —                       — drives the protocol's own scenarios against an implementation (PRIVATE, not published)
@@ -44,7 +44,7 @@ This is **one git repo** at the root (pnpm + turbo monorepo). The TS library pac
 
 ## Service boundaries (who owns what)
 
-- **`@reticlehq/core` is the contract.** Any message that crosses browser ↔ bridge ↔ agent is defined there as a constant + zod schema. It sits at the bottom of the graph (deps: `zod` only); everything depends on it, it depends on nothing. Never inline a wire string in `browser` or `server` — add it to `core`.
+- **`@reticlehq/core` is the contract.** Any message that crosses browser ↔ bridge ↔ agent is defined there as a constant + zod schema. It sits at the bottom of the graph: everything depends on it, and it depends only on `zod` and on `@reticlehq/openreality` — the protocol whose vocabulary the contract is written in. That second dependency is the floor, not a layer: openreality itself depends on `zod` alone, so the graph stays acyclic. This line used to read "deps: `zod` only … it depends on nothing", which stopped being true when the protocol was extracted and nobody updated the sentence. Never inline a wire string in `browser` or `server` — add it to `core`.
 - **`@reticlehq/browser` only touches the DOM/page.** It never imports Node APIs.
 - **`@reticlehq/server` only runs in Node.** It never imports DOM APIs.
 - **`@reticlehq/init` is build-time only.** It writes files and shells out to a package manager; it never opens a socket, reads daemon state or emits an event, and it imports NOTHING from `@reticlehq/server`. Everything it cannot know for itself — the release version, a tracer, the outcome reporter, the bridge pairing token, the declared install channel — arrives through the injected `InitHost` on `InitIo`. A new outward need is a new member on that interface, never an import.

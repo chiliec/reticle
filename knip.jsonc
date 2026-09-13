@@ -46,7 +46,7 @@
     "apps/electron-smoke": {
       "entry": ["electron/main.cjs", "electron/preload.cjs", "src/main.tsx"],
     },
-    "packages/*": {
+    "adapters/*/*": {
       "entry": ["src/index.ts", "scripts/*.mts"],
       "project": ["src/**"],
       "ignore": ["dist/**"],
@@ -64,5 +64,5 @@
   "ignoreBinaries": ["pgrep"],
 
   // Rust; outside every JS tool in this repo.
-  "ignoreWorkspaces": ["packages/tauri"],
+  "ignoreWorkspaces": ["adapters/realm/tauri"],
 }

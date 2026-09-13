@@ -30,7 +30,6 @@ import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-const { join } = path;
 import { ReticleCommand } from '@reticlehq/core';
 import { start, WebRealm, conformanceClient } from '@reticlehq/server';
 import { driveAll } from './drive.mjs';
