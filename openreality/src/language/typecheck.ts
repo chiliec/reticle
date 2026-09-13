@@ -30,6 +30,10 @@ export const TypeErrorKind = {
   UNRESOLVED_FLOW: 'unresolved-flow',
   /** Following `invoke` edges comes back to a document already on the path. */
   CYCLIC_INVOCATION: 'cyclic-invocation',
+  /** What the journey has established does not meet what the next document declares it needs. */
+  UNSATISFIED_REQUIREMENT: 'unsatisfied-requirement',
+  /** A document declares `requires` and the realm cannot say whether it holds. */
+  UNJUDGED_REQUIREMENT: 'unjudged-requirement',
 } as const;
 export type TypeErrorKind = (typeof TypeErrorKind)[keyof typeof TypeErrorKind];
 
@@ -92,11 +96,28 @@ export function typecheckProgram(
   return errors;
 }
 
-/** A document reduced to what composition needs: its name, and what it invokes, in order. */
+/** A document reduced to what composition needs: its name, its state contract, and what it invokes. */
 export interface CompositeDocument {
   name: string;
+  /** What must hold before step 1. Realm-opaque — this module never looks inside it. */
+  requires?: unknown;
+  /** What a caller may assume afterwards. Realm-opaque. */
+  ensures?: unknown;
   steps: readonly { invoke?: string }[];
 }
+
+/**
+ * Does what the journey has established meet what the next document needs?
+ *
+ * Supplied by the REALM, because only it knows what its own state values mean — a protocol that
+ * compared these would be a protocol with an opinion about what a subject is, which is the opinion
+ * it exists not to have.
+ *
+ * `undefined` is a real and expected answer: "I cannot tell." It must never be read as agreement.
+ * A check that treats "cannot tell" as "yes" can only ever pass, and a guard that cannot fail is
+ * worse than no guard, because it reads as one.
+ */
+export type SatisfiesRequirement = (ensures: unknown, requires: unknown) => boolean | undefined;
 
 /**
  * Refuse a composite by READING it — no realm, no subject, no action spent.
@@ -117,20 +138,55 @@ export interface CompositeDocument {
 export function typecheckComposite(
   documents: readonly CompositeDocument[],
   entry: string,
+  /**
+   * Omitted means the state contract is not checked at all, and that is deliberate: composition
+   * without contracts is still composition, and a realm that has not implemented the comparison
+   * must not have its documents refused for it.
+   */
+  satisfies?: SatisfiesRequirement,
 ): FlowTypeError[] {
   const byName = new Map(documents.map((d) => [d.name, d]));
   const errors: FlowTypeError[] = [];
   const done = new Set<string>();
   const path: string[] = [];
+  let stitching = true;
 
-  const walk = (name: string, step: number): void => {
+  /**
+   * What the journey has established by the time a step runs.
+   *
+   * Carried forward rather than compared pairwise, so a document three invocations later can rely
+   * on something the first one established — which is how a real onboarding reads. The protocol
+   * does not merge these; it hands the realm the most recent guarantee, and a realm that needs
+   * accumulation can express it in its own `ensures` values.
+   */
+  const check = (doc: CompositeDocument, established: unknown, step: number): boolean => {
+    if (!stitching || satisfies === undefined || doc.requires === undefined) return true;
+    const held = satisfies(established, doc.requires);
+    if (true === held) return true;
+    errors.push(
+      undefined === held
+        ? {
+            step,
+            kind: TypeErrorKind.UNJUDGED_REQUIREMENT,
+            detail: `"${doc.name}" declares a requirement this realm cannot judge, so the composite cannot be shown to stitch`,
+          }
+        : {
+            step,
+            kind: TypeErrorKind.UNSATISFIED_REQUIREMENT,
+            detail: `"${doc.name}" needs something the journey has not established by this point`,
+          },
+    );
+    return false;
+  };
+
+  const walk = (name: string, step: number, established: unknown): unknown => {
     if (path.includes(name)) {
       errors.push({
         step,
         kind: TypeErrorKind.CYCLIC_INVOCATION,
         detail: `invocation returns to a document already running: ${[...path, name].join(' → ')}`,
       });
-      return;
+      return established;
     }
     const doc = byName.get(name);
     if (doc === undefined) {
@@ -139,17 +195,39 @@ export function typecheckComposite(
         kind: TypeErrorKind.UNRESOLVED_FLOW,
         detail: `no document named "${name}"; the set holds: ${[...byName.keys()].join(', ') || '(nothing)'}`,
       });
-      return;
+      return established;
     }
-    if (done.has(name)) return; // reuse, not recursion
-    path.push(name);
-    doc.steps.forEach((s, index) => {
-      if (s.invoke !== undefined) walk(s.invoke, index);
-    });
-    path.pop();
-    done.add(name);
+    // Only an INVOKED document is stitch-checked. The entry document's `requires` is a precondition
+    // on the SUBJECT — nothing precedes it to establish anything, so judging it here would refuse
+    // every composite that declares one. That check belongs at replay, against the real subject.
+    if (path.length > 0 && !check(doc, established, step)) {
+      // Stop stitching this branch once one requirement has failed. What the journey has
+      // established is no longer knowable, so every later comparison is a consequence of the error
+      // already named — the same rule `typecheckProgram` applies to a step that cannot run. The
+      // structure below is still walked, because a cycle or a missing document is worth finding
+      // whatever the state contract says.
+      stitching = false;
+    }
+    // Re-walked even when already finished, because the same document reached by a second route
+    // meets a DIFFERENT established state and may stitch there and not here. Cycles are still
+    // caught by the path stack, so this cannot run away; `done` now only records that its own
+    // structure has been checked.
+    if (!done.has(name)) {
+      path.push(name);
+      // The entry document's own `requires` SEEDS what is established: a composite that declares
+      // it starts signed-out is telling the first invoked document exactly that. For an invoked
+      // document the requirement has just been checked and held, so using it as the new baseline
+      // says no more than was already proved. `ensures` wins where it is given.
+      let carried = doc.ensures ?? doc.requires ?? established;
+      doc.steps.forEach((s, index) => {
+        if (s.invoke !== undefined) carried = walk(s.invoke, index, carried);
+      });
+      path.pop();
+      done.add(name);
+    }
+    return doc.ensures ?? doc.requires ?? established;
   };
 
-  walk(entry, 0);
+  walk(entry, 0, undefined);
   return errors;
 }
