@@ -72,6 +72,7 @@ import {
 } from '../../memory/intent/inline-intent.js';
 import { bodiesNotCaptured } from '@reticlehq/engine/evidence/uncaptured-bodies.js';
 import { bodyIsEvidence, type BodyMode } from '@reticlehq/engine/window/body-relevance.js';
+import { foldAssetNoise } from '@reticlehq/engine/window/asset-noise.js';
 import { bodyClauseRefusal } from '@reticlehq/engine/evidence/body-capture-remedy.js';
 import { withControl } from '../../portal/session/control-envelope.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
@@ -583,6 +584,12 @@ export const OBSERVE_TOOLS: ToolDef[] = [
         .describe(
           'Keep only the most recent N matching calls (older are dropped and counted in droppedOldest) — cuts tokens on a wide window. Defaults to 200 when omitted; pass a higher number for more, or scope with since/until.',
         ),
+      assets: z
+        .boolean()
+        .optional()
+        .describe(
+          "List the dev server's own successful asset GETs (modules, styles, maps, Vite plumbing). Omitted they are FOLDED into `assetsFolded {count,bytes,sample,why,how}` — measured at 68% of this tool's bytes on a real drive, carrying no verdict. A FAILED asset is never folded, and nothing folds once you filter.",
+        ),
       bodies: z
         .boolean()
         .optional()
@@ -688,10 +695,17 @@ export const OBSERVE_TOOLS: ToolDef[] = [
       // A zero-match FILTER already reports what did fire (netEmptyHint above). Zero calls at all
       // fell through as a bare `[]`, which is indistinguishable from an observer that is not
       // recording — and those need opposite responses. Say the look happened.
+      /*
+       * Fold the bundler's own traffic unless the caller asked for it or filtered for something.
+       * A filter means they are asking about particular calls, and answering a narrowed question
+       * with a summary is refusing it.
+       */
+      const wantAssets = 'boolean' === typeof args['assets'] ? args['assets'] : false;
+      const { calls: listed, folded } = foldAssetNoise(calls, { folding: !wantAssets && !named });
       return withSizeCost(
         noteEmptyRead(
           {
-            calls,
+            calls: listed,
             ...(droppedOldest > 0 ? { total: matched.length, droppedOldest } : {}),
             ...('none' !== bodyMode ? bodiesNotCaptured(calls, session.sdkVersion) : {}),
             /*
@@ -700,6 +714,7 @@ export const OBSERVE_TOOLS: ToolDef[] = [
              * this is a capability that degrades without saying so, which is the failure mode that
              * cost this project a feature that looked wired and was inert.
              */
+            ...(folded !== undefined ? { assetsFolded: folded } : {}),
             ...(withheld > 0
               ? {
                   bodiesWithheld: {

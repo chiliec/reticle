@@ -47,8 +47,12 @@ const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
  * bytes and 68% of the payload was URLs of exactly this kind — `/src/main.tsx`, `/@vite/client`,
  * `/node_modules/.vite/deps/...`. They carry no verdict and are the reason the tool cost 59,458
  * bytes on that drive.
+ *
+ * Exported because the same question is asked twice: whether to keep this call's BODY, and whether
+ * to list the call at all. One regular expression, so the two answers cannot drift apart and start
+ * disagreeing about what an asset is.
  */
-const ASSET =
+export const ASSET_URL =
   /\.(m?[jt]sx?|css|map|woff2?|png|jpe?g|svg|gif|ico|webp|avif)(\?|$)|\/@vite\/|\/node_modules\//i;
 
 /** True when the caller's filters singled this call out, so its body is the thing being asked about. */
@@ -81,5 +85,5 @@ export function bodyIsEvidence(
   // Anything the app exchanged as data, rather than something the browser fetched to run.
   if ((call.contentType ?? '').toLowerCase().includes('json')) return true;
   // What is left is a successful GET of something that looks like a build artifact.
-  return !ASSET.test(call.url ?? '');
+  return !ASSET_URL.test(call.url ?? '');
 }

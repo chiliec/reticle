@@ -98,6 +98,7 @@ const PINNED: readonly PublicSurface[] = [
       'question/reaction.ts',
       'window/adversary.ts',
       'window/ambient.ts',
+      'window/asset-noise.ts',
       'window/body-relevance.ts',
       'window/engine-host.ts',
       'window/event-filters.ts',
