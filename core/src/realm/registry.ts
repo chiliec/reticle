@@ -173,11 +173,62 @@ export function isKnownRealm(runtime: string | undefined): runtime is AppRuntime
  * a page that may be newer than this build, so "a realm I have never heard of" is a case that has to
  * exist -- and typing the parameter as the enum would describe a guarantee the wire cannot make.
  */
+/**
+ * Realms a host registered at startup, for domains this package does not ship.
+ *
+ * `REALMS` above is a compile-checked `Record<AppRuntime, …>` and stays that way: leaving out a
+ * shell we ship must remain a compile error. But that same shape is a wall for everybody else —
+ * an Android realm, a game realm, a CLI realm cannot be NAMED without a pull request against
+ * `@reticlehq/core`, and a protocol meant for industries that have never heard of this repository
+ * cannot require one.
+ *
+ * Separate map rather than a mutable `REALMS`, so a registration can never shadow or delete a
+ * built-in. Extension must not mean an adopter can redefine `web`.
+ */
+const REGISTERED = new Map<string, RealmTraits>();
+
+/** The prefix every extension in this protocol carries. Not decoration — see `registerRealm`. */
+const EXTENSION_PREFIX = 'x-';
+
+/**
+ * Teach this process about a realm it does not ship.
+ *
+ * The `x-` prefix is required for two reasons that are both about the future: a third-party name
+ * can never collide with one this package later ships, and a reader can tell at a glance which
+ * realms are ours and which are somebody's. It is the same convention `ChannelIdSchema` already
+ * enforces for channels.
+ *
+ * Throws rather than returning a result. A realm that failed to register would answer `web` to
+ * everything — the most plausible-looking wrong answer available — and the caller is a host at
+ * startup, where a throw is read immediately and a silent miss is not read at all.
+ */
+export function registerRealm(runtime: string, traits: RealmTraits): void {
+  if (!runtime.startsWith(EXTENSION_PREFIX)) {
+    throw new Error(
+      `realm "${runtime}" must start with "${EXTENSION_PREFIX}" — the prefix keeps a realm this ` +
+        'package might later ship from colliding with yours, and tells a reader whose realm it is.',
+    );
+  }
+  if (Object.hasOwn(REALMS, runtime)) {
+    throw new Error(`realm "${runtime}" is built in and cannot be redefined`);
+  }
+  REGISTERED.set(runtime, traits);
+}
+
+/** Every runtime this process understands: the built-ins, plus whatever a host registered. */
+export function knownRuntimes(): string[] {
+  return [...Object.keys(REALMS), ...REGISTERED.keys()];
+}
+
+/** Forget every registered realm. For tests and for a host rebuilding its own registry. */
+export function resetRegisteredRealms(): void {
+  REGISTERED.clear();
+}
+
 export function realmOf(runtime: string | undefined): RealmTraits {
-  const known = Object.hasOwn(REALMS, runtime ?? '')
-    ? REALMS[runtime as AppRuntime]
-    : REALMS[AppRuntime.WEB];
-  return known;
+  const name = runtime ?? '';
+  if (Object.hasOwn(REALMS, name)) return REALMS[name as AppRuntime];
+  return REGISTERED.get(name) ?? REALMS[AppRuntime.WEB];
 }
 
 /**
