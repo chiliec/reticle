@@ -6,6 +6,7 @@ import {
   type CommandResult,
 } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
+import { formatStepAddress } from '@reticlehq/openreality';
 import {
   predicateToExpect,
   enforcedOnReplay,
@@ -314,6 +315,13 @@ interface ReplayStepResult {
   ok: boolean;
   error?: string;
   note?: string;
+  /**
+   * Where this step lives, rendered, when the program is a composite.
+   *
+   * `mid#0 (invoked from top#0)`. Absent for a flat program, where the position in this array is
+   * already the answer and an address would be noise on every step of every replay.
+   */
+  at?: string;
 }
 
 /** Re-execute every step of a compiled program in order, stopping at the first failure. */
@@ -321,9 +329,55 @@ export async function replayProgram(
   session: Session,
   program: CompiledProgram,
   confirmDangerous = false,
+  /**
+   * How to find an invoked document. Absent means this replayer cannot follow one — and an
+   * unfollowable invocation FAILS rather than being skipped, because a composite that reports green
+   * having silently not run a sub-journey is the false green this layer exists to prevent, arriving
+   * through the feature meant to strengthen it.
+   */
+  resolve?: (name: string) => CompiledProgram | undefined,
+  /** The invocation chain that reached this program, nearest caller first. Empty at the top. */
+  via: readonly { flow: string; step: number }[] = [],
 ): Promise<ReplayStepResult[]> {
   const results: ReplayStepResult[] = [];
+  let index = -1;
   for (const step of program.steps) {
+    index += 1;
+    if (step.invoke !== undefined) {
+      const site = { flow: program.name, step: index, via };
+      const address = formatStepAddress(site);
+      const chain = [...via.map((v) => v.flow), program.name];
+      if (chain.includes(step.invoke)) {
+        // Typecheck catches this at rest and the replayer does not trust it: the document set can
+        // change between the check and the run, and an infinite replay is not a thing to find out
+        // about live.
+        results.push({
+          tool: step.tool,
+          ok: false,
+          at: address,
+          error: `invocation returns to a document already running: ${[...chain, step.invoke].join(' → ')}`,
+        });
+        break;
+      }
+      const sub = resolve?.(step.invoke);
+      if (sub === undefined) {
+        results.push({
+          tool: step.tool,
+          ok: false,
+          at: address,
+          error: `cannot replay "${step.invoke}": it was not found, so this journey would report green having never run it`,
+        });
+        break;
+      }
+      results.push({ tool: step.tool, ok: true, at: address, note: `entered ${step.invoke}` });
+      const nested = await replayProgram(session, sub, confirmDangerous, resolve, [
+        { flow: program.name, step: index },
+        ...via,
+      ]);
+      results.push(...nested);
+      if (nested.some((r) => !r.ok)) break;
+      continue;
+    }
     try {
       if (step.tool === ReticleTool.ACT_SEQUENCE) {
         const subs = Array.isArray(step.args['steps']) ? step.args['steps'] : [];
