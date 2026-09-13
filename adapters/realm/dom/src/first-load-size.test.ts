@@ -1,7 +1,7 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { buildSync } from 'esbuild';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -30,17 +30,6 @@ import { join } from 'node:path';
  */
 
 const PACKAGE_ROOT = join(__dirname, '..');
-/**
- * Where the repository is, asked rather than counted.
- *
- * Counting `..` segments up to the root is a statement about how deep this package happens to sit,
- * and this package has just moved. Three checks broke on that count in one afternoon, each one
- * silently reading the wrong directory. Git already knows the answer.
- */
-const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
-  cwd: PACKAGE_ROOT,
-  encoding: 'utf8',
-}).trim();
 const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
 
 /**
@@ -204,40 +193,28 @@ interface Chunk {
   readonly entryPoint?: string;
 }
 
-/** Where the bundler lives. It is a build dependency here, not something this package ships. */
-function bundlerPath(): string {
-  const found = execFileSync(
-    'bash',
-    [
-      '-c',
-      `ls -d "${REPO_ROOT}"/node_modules/.pnpm/esbuild@*/node_modules/esbuild/bin/esbuild 2>/dev/null | tail -1`,
-    ],
-    { encoding: 'utf8' },
-  ).trim();
-  return found;
-}
-
-/** Bundle the entry and report what a first load costs, and how much of that is the panel. */
+/**
+ * Bundle the entry and report what a first load costs, and how much of that is the panel.
+ *
+ * Through esbuild's own API rather than its binary. Finding the binary used to mean globbing
+ * `node_modules/.pnpm/esbuild@*` through `bash`, and on Windows that glob FINDS a file it cannot
+ * run: the POSIX install swaps `bin/esbuild` for the native executable, the Windows one leaves a
+ * Node shim there and puts the real `.exe` in `@esbuild/win32-x64`. So the path existed, the
+ * check below reported a bundler, and the spawn died `ENOENT` on every Windows run.
+ */
 function firstLoad(): { bytes: number; panelBytes: number; deferredBytes: number } {
-  const out = mkdtempSync(join(tmpdir(), 'reticle-first-load-'));
-  execFileSync(
-    bundlerPath(),
-    [
-      DIST_ENTRY,
-      '--bundle',
-      '--format=esm',
-      '--splitting',
-      '--minify',
-      `--outdir=${out}`,
-      '--log-level=error',
-      `--metafile=${join(out, 'meta.json')}`,
-    ],
-    { encoding: 'utf8' },
-  );
-  const meta = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')) as {
-    outputs: Record<string, Chunk>;
-  };
-  const chunks = meta.outputs;
+  const meta = buildSync({
+    entryPoints: [DIST_ENTRY],
+    bundle: true,
+    format: 'esm',
+    splitting: true,
+    minify: true,
+    outdir: 'first-load', // splitting needs one; nothing is written
+    write: false,
+    logLevel: 'error',
+    metafile: true,
+  }).metafile;
+  const chunks = meta.outputs as Record<string, Chunk>;
   const entry = Object.keys(chunks).find((name) => chunks[name]?.entryPoint !== undefined) ?? '';
 
   // Only the imports that happen on the way in. A dynamic import is by definition not one of those.
@@ -267,11 +244,14 @@ function firstLoad(): { bytes: number; panelBytes: number; deferredBytes: number
 }
 
 describe('what a page downloads just for loading the SDK', () => {
-  it('there is a build to measure, and a bundler to measure it with', () => {
+  it('there is a build to measure, and a bundler that really bundled it', () => {
     // Without this the whole check passes on a missing build, reporting a first load of zero --
     // which reads as spectacular good news.
     expect(existsSync(DIST_ENTRY), `${DIST_ENTRY} is missing — run pnpm build`).toBe(true);
-    expect(bundlerPath(), 'no bundler found, so nothing below measured anything').not.toBe('');
+    expect(
+      firstLoad().bytes,
+      'the bundler produced nothing, so nothing below measured anything',
+    ).toBeGreaterThan(0);
   });
 
   it('really does defer something, so the numbers below are not a bundle that never split', () => {
