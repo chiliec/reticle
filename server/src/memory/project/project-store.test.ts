@@ -112,6 +112,20 @@ describe('ProjectStore — temp-dir filesystem, never touches the repo', () => {
     expect(r.file.runs.some((x) => 'r0' === x.summary)).toBe(false);
   }, 30_000);
 
+  /*
+   * 120s, not 30s, and the reason is Windows CI rather than anything this test asserts.
+   *
+   * Each `recordRun` is a locked read-modify-write: read the file, parse it, append, cap, write it
+   * back — plus a recursive `mkdir` that is a syscall even when the directory is already there. Over
+   * TOTAL + 25 iterations that is ~675 filesystem operations against a file that grows to two
+   * hundred records, so the bytes moved are O(n²). On this machine the whole FILE runs in 190ms. On
+   * a Windows runner the same loop passed 30,000ms and was killed — a ratio north of 150x, which is
+   * what a virus scanner reading every write of a growing file looks like.
+   *
+   * This is a BOUND, not a duration: nothing below asserts how long anything took. A broken eviction
+   * rule still fails on the assertion, immediately, on every platform. The only thing a bigger
+   * ceiling costs is how long a genuine hang takes to report.
+   */
   it('7: keeps every distinct flow last-known-good even past TOTAL (durable local regression memory)', async () => {
     // One run each of many DISTINCT flows: each flow's latest (its only) run is its last-known-good and
     // must never be evicted by the TOTAL cap — that's what lets a fresh session answer "did my last run
@@ -124,8 +138,22 @@ describe('ProjectStore — temp-dir filesystem, never touches the repo', () => {
     expect(r.file.runs).toHaveLength(PROJECT_RUN_CAP.TOTAL + 25);
     expect(r.file.runs.some((x) => 'flow-0' === x.name)).toBe(true); // the oldest flow's LKG survives
     expect(r.file.runs.at(-1)?.name).toBe(`flow-${PROJECT_RUN_CAP.TOTAL + 24}`);
-  }, 30_000);
+  }, 120_000);
 
+  /*
+   * 120s, not 30s, and the reason is Windows CI rather than anything this test asserts.
+   *
+   * Each `recordRun` is a locked read-modify-write: read the file, parse it, append, cap, write it
+   * back — plus a recursive `mkdir` that is a syscall even when the directory is already there. Over
+   * TOTAL + 25 iterations that is ~675 filesystem operations against a file that grows to two
+   * hundred records, so the bytes moved are O(n²). On this machine the whole FILE runs in 190ms. On
+   * a Windows runner the same loop passed 30,000ms and was killed — a ratio north of 150x, which is
+   * what a virus scanner reading every write of a growing file looks like.
+   *
+   * This is a BOUND, not a duration: nothing below asserts how long anything took. A broken eviction
+   * rule still fails on the assertion, immediately, on every platform. The only thing a bigger
+   * ceiling costs is how long a genuine hang takes to report.
+   */
   it('7b: a rarely-run flow keeps its last-known-good when busy flows fill the cap', async () => {
     await store.recordRun({ ...RUN, name: 'early' });
     // Four busy flows each hitting PER_NAME fills TOTAL with newer runs — under the old cap this evicted
@@ -136,7 +164,7 @@ describe('ProjectStore — temp-dir filesystem, never touches the repo', () => {
       }
     }
     expect(await store.lastRun('early')).toBeDefined();
-  }, 30_000);
+  }, 120_000);
 
   // ---- EDGE / INVALID ----
 

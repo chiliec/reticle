@@ -62,8 +62,23 @@ export function importsOf(sourceRoot: string, file: string): string[] {
  * useful question is always "who pulled this in", and the answer is otherwise a manual search.
  */
 export function reachableFrom(sourceRoot: string, entry: string): Map<string, string> {
-  const reachedVia = new Map<string, string>([[entry, entry]]);
-  const queue = [entry];
+  /*
+   * The entry is normalised the same way `resolveImport` normalises everything this walker
+   * DISCOVERS, because callers build it with `join()` and on Windows that yields `features\ee\x.ts`
+   * while every other key in the map is `features/ee/x.ts`. A caller then filters the result with
+   * `startsWith('features/ee/')` and the seed — the one path it did not walk to — silently drops
+   * out. That is how `ee-boundary`, the guard that says the free build cannot reach the
+   * separately-licensed code, passed on Windows while checking nothing at all: both of its real
+   * assertions expect an EMPTY list, so a walker that finds nothing agrees with them. Only its
+   * negative control could see it, and that is the whole reason the negative control exists.
+   *
+   * Both separators, not `sep`: on a POSIX machine `sep` is `/`, so splitting on it leaves a
+   * backslash path untouched and the rule stays untestable exactly where everybody develops. The
+   * first version of this fix did that and the test written to catch it went red immediately.
+   */
+  const start = entry.split(/[\\/]/).join('/');
+  const reachedVia = new Map<string, string>([[start, start]]);
+  const queue = [start];
   while (queue.length > 0) {
     const file = queue.shift();
     if (file === undefined) continue;
