@@ -15,7 +15,7 @@ You do not need to understand the codebase to check it. **Reticle** drives every
 ## 1. Ask the app what it can do
 
 ```
-reticle_capabilities({ sessionId })
+reticle_run({ tool: "reticle_capabilities", args: { sessionId } })
 ```
 
 About 1 KB, and it is the app describing its own testable surface: every registered testid, every domain signal, the stores, and the saved flows with their steps. That beats snapshotting the DOM and inferring intent from element names, and it is the cheapest orientation available.

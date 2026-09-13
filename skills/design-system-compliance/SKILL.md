@@ -47,7 +47,7 @@ A design review that only compares colors passes a button nobody can press.
 ## Animations
 
 ```
-reticle_animations({ sessionId })
+reticle_run({ tool: "reticle_animations", args: { sessionId } })
 ```
 
 Returns running and recently completed animations with their targets and timing. Two things worth checking after any motion work: an animation you added that **never appears here** did not run, and one whose duration does not match the token is off-spec. Both look identical in a screenshot.

@@ -15,8 +15,9 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { ReticleTool } from '@reticlehq/core';
+import { ReticleTool, FlowStepTool } from '@reticlehq/core';
 import { REPO_ROOT } from '../../machine/repo-root.js';
+import { CORE_TOOL_NAMES } from './tool-surface.js';
 
 const REPO = REPO_ROOT;
 /** The docs an AGENT is pointed at. Internal design notes are not a contract with anyone. */
@@ -28,7 +29,34 @@ const AGENT_DOCS = [
   'docs/agent-cheatsheet.md',
   'docs/debugging.md',
   'docs/usage.md',
+  // Every published skill. These are the files a user PASTES into their agent, so they are the most
+  // agent-facing documents in the repository — and they were not checked here at all, which is how
+  // five call-shaped examples of tools that are not advertised came to ship. `plugin/SKILL.md` is
+  // the marketplace copy of the root skill and travels the same way.
+  ...readdirSync(join(REPO_ROOT, 'skills'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join('skills', entry.name, 'SKILL.md')),
+  'plugin/SKILL.md',
 ];
+
+/**
+ * The tools an agent is handed directly, so a bare `name({...})` in a doc is a call it can make.
+ *
+ * Everything else exists but is NOT advertised, and reaching it takes one `reticle_run` hop. The
+ * root SKILL.md states that rule explicitly and follows it; the `skills/` directory did not, and a
+ * skill that shows `reticle_clock({ ... })` as a bare call sends the reader to a tool that is not
+ * on their list. That is worse than saying nothing, and the repo's own tool-surface comment says
+ * why: a tool an agent must already know about is a tool that never gets called.
+ */
+const ADVERTISED: ReadonlySet<string> = new Set([
+  ...CORE_TOOL_NAMES,
+  ReticleTool.RUN,
+  ReticleTool.TOOLS,
+  ReticleTool.VERIFY,
+  FlowStepTool.ACT,
+  FlowStepTool.ACT_SEQUENCE,
+  FlowStepTool.ACT_AND_WAIT,
+]);
 
 /** Every `reticle_*` identifier we actually ship: tool names, plus every event any source emits. */
 function shippedNames(): Set<string> {
@@ -66,6 +94,30 @@ describe('agent-facing docs name only things that exist', () => {
         ...new Set([...text.matchAll(/`(reticle_[a-z0-9_]+)`/g)].map((m) => m[1] as string)),
       ].filter((name) => !shipped.has(name));
       expect(ghosts, `named in ${doc} but shipped nowhere`).toEqual([]);
+    });
+
+    it(`${doc} shows no bare call to an unadvertised tool`, () => {
+      let text: string;
+      try {
+        text = readFileSync(join(REPO, doc), 'utf8');
+      } catch {
+        return;
+      }
+      const bare: string[] = [];
+      text.split('\n').forEach((line, i) => {
+        // A `reticle_run({ tool: "x" })` on the line IS the supported shape, so the line is fine.
+        if (/reticle_run\s*\(/.test(line)) return;
+        for (const m of line.matchAll(/(?<!["'`\w])(reticle_[a-z0-9_]+)\s*\(/g)) {
+          const name = m[1] as string;
+          if (!ADVERTISED.has(name)) bare.push(`${doc}:${i + 1} ${name}`);
+        }
+      });
+      expect(
+        bare,
+        'shown as a direct call, but not on the advertised tool list — an agent reading this ' +
+          'cannot make that call. Write it as reticle_run({ tool: "…", args: { … } }), which is ' +
+          'the supported shape rather than a workaround.',
+      ).toEqual([]);
     });
   }
 });
