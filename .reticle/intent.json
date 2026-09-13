@@ -1634,6 +1634,27 @@
         "grade": "presence",
         "at": 1789218456428
       }
+    },
+    "flow:demo/signin": {
+      "id": "flow:demo/signin",
+      "statement": "a signed-out user signing in makes the app announce auth:granted",
+      "state": "bound",
+      "declaredAt": 1789282663032,
+      "binding": {
+        "flow": "demo/signin"
+      },
+      "surface": {
+        "flow": "demo/signin"
+      }
+    },
+    "flow:demo-full": {
+      "id": "flow:demo-full",
+      "statement": "the onboarding journey signs a user in by running the signin sub-flow",
+      "state": "declared",
+      "declaredAt": 1789282682186,
+      "surface": {
+        "flow": "demo-full"
+      }
     }
   }
 }

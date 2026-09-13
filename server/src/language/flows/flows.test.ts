@@ -232,11 +232,24 @@ describe('FlowStore — temp-dir fs, never touches the repo', () => {
   });
 
   it(
-    '9: save rejects an absolute / slashed name',
+    '9: save ACCEPTS a namespaced name and still refuses one that could escape',
     async () => {
-      for (const name of ['a/b', '/etc/x']) {
+      // `a/b` used to be refused with the escapes, from before the replay grammar addressed
+      // documents by path. A composite names the sub-journey it invokes — `onboarding/signup` — so
+      // refusing a separator refused every name the language is built on, which is what a real
+      // drive hit the moment a composite was saved.
+      //
+      // Inverted rather than deleted: the invariant was never "no separators", it was "cannot leave
+      // the flows directory", and that is now guaranteed by CONSTRUCTION — no segment may contain a
+      // dot, so `..` cannot be spelled, and every segment must start with a letter or digit, so a
+      // leading, trailing or doubled separator cannot either.
+      expect(await store.save(program('onboarding/signup', []))).toMatchObject({ ok: true });
+      for (const name of ['/etc/x', '../escape', 'a/../b', 'a//b', 'trailing/']) {
         const saved = await store.save(program(name, []));
-        expect(saved).toEqual({ ok: false, code: FlowErrorCode.INVALID_NAME });
+        expect(saved, `"${name}" must not be saveable`).toEqual({
+          ok: false,
+          code: FlowErrorCode.INVALID_NAME,
+        });
       }
     },
     FLOW_ROUND_TRIP_TIMEOUT_MS,

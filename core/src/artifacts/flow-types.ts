@@ -316,6 +316,13 @@ export interface FlowStepResult {
   /** The testid/signal value the step is bound to (the re-resolved anchor). */
   anchor: string;
   /**
+   * Where this step lives, rendered, when the flow is a COMPOSITE — `signin#0 (invoked from full#1)`.
+   *
+   * Absent for a flat flow, where `step` is already the whole answer and an address on every row
+   * would be noise on every replay of every flow.
+   */
+  at?: string;
+  /**
    * The route (pathname) the page was on when this step ran — the "which page" of the journey.
    * Additive/optional: present when a route is observable, absent in route-less contexts (e.g. a
    * fake session with no route events). Lets a replay result read as a page-by-page journey.

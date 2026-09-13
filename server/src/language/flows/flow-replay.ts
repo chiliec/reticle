@@ -1,5 +1,5 @@
 import { mayResumeByReplayingPrefix } from '@reticlehq/core';
-import { Surface } from '@reticlehq/openreality';
+import { Surface, formatStepAddress } from '@reticlehq/openreality';
 import { span } from '../../trace.js';
 import { routeOfEvent } from '@reticlehq/engine/question/predicate/predicate-route.js';
 import { stepEffect } from '@reticlehq/engine/evidence/step-effect.js';
@@ -552,6 +552,19 @@ async function runSignalStep(
 export interface ReplayFromOptions {
   from?: number;
   /**
+   * How to load a flow this one INVOKES. Absent means invocations cannot be followed.
+   *
+   * A composite whose sub-flow cannot be loaded must FAIL and say so. It must not be reported as a
+   * missing anchor — which is what happened before this existed: the invoke step fell through to
+   * the anchor path and replay went looking for an element with a testid literally named
+   * `demo/signin`, then reported the journey as NO LONGER TRUE with a suggested fix of "sign-out".
+   * Every word of that was wrong, and it was found by driving, not by a unit test — the in-memory
+   * replayer had honoured invocations for an hour by then. Two replay paths; one was wired.
+   */
+  resolveFlow?: (name: string) => Promise<FlowFile | undefined>;
+  /** The invocation chain that reached this flow, nearest caller first. Empty at the top. */
+  via?: readonly { flow: string; step: number }[];
+  /**
    * Which kind of subject this is. Decides whether re-driving the prefix is allowed at all.
    *
    * Defaults to `web`, which is the permissive answer — correct for the only surface that resumes
@@ -576,6 +589,77 @@ function resumableFrom(options: ReplayFromOptions): number {
   const asked = Math.max(0, options.from ?? 0);
   if (0 === asked) return 0;
   return mayResumeByReplayingPrefix(options.surface ?? Surface.WEB) ? asked : 0;
+}
+
+/**
+ * Run an `invoke` step: load the named flow and replay it, or fail saying why.
+ *
+ * Never silently skipped. An invocation that cannot be followed and is reported as OK would mean a
+ * composite replays green having run none of its sub-journeys — a false green arriving through the
+ * feature meant to make verification stronger.
+ *
+ * The nested steps are NOT spliced into the caller's results. A composite's own step list stays its
+ * own, and the sub-journey's outcome is summarised on the invocation, so a reader sees the shape
+ * they recorded rather than a flattened list that has lost every boundary.
+ */
+async function runInvokeStep(
+  session: FlowReplaySession,
+  flow: FlowFile,
+  step: FlowStep,
+  index: number,
+  waitForSignal: WaitForSignal,
+  signalTimeoutMs: number,
+  confirmDangerous: boolean,
+  sleep: Sleep,
+  options: ReplayFromOptions,
+): Promise<FlowStepResult> {
+  const name = step.invoke ?? '';
+  const via = options.via ?? [];
+  const here = { flow: flow.name, step: index, via };
+  const address = formatStepAddress(here);
+  const base = { step: index, tool: FlowStepTool.INVOKE, anchor: name, at: address };
+  const chain = [...via.map((v) => v.flow), flow.name];
+  if (chain.includes(name)) {
+    return {
+      ...base,
+      ok: false,
+      error: `invocation returns to a flow already running: ${[...chain, name].join(' → ')}`,
+    };
+  }
+  const sub = options.resolveFlow === undefined ? undefined : await options.resolveFlow(name);
+  if (sub === undefined) {
+    return {
+      ...base,
+      ok: false,
+      error: `cannot replay "${name}": it was not found, so this journey would report green having never run it`,
+    };
+  }
+  // `from` is deliberately dropped rather than forwarded: it is a REPORTING offset into the
+  // caller's own step list, and applying it inside a sub-journey would silently hide that
+  // journey's first steps for a reason that has nothing to do with it.
+  const { from: _ignored, ...carried } = options;
+  const nested = await replayFlow(
+    session,
+    sub,
+    waitForSignal,
+    signalTimeoutMs,
+    confirmDangerous,
+    sleep,
+    {
+      ...carried,
+      via: [{ flow: flow.name, step: index }, ...via],
+    },
+  );
+  const failed = nested.find((r) => false === r.ok);
+  if (failed !== undefined) {
+    return {
+      ...base,
+      ok: false,
+      error: `"${name}" failed at ${failed.at ?? `step ${String(failed.step)}`}: ${failed.error ?? 'see that flow'}`,
+      ...(failed.drift === undefined ? {} : { drift: failed.drift }),
+    };
+  }
+  return { ...base, ok: true, note: `ran ${name} (${String(nested.length)} step(s))` };
 }
 
 export async function replayFlow(
@@ -615,6 +699,25 @@ export async function replayFlow(
     step.timeoutMs ?? flow.signalTimeoutMs ?? signalTimeoutMs;
   let index = 0;
   for (const step of flow.steps) {
+    if (step.invoke !== undefined) {
+      results.push(
+        await runInvokeStep(
+          session,
+          flow,
+          step,
+          index,
+          waitForSignal,
+          signalTimeoutMs,
+          confirmDangerous,
+          sleep,
+          options,
+        ),
+      );
+      const last = results[results.length - 1];
+      if (last !== undefined && false === last.ok) break;
+      index += 1;
+      continue;
+    }
     const label = anchorLabel(step.anchor);
     // The page this step runs on (the journey's "which page") — captured before the action.
     const page = currentRoute(session);

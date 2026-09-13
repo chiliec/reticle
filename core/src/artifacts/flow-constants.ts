@@ -91,7 +91,33 @@ export const FlowErrorCode = {
 export type FlowErrorCode = (typeof FlowErrorCode)[keyof typeof FlowErrorCode];
 
 /** A flow name must be a single safe path segment (no '/', '\\', '..', leading dot). */
-export const FLOW_NAME_PATTERN = /^[a-z0-9][a-z0-9-_]{0,63}$/i;
+/**
+ * ONE safe path segment: the guard for anything that becomes a single directory or file name.
+ *
+ * Session ids and run ids are this. They are joined into `.reticle/sessions/<id>/` and written to,
+ * and a session LABEL is supplied by the tab — so a separator here is a tab choosing where on disk
+ * Reticle writes. Flow names were this too until they became namespaced, and the two guards shared
+ * one pattern; widening the flow pattern silently widened these, which a test caught immediately.
+ * They answer different questions and now have different patterns: a flow name may be a path, a
+ * session id may never be one.
+ */
+export const SAFE_SEGMENT_PATTERN = /^[a-z0-9][a-z0-9-_]{0,63}$/i;
+
+/**
+ * A flow name: one or more `/`-separated segments.
+ *
+ * Namespaced because the replay grammar addresses documents by path — `onboarding/signup` is how a
+ * composite names the sub-journey it invokes, and the protocol's `FlowNameSchema` has said so since
+ * grammar v2. This pattern is the PERSISTENCE half, and while it stayed single-segment
+ * `reticle_flow_save` refused every name the language is built on. Found by driving a composite:
+ * recording worked, closing the boundary worked, saving it was refused.
+ *
+ * Traversal is impossible by CONSTRUCTION rather than by a filter. No segment may contain a dot at
+ * all, so `..` cannot be spelled; every segment must START with a letter or digit, so a leading,
+ * trailing or doubled separator cannot either. That is stronger than checking for `..`, because
+ * there is no encoding of it left to miss.
+ */
+export const FLOW_NAME_PATTERN = /^[a-z0-9][a-z0-9-_]{0,63}(?:\/[a-z0-9][a-z0-9-_]{0,63})*$/i;
 
 /**
  * The outcome of replaying an on-disk flow by re-resolving its

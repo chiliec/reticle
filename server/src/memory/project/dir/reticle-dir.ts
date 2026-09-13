@@ -1,10 +1,11 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { realmOf, type FlowName, type SessionId } from '@reticlehq/core';
 import {
   CONTRACT_FILE_VERSION,
   ContractFileSchema,
   ContractReadError,
   FLOW_NAME_PATTERN,
+  SAFE_SEGMENT_PATTERN,
   ReticleDir,
   type CapabilitiesContract,
   type ManifestGovernance,
@@ -87,12 +88,17 @@ export function journalActionsPath(root: string, sessionId: string): string {
 }
 
 /**
- * A sessionId must be a single safe path segment before it is joined into a disk path — same guard as
- * run/flow ids (rejects '../', slashes, absolute, dotfiles). Session labels are user/tab-supplied, so
- * this guard runs before any journal write.
+ * A sessionId must be a single safe path segment before it is joined into a disk path (rejects
+ * '../', slashes, absolute, dotfiles). Session labels are user/tab-supplied, so this guard runs
+ * before any journal write.
+ *
+ * `SAFE_SEGMENT_PATTERN`, NOT the flow pattern the two once shared. Flow names became namespaced —
+ * `onboarding/signup` is a real address — and for a moment that widened this guard along with it,
+ * which would have let a tab-supplied label pick a nested directory to write into. A flow name is
+ * an address; a session id is a directory name. Same shape once, different questions now.
  */
 export function isValidSessionId(sessionId: string): sessionId is SessionId {
-  return FLOW_NAME_PATTERN.test(sessionId) && !sessionId.includes('..');
+  return SAFE_SEGMENT_PATTERN.test(sessionId) && !sessionId.includes('..');
 }
 
 /**
@@ -100,7 +106,7 @@ export function isValidSessionId(sessionId: string): sessionId is SessionId {
  * absolute, dotfiles). uuid-style ids (hyphens/underscores) pass. Guards every disk op before join.
  */
 export function isValidRunId(runId: string): runId is RunId {
-  return FLOW_NAME_PATTERN.test(runId) && !runId.includes('..');
+  return SAFE_SEGMENT_PATTERN.test(runId) && !runId.includes('..');
 }
 
 /** The PNG baseline path for `name`.reticle/visual/<name>.png). */
@@ -152,8 +158,27 @@ export function flowDir(root: string, projectId?: string): string {
 }
 
 /**
- * A flow name must be a single safe path segment — rejects '../', '/', '\\', absolute, dotfiles.
- * Guards every disk op before a path is ever joined, so a traversal name never escapes .reticle/.
+ * The directory that must exist before a flow of this name can be written.
+ *
+ * `flowDir` answers where flows live; this answers where THIS one goes, and they stopped being the
+ * same thing when names became namespaced. `onboarding/signup` is a file inside `onboarding/`, and
+ * creating only the flows root leaves the write failing on a directory nobody made — which reads as
+ * "saving is broken" rather than "a namespace has never been created".
+ *
+ * Derived from the resolved path rather than by splitting the name, so it cannot disagree with
+ * `flowPath` about where the file actually goes.
+ */
+export function flowParentDir(root: string, name: FlowName, projectId?: string): string {
+  return dirname(flowPath(root, name, projectId));
+}
+
+/**
+ * A flow name may be NAMESPACED — `onboarding/signup` — and still never escapes `.reticle/`.
+ *
+ * Traversal is impossible by construction rather than by this filter: no segment may contain a dot,
+ * so `..` cannot be spelled, and every segment must start with a letter or digit, so a leading,
+ * trailing or doubled separator cannot either. The explicit `..` check is kept as a belt on top of
+ * braces, costing nothing and surviving a future loosening of the pattern.
  */
 export function isValidFlowName(name: string): name is FlowName {
   return FLOW_NAME_PATTERN.test(name) && !name.includes('..');

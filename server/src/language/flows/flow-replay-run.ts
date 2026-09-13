@@ -442,6 +442,15 @@ export async function replayNamedFlow(
     waitForPredicate,
     FLOW_SIGNAL_TIMEOUT_MS,
     true === args['confirmDangerous'],
+    undefined,
+    {
+      // How an `invoke` step finds the flow it runs. Scoped to the same project as the flow being
+      // replayed, so a composite cannot reach into another app's store for a same-named sub-journey.
+      resolveFlow: async (invoked: string) => {
+        const sub = await flowsForSession(deps, projectId).flows.load(invoked, projectId);
+        return sub.ok ? await resolveFlowUploads(deps, sub.value) : undefined;
+      },
+    },
   );
   // Computed HERE, before the synthetic success row is appended below: once that row is pushed,
   // `steps.length` no longer counts only the flow's own steps and the arithmetic is wrong.

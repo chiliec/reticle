@@ -27,6 +27,7 @@ import type { CompiledProgram, RecordedStep } from './recording/tape/recordings.
 import type { FileSystemPort } from '../../memory/project/fs/fs-port.js';
 import {
   flowDir,
+  flowParentDir,
   flowPath,
   reticleDirPaths,
   isValidFlowName,
@@ -792,7 +793,7 @@ export class FlowStore {
       ...(program.startPath === undefined ? {} : { startPath: program.startPath }),
     };
     const flow = await this.#linkIntent(withAnnotations(base, annotations));
-    await this.#fs.mkdir(flowDir(this.#root, pid));
+    await this.#fs.mkdir(flowParentDir(this.#root, program.name, pid));
     await this.#fs.writeFile(flowPath(this.#root, program.name, pid), this.#serialize(flow));
     return { ok: true, value: this.#summary(flow) };
   }
@@ -819,7 +820,7 @@ export class FlowStore {
       };
     }
     const valid = await this.#linkIntent(parsed.data);
-    await this.#fs.mkdir(flowDir(this.#root, pid));
+    await this.#fs.mkdir(flowParentDir(this.#root, asFlowName(valid.name), pid));
     await this.#fs.writeFile(
       flowPath(this.#root, asFlowName(valid.name), pid),
       this.#serialize(valid),
