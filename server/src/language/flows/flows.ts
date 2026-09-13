@@ -5,6 +5,7 @@ import {
   FLOW_FILE_VERSION,
   FlowErrorCode,
   FlowFileSchema,
+  FlowStepTool,
   QueryBy,
   defaultIsSensitiveKey,
 } from '@reticlehq/core';
@@ -626,6 +627,18 @@ function buildStep(
  * NEVER silently dropped. ACT_SEQUENCE recurses over its sub-steps.
  */
 export function recordedStepToFlowStep(step: RecordedStep): FlowStep {
+  if (step.invoke !== undefined) {
+    // An invocation drives nothing: no action, no args, and an anchor only because every step
+    // carries one. Falling through to the action path below would give it an `action` and a
+    // replayer would try to dispatch a step whose whole meaning is "go and run that document".
+    const out: FlowStep = {
+      tool: FlowStepTool.INVOKE,
+      anchor: { kind: AnchorKind.TESTID, value: step.invoke },
+      invoke: step.invoke,
+    };
+    if (step.expect !== undefined) out.expect = step.expect;
+    return out;
+  }
   if (step.tool === ReticleTool.ACT_SEQUENCE) {
     const rawSubs = Array.isArray(step.args['steps']) ? step.args['steps'] : [];
     const subs = rawSubs.map(subStepToFlowStep);

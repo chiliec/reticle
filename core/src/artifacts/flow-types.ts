@@ -25,6 +25,15 @@ export const FlowStepTool = {
   ACT: 'reticle_act',
   ACT_SEQUENCE: 'reticle_act_sequence',
   ACT_AND_WAIT: 'reticle_act_and_wait',
+  /**
+   * Run another flow. The step drives nothing itself; `invoke` names the document to replay.
+   *
+   * Here rather than in the recorder, for the reason stated above this object: it crosses the
+   * recorder, the saved file and the replayer, and a string spelled in three places is a rename
+   * away from a recorder that writes what no replayer reads. That is the exact drift this enum was
+   * created to end, and a new one would have re-opened it.
+   */
+  INVOKE: 'reticle_invoke',
 } as const;
 export type FlowStepTool = (typeof FlowStepTool)[keyof typeof FlowStepTool];
 
@@ -204,6 +213,14 @@ export interface FlowStep {
   timeoutMs?: number;
   /** sub-steps for an act_sequence, each independently anchored. */
   steps?: FlowStep[];
+  /**
+   * The flow this step runs, when `tool` is `FlowStepTool.INVOKE`.
+   *
+   * A name, not a copy. Inlining the sub-journey's steps here would produce a composite-shaped file
+   * with none of composition's value — the drift would still report a position in the outer flow,
+   * repair would still have to happen in every copy, and the sub-journey could not be reused.
+   */
+  invoke?: string;
 }
 
 const baseFlowStep = z.object({
@@ -214,6 +231,7 @@ const baseFlowStep = z.object({
   expect: FlowExpectSchema.optional(),
   degraded: z.boolean().optional(),
   timeoutMs: z.number().int().positive().optional(),
+  invoke: z.string().min(1).optional(),
 });
 
 export const FlowStepSchema: z.ZodType<FlowStep> = baseFlowStep.extend({

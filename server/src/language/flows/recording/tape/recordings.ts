@@ -1,4 +1,4 @@
-import type { FlowExpect } from '@reticlehq/core';
+import { FlowStepTool, type FlowExpect } from '@reticlehq/core';
 
 /** One captured agent action, normalized for replay. */
 export interface RecordedStep {
@@ -65,13 +65,13 @@ export interface CompiledProgram {
 }
 
 /**
- * The `tool` written on an invocation step.
+ * The `tool` written on an invocation step — core's constant, re-exported for this module's callers.
  *
- * A named constant rather than an inline string: it crosses from the recorder to the compiler to
- * whatever replays it, and a free string on a wire-ish shape is the thing this repository forbids
- * precisely because a typo in one of three places fails silently.
+ * NOT a second spelling. It crosses the recorder, the saved file and the replayer, and core is where
+ * a string that crosses those is defined; a local copy is a rename away from a recorder that writes
+ * what no replayer reads, which is the drift `FlowStepTool` was created to end.
  */
-export const INVOKE_TOOL = 'reticle_invoke';
+export const INVOKE_TOOL: string = FlowStepTool.INVOKE;
 
 /**
  * Tracks in-flight recordings (name -> { buffer cursor at record_start, captured steps })
