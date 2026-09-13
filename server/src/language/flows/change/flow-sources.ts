@@ -1,4 +1,4 @@
-import { AnchorKind, type FlowStep } from '@reticlehq/core';
+import type { FlowStep } from '@reticlehq/core';
 import { affectedFlows, type AffectedResult, type FlowSources } from './affected.js';
 
 /**
@@ -12,10 +12,22 @@ export function flowSources(steps: readonly FlowStep[]): string[] {
   const files = new Set<string>();
   const walk = (list: readonly FlowStep[]): void => {
     for (const step of list) {
-      const anchor = step.anchor;
-      if (anchor.kind === AnchorKind.COMPONENT && anchor.source !== undefined) {
-        files.add(anchor.source.file);
-      }
+      /*
+       * ANY anchor that carries a source, not only a COMPONENT one.
+       *
+       * This was `kind === COMPONENT && source !== undefined`, and the `kind` half was the whole
+       * bug. `compileAnchorArgs` attaches the source to a TESTID anchor too — deliberately, with a
+       * comment saying it rides along so a failure can name a file — so the data was already on
+       * disk and simply never read. Measured on this repository's own saved flows: 32 of 40 carry
+       * a source, and every one of them was reported as unknown-provenance.
+       *
+       * What that cost: `verify { action: "change" }` on two edited files replayed FIFTY-TWO flows
+       * in 46 seconds and answered `unknown`, because the fail-safe re-runs everything it cannot
+       * attribute. The fix needs no re-recording — those flows have been carrying the answer the
+       * whole time.
+       */
+      const anchored = step.anchor as { source?: { file: string } };
+      if (anchored.source !== undefined) files.add(anchored.source.file);
       /*
        * The step's own source, which is where almost every real flow's coverage actually lives.
        *
