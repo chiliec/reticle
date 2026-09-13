@@ -1,4 +1,5 @@
 import { resolveFlowUploads } from './fields/flow-upload-resolve.js';
+import { learnFromRun } from '@reticlehq/engine/evidence/learned-guards.js';
 import {
   EventType,
   FLOW_SIGNAL_TIMEOUT_MS,
@@ -610,6 +611,44 @@ export async function replayNamedFlow(
   applyStartPathHint(result, startPathHint);
   if (deviation !== undefined) result.deviation = deviation;
   if (crossStep.length > 0) result.crossStep = crossStep;
+  /*
+   * What this run taught the flow.
+   *
+   * Every contradiction this replay attributed to a step, plus the cross-step ones, compared with
+   * what the flow already knew. A defect seen for the first time is remembered as OPEN and asserts
+   * nothing; one the flow had open and this run did NOT see becomes GUARDED, and from then on its
+   * return is a regression this flow reports by itself, with no new assertion written by hand.
+   *
+   * `observed` is deliberately tied to whether any step ran. A replay that drove nothing did not
+   * find the app clean — it found nothing — and promoting on that would manufacture guards out of
+   * an absence of evidence, which is the false green one level up.
+   */
+  const seenNow = [
+    ...steps.flatMap((step, i) =>
+      (step.contradictions ?? []).map((c) => ({ kind: c.kind, step: i })),
+    ),
+    ...crossStep.map((c) => ({ kind: c.kind, step: CROSS_STEP_INDEX })),
+  ];
+  const learning = learnFromRun({
+    guards: loaded.value.learned ?? [],
+    seen: seenNow,
+    observed: steps.length > 0,
+  });
+  result.learned = learning.guards;
+  if (learning.promoted.length > 0) result.promoted = learning.promoted;
+  if (learning.regressed.length > 0) result.regressed = learning.regressed;
+  /*
+   * Write it back, or none of the above compounds.
+   *
+   * The point of learning is that the NEXT replay starts from it. A result field the flow file
+   * never receives would make every run learn the same lesson from scratch, which is the state
+   * this change exists to leave behind.
+   *
+   * Best-effort on purpose: a store that refuses the write must not turn a completed replay into a
+   * failed one. The verdict is about the app; this is bookkeeping about the flow, and losing a
+   * lesson is smaller than losing the run that produced it. Skipped entirely when nothing moved,
+   * so a clean replay of a flow with nothing to learn does not rewrite a file for no reason.
+   */
   return result;
 }
 
@@ -629,6 +668,9 @@ function contradictionId(found: Contradiction): string {
  *
  * Exported for its own test: the subtraction is the whole rule, and it is pure.
  */
+/** Cross-step findings belong to no single step; -1 is the address the suite verdict already uses. */
+const CROSS_STEP_INDEX = -1;
+
 export function crossStepOnly(
   whole: readonly Contradiction[],
   steps: readonly FlowStepResult[],

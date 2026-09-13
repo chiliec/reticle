@@ -835,6 +835,33 @@ export class FlowStore {
    * calls it with proposals that already cleared HEAL_CONFIDENCE_MIN). A change whose `from` no
    * longer matches the step's testid anchor is skipped (idempotent / defensive), never throwing.
    */
+  /**
+   * Write back only what a replay LEARNED, touching nothing else on the file.
+   *
+   * Not `saveFlow`, and the difference is not style. `saveFlow` re-runs `#linkIntent` on the whole
+   * document, which re-binds an intent that the replay had just discharged — so persisting a
+   * learned guard through it turned a `proved` intent back into `bound`. The test
+   * `a passing replay marks the intent proved with the verdict that did it` caught it, and the
+   * general shape is worth naming: a whole-document save is not a field update, and using one to
+   * change a single field re-applies every rule the document has ever been subject to.
+   *
+   * So this follows `heal` above: load, replace one field, write the same path load resolved.
+   */
+  async recordLearned(
+    name: string,
+    learned: NonNullable<FlowFile['learned']>,
+    projectId?: string,
+  ): Promise<FlowResult<{ name: string }>> {
+    if (!isValidFlowName(name)) return { ok: false, code: FlowErrorCode.INVALID_NAME };
+    const pid = safeProjectId(projectId);
+    const loaded = await this.load(name, pid);
+    if (!loaded.ok) return { ok: false, code: loaded.code };
+    const path = await this.#resolveReadPath(name, pid);
+    if (null === path) return { ok: false, code: FlowErrorCode.NOT_FOUND };
+    await this.#fs.writeFile(path, this.#serialize({ ...loaded.value, learned }));
+    return { ok: true, value: { name } };
+  }
+
   async heal(
     name: string,
     changes: HealChange[],

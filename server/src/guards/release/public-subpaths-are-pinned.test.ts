@@ -68,6 +68,7 @@ const PINNED: readonly PublicSurface[] = [
       'evidence/gap-ledger.ts',
       'evidence/honesty.ts',
       'evidence/instrumentation-gaps.ts',
+      'evidence/learned-guards.ts',
       'evidence/observability.ts',
       'evidence/page-teardown.ts',
       // New public entry point: the one builder that turns a window of events into a step's effect

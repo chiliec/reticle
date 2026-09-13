@@ -47,6 +47,7 @@ import { runServerVerify } from './suite/server-verify.js';
 import { healFlow } from './heal-run.js';
 
 export { replayNamedFlow } from './flow-replay-run.js';
+import { persistLearning } from './flow-learning.js';
 
 /**
  * Best-effort mirror of a just-saved flow to Reticle (only when logged in — both cloud env vars
@@ -484,7 +485,8 @@ export const FLOW_TOOLS: ToolDef[] = [
     // token-flat). Single-flow replay and whole-suite verify share that one implementation.
     handler: async (deps: ToolDeps, args): Promise<FlowReplayResult> => {
       const seed = asNumber(args['seed']);
-      if (seed === undefined) return replayNamedFlow(deps, args);
+      if (seed === undefined)
+        return await persistLearning(deps, args, await replayNamedFlow(deps, args));
       /*
        * Seeded chaos, and always put the page back.
        *

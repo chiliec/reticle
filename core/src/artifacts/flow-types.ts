@@ -546,6 +546,18 @@ export interface FlowReplayResult {
    * Omitted when the whole-span pass adds nothing over the steps.
    */
   crossStep?: Contradiction[];
+  /**
+   * What this flow knows after this run — every defect it has seen, and whether it is still open.
+   *
+   * Written back to the flow file so the next replay starts from it. This is how a flow gets
+   * stricter without anybody writing a new assertion: a defect observed, then observed GONE, becomes
+   * something the app can never quietly reacquire.
+   */
+  learned?: { kind: string; step: number; state: 'open' | 'guarded' }[];
+  /** Defects this run saw disappear. The app got better here. */
+  promoted?: string[];
+  /** Guarded defects that came back. The app got worse here, and only this flow would have known. */
+  regressed?: string[];
 
   steps: FlowStepResult[];
   /** The machine-actionable decision derived from this replay (autonomy layer). */
@@ -700,6 +712,28 @@ export const FlowFileSchema = z.object({
    * with an OLD excuse, which is a false green in a different costume. `staleKnownBugs` reports any
    * note whose assertions no longer all exist, rather than trusting it.
    */
+  /**
+   * What this flow has learned from being run, as opposed to what a person wrote on it.
+   *
+   * Distinct from `knownBugs` above, and the difference is who is speaking. A known bug is a HUMAN
+   * excusing a failing assertion with a traceable id. A learned guard is the SYSTEM remembering a
+   * defect it observed: `open` while the defect is still happening, `guarded` once a run stopped
+   * showing it. Only the second state asserts anything, and its return is a regression.
+   *
+   * The ordering is the safety property. A contradiction seen right now is not an assertion:
+   * asserting "must not happen" while it happens makes the flow red over an accepted defect and
+   * trains the reader to ignore it, and asserting "does happen" pins broken behaviour so the check
+   * fires when somebody FIXES the bug. See `learnFromRun` in the engine for the rule.
+   */
+  learned: z
+    .array(
+      z.object({
+        kind: z.string().min(1),
+        step: z.number().int().nonnegative(),
+        state: z.enum(['open', 'guarded']),
+      }),
+    )
+    .optional(),
   knownBugs: z
     .array(
       z.object({

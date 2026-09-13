@@ -60,7 +60,7 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // 15 since the shared step-effect builder. Recorded rather than grouped: the note above explains
   // why this directory cannot come down by the usual rule — its FILENAMES are published API, so
   // moving one to tidy the count would be a breaking change for somebody outside this repository.
-  'engine/src/evidence': 15,
+  'engine/src/evidence': 16,
   'engine/src/question/predicate': 16,
   /*
    * Crossed ten when the fast-drive budget and a portable byte counter landed. The guard asks for
@@ -87,7 +87,7 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   'server/src/command/cli': 18, // + tutorial.ts: one sequence, two audiences, ending at a verdict
   'server/src/command/setup': 15,
   'server/src/portal/session': 20,
-  'server/src/language/flows': 27,
+  'server/src/language/flows': 28,
   'server/src/memory/journal': 11,
   'server/src/telemetry': 32,
   'spec-runner/src': 11,

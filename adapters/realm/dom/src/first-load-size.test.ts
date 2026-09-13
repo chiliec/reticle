@@ -39,7 +39,22 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * measured, so an ordinary change does not fail on rounding; raising either one needs a reason
  * written here, the way the tool-surface budget does.
  */
-const MAX_FIRST_LOAD_BYTES = 233_400;
+/*
+ * Raised by 100 B for the learned-guards contract, and the reason is recorded because the guard
+ * asks for one.
+ *
+ * Adding `learned` to `FlowFileSchema` cost this bundle 89 bytes — proven by reverting only that
+ * file and watching the check pass. It is a zod schema built at module scope, so the bundler cannot
+ * drop it even though a browser never validates a flow FILE; flow files are read and written by the
+ * daemon.
+ *
+ * The 89 bytes are worth stating precisely because they point at something much larger that is NOT
+ * fixed here: the whole of `FlowFileSchema` appears to be reachable from the SDK entry, and the
+ * browser has no use for any of it. Nobody has measured what the entire schema costs a page load.
+ * That measurement is the actual finding; this constant is the small, honest cost of one field
+ * until somebody takes it.
+ */
+const MAX_FIRST_LOAD_BYTES = 233_500;
 /*
  * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
  *
