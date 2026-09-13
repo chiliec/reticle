@@ -39,11 +39,38 @@ describe('learnFromRun', () => {
     expect(r.guards.every((g) => g.state === GuardState.OPEN)).toBe(true);
   });
 
-  it('PROMOTES an open issue to a guard the moment the run stops showing it', () => {
+  it('does NOT promote on a single clean run — one absence is not a fix', () => {
+    /*
+     * Found by driving, not by reasoning. Replaying a real flow three times, a
+     * `request-never-settled` appeared in run 1 and not in run 2 — and the first version of this
+     * rule promoted it on the spot. That defect was not fixed between two replays a second apart;
+     * it is INTERMITTENT, and a guard minted from one quiet run reports every later appearance as
+     * a regression. Flakiness would arrive dressed as a code change.
+     */
     const before = [{ kind: 'request-never-settled', step: 0, state: GuardState.OPEN }];
+    const r = learnFromRun({ guards: before, seen: [] });
+    expect(r.guards[0]?.state).toBe(GuardState.OPEN);
+    expect(r.guards[0]?.cleanRuns).toBe(1);
+    expect(r.promoted).toHaveLength(0);
+  });
+
+  it('PROMOTES once the defect has stayed away, not merely gone away', () => {
+    const before = [
+      { kind: 'request-never-settled', step: 0, state: GuardState.OPEN, cleanRuns: 1 },
+    ];
     const r = learnFromRun({ guards: before, seen: [] });
     expect(r.guards[0]?.state).toBe(GuardState.GUARDED);
     expect(r.promoted).toEqual(['request-never-settled']);
+  });
+
+  it('resets the count when the defect reappears — consecutive, not cumulative', () => {
+    // Two separate quiet runs with a failure between them say "intermittent", not "fixed".
+    const before = [
+      { kind: 'request-never-settled', step: 0, state: GuardState.OPEN, cleanRuns: 1 },
+    ];
+    const r = learnFromRun({ guards: before, seen: [seen('request-never-settled')] });
+    expect(r.guards[0]?.state).toBe(GuardState.OPEN);
+    expect(r.guards[0]?.cleanRuns).toBe(0);
   });
 
   it('keeps a guard guarded when the run is clean — the normal case, and it is silent', () => {

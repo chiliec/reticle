@@ -35,6 +35,19 @@ export interface LearnedGuard {
   /** Which step of the flow it was attributed to. The same kind at two steps is two defects. */
   readonly step: number;
   readonly state: GuardState;
+  /**
+   * Consecutive runs that did not show this defect, while it is still open.
+   *
+   * Exists because one quiet run is not a fix. Driving a real flow three times, a
+   * `request-never-settled` appeared in run 1 and not in run 2 — one second apart, with no code
+   * changed. Promoting there would have minted a guard out of INTERMITTENCE, and every later
+   * appearance of a flaky defect would then be reported as a regression: flakiness arriving dressed
+   * as a code change, which is the most expensive kind of false alarm because it looks actionable.
+   *
+   * Reset to zero the moment the defect reappears. Consecutive, never cumulative — two quiet runs
+   * with a failure between them say "intermittent", not "fixed".
+   */
+  readonly cleanRuns?: number | undefined;
 }
 
 export interface SeenContradiction {
@@ -65,6 +78,16 @@ export interface LearnResult {
   readonly regressed: string[];
 }
 
+/**
+ * Consecutive quiet runs before an open defect becomes a guard.
+ *
+ * Two, not one, for the reason recorded on `cleanRuns`. Not more than two: every extra run is a
+ * real replay the user pays for, and a defect that stays away twice in a row has earned the benefit
+ * of the doubt — a guard being wrong costs one investigated regression, while never promoting costs
+ * every regression this mechanism exists to catch.
+ */
+const CLEAN_RUNS_TO_PROMOTE = 2;
+
 const idOf = (kind: string, step: number): string => `${kind}@${String(step)}`;
 
 export function learnFromRun(input: LearnInput): LearnResult {
@@ -86,11 +109,17 @@ export function learnFromRun(input: LearnInput): LearnResult {
     }
     // Open, and gone — but only a run that could actually look is allowed to conclude that.
     if (!isSeen && observed) {
-      guards.push({ ...guard, state: GuardState.GUARDED });
-      promoted.push(guard.kind);
+      const clean = (guard.cleanRuns ?? 0) + 1;
+      if (clean >= CLEAN_RUNS_TO_PROMOTE) {
+        guards.push({ kind: guard.kind, step: guard.step, state: GuardState.GUARDED });
+        promoted.push(guard.kind);
+      } else {
+        guards.push({ ...guard, cleanRuns: clean });
+      }
       continue;
     }
-    guards.push(guard);
+    // Seen again: the streak is broken, not merely paused.
+    guards.push(isSeen ? { ...guard, cleanRuns: 0 } : guard);
   }
 
   const known = new Set(input.guards.map((g) => idOf(g.kind, g.step)));

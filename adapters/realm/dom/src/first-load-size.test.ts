@@ -48,13 +48,21 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * drop it even though a browser never validates a flow FILE; flow files are read and written by the
  * daemon.
  *
- * The 89 bytes are worth stating precisely because they point at something much larger that is NOT
- * fixed here: the whole of `FlowFileSchema` appears to be reachable from the SDK entry, and the
- * browser has no use for any of it. Nobody has measured what the entire schema costs a page load.
- * That measurement is the actual finding; this constant is the small, honest cost of one field
- * until somebody takes it.
+ * Then 41 more for `cleanRuns` on the same schema. THREE schema additions have now moved this
+ * number, and that pattern is the real finding rather than any of the three amounts.
+ *
+ * `core`'s barrel does `export * from './artifacts/flow-types.js'`, the SDK imports the barrel in
+ * 151 places, and zod schemas are built at module scope so the bundler cannot drop them. A browser
+ * never validates a flow FILE — flows are read and written by the daemon — so every page load in
+ * every instrumented app carries a schema it can never use, and it grows whenever the daemon's file
+ * format does.
+ *
+ * Nobody has measured what ALL of it costs; the three increments only prove the channel exists.
+ * The fix is to stop re-exporting flow artifacts from the barrel the SDK imports (core has a
+ * `./artifacts` subpath already), which is free while core is unpublished and is not free after.
+ * Raising this constant a fourth time is the wrong answer.
  */
-const MAX_FIRST_LOAD_BYTES = 233_500;
+const MAX_FIRST_LOAD_BYTES = 233_600;
 /*
  * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
  *

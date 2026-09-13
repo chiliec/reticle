@@ -553,7 +553,12 @@ export interface FlowReplayResult {
    * stricter without anybody writing a new assertion: a defect observed, then observed GONE, becomes
    * something the app can never quietly reacquire.
    */
-  learned?: { kind: string; step: number; state: 'open' | 'guarded' }[];
+  learned?: {
+    kind: string;
+    step: number;
+    state: 'open' | 'guarded';
+    cleanRuns?: number | undefined;
+  }[];
   /** Defects this run saw disappear. The app got better here. */
   promoted?: string[];
   /** Guarded defects that came back. The app got worse here, and only this flow would have known. */
@@ -731,6 +736,8 @@ export const FlowFileSchema = z.object({
         kind: z.string().min(1),
         step: z.number().int().nonnegative(),
         state: z.enum(['open', 'guarded']),
+        /** Consecutive runs that did not show it. One quiet run is not a fix; see learnFromRun. */
+        cleanRuns: z.number().int().nonnegative().optional(),
       }),
     )
     .optional(),
