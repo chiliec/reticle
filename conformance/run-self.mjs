@@ -37,11 +37,11 @@
 
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { start, WebRealm, conformanceClient } from '@reticlehq/server';
 import { driveAll } from './drive.mjs';
+import { WEB_HANDOFF } from './handoff.mjs';
 import { BENCH_APP_CHANNELS, BENCH_APP_SUBJECT, plantUrl } from './subjects/bench-app.mjs';
 import { Profile } from './scenarios/index.mjs';
 
@@ -308,10 +308,8 @@ async function main() {
   // two agree rather than only that each is internally fine. Written unconditionally and to a
   // temp path: it is a handoff between two processes in one `gate:conformance`, not an
   // artifact anybody keeps.
-  writeFileSync(
-    join(tmpdir(), 'reticle-conformance-web.json'),
-    JSON.stringify({ at: Date.now(), outcomes: report.outcomes ?? {} }),
-  );
+  mkdirSync(dirname(WEB_HANDOFF), { recursive: true });
+  writeFileSync(WEB_HANDOFF, JSON.stringify({ at: Date.now(), outcomes: report.outcomes ?? {} }));
 
   const failed = report.failed.length;
   if (process.argv.includes('--self-test')) {

@@ -29,12 +29,12 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 const { join } = path;
 import { ReticleCommand } from '@reticlehq/core';
 import { start, WebRealm, conformanceClient } from '@reticlehq/server';
 import { driveAll } from './drive.mjs';
+import { WEB_HANDOFF } from './handoff.mjs';
 import { Profile, SCENARIOS } from './scenarios/index.mjs';
 
 // The daemon's default. Not a free choice either: the renderer's SDK dials the default unless a
@@ -343,7 +343,7 @@ function dishonestIfSelfTesting(client) {
 }
 
 function comparedWithWeb(report) {
-  const handoff = join(tmpdir(), 'reticle-conformance-web.json');
+  const handoff = WEB_HANDOFF;
   if (!existsSync(handoff)) {
     return {
       line: 'cross-surface agreement: not checked, the web pass did not run',

@@ -112,6 +112,25 @@ describe('devServersForProject', () => {
     expect(devServersForProject([sibling], { root: '/repo/apps/web' })).toEqual([]);
   });
 
+  /*
+   * Trailing separators, and a run of them, because the trim stopped being a regex.
+   *
+   * `/\/+$/` was replaced with a loop after CodeQL flagged it as polynomial ReDoS — quadratic on a
+   * long run of slashes followed by anything else. These pin that the behaviour did not move with
+   * it: one trailing slash, several, backslashes, and a root that is nothing but separators.
+   */
+  it('matches the same roots however their trailing separators are spelled', () => {
+    const web = { ...entry(5173, 10), root: '/repo/apps/web', projectId: 'web-1' };
+    expect(devServersForProject([web], { root: '/repo/apps/web/' })).toEqual([web]);
+    expect(devServersForProject([web], { root: '/repo/apps/web///' })).toEqual([web]);
+    expect(devServersForProject([web], { root: '/repo/' })).toEqual([web]);
+    expect(
+      devServersForProject([{ ...web, root: 'C:\\repo\\app\\' }], { root: 'C:/repo/app' }),
+    ).toEqual([{ ...web, root: 'C:\\repo\\app\\' }]);
+    // A root of nothing but separators normalises to empty, and empty is inside nothing.
+    expect(devServersForProject([{ ...web, root: '////' }], { root: '/repo' })).toEqual([]);
+  });
+
   /** Nothing to scope BY must match nothing — never everything, which is the failure being fixed. */
   it('matches nothing when neither projectId nor root is known', () => {
     expect(devServersForProject([a, b], {})).toEqual([]);

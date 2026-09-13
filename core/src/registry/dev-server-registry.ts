@@ -124,7 +124,20 @@ export function devServersForProject(
 /** `path` is `base`, or sits under it. Separator-aware, so `/repo/app2` is not inside `/repo/app`. */
 function isWithin(path: string, base: string | undefined): boolean {
   if (base === undefined || 0 === base.length) return false;
-  const norm = (p: string): string => p.split('\\').join('/').replace(/\/+$/, '');
+  /*
+   * Trailing separators are trimmed with a loop rather than `/\/+$/`, which is a polynomial-ReDoS
+   * shape: on a run of slashes followed by anything else the engine retries `\/+` from every start
+   * position and rescans to the end each time, so the cost is quadratic in the length of the run.
+   * Flagged by CodeQL on this line. A registry root is not obviously hostile input, but this is
+   * `@reticlehq/core` — the package everything else depends on — and the loop is O(n), boring, and
+   * the same length as the regex it replaces.
+   */
+  const norm = (p: string): string => {
+    const forward = p.split('\\').join('/');
+    let end = forward.length;
+    while (end > 0 && '/' === forward[end - 1]) end -= 1;
+    return forward.slice(0, end);
+  };
   const target = norm(path);
   const parent = norm(base);
   return target === parent || target.startsWith(`${parent}/`);
