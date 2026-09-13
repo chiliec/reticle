@@ -54,33 +54,39 @@ Every item here cost somebody a debugging session. None is discoverable by readi
 
 ## Repository layout
 
-Five top-level directories, each with one job. If you can name which of these your change belongs to, you can find everything else.
+The packages sit at the top level — there is no `packages/` directory; it was dissolved in v3 so a package's path names what it IS rather than the fact that it is a package. If you can name which area your change belongs to, you can find everything else.
 
 | Directory | Job | Read first |
 | --- | --- | --- |
-| `packages/` | the shipped product — everything published to npm and crates.io | this section |
+| top level | the shipped product — everything published to npm and crates.io | this section |
+| `adapters/` | the shipped product's edges: one directory per realm, framework, build tool and linter | this section |
 | `apps/` | fixtures the gates drive, plus the test runner itself | [`apps/README.md`](apps/README.md) |
 | `bench/` | measurement and research. **Not a gate** — nothing here blocks a PR | [`bench/README.md`](bench/README.md) |
 | `docs/` | user docs (published to reticle.sh) **and** contributor docs | [`docs/README.md`](docs/README.md) |
 | `scripts/` | repo tooling: the boundary/lossy guards, the local registry | — |
 
-### `packages/` — the shipped product
+### The shipped product
 
 ```
-core          @reticlehq/core         — wire contract, constants, zod schemas (deps: zod)
-adapters/realm/dom       @reticlehq/browser      — instrumentation SDK embedded in the app (DOM-side)
+core          @reticlehq/core         — wire contract, constants, zod schemas (deps: openreality, zod)
+openreality   @reticlehq/openreality  — the Open Verification Protocol: vocabulary, rules, `Realm`, `adjudicate()`
+engine        @reticlehq/engine       — the rules that decide a verdict, with no browser, daemon or CLI attached
 server        @reticlehq/server       — bridge + MCP server, the `reticle` CLI (Node-side)
-packages/react         @reticlehq/react        — React adapter: DOM ref -> component -> source file
-packages/vite-plugin   @reticlehq/vite-plugin  — Vite integration: stamps source + auto-injects connect()
-packages/babel-plugin  @reticlehq/babel-plugin — stamps data-reticle-source (source mapping, React 19)
-packages/next          @reticlehq/next         — Next.js source mapping (keeps SWC) via withReticle (CJS)
-packages/electron      @reticlehq/electron     — Electron main-process adapter (IPC observer, capture)
-packages/tauri         reticle-tauri           — Tauri capture backend (RUST — outside every JS gate)
-spec-runner          @reticlehq/test         — spec runner + matchers for CI (peer vitest)
-eslint-plugin @reticlehq/eslint-plugin — dev-only lint rule: state changed ⇒ signal fired
+init          @reticlehq/init         — project scaffolder: `reticle init`'s codemod, no runtime (Node-side)
+spec-runner   @reticlehq/test         — spec runner + matchers for CI (peer vitest)
+conformance   —                       — drives the protocol's own scenarios against an implementation (PRIVATE)
+
+adapters/realm/dom           @reticlehq/browser      — instrumentation SDK embedded in the app (DOM-side)
+adapters/realm/electron      @reticlehq/electron     — Electron main-process adapter (IPC observer, capture)
+adapters/realm/tauri         reticle-tauri           — Tauri capture backend (RUST — outside every JS gate)
+adapters/framework/react     @reticlehq/react        — React adapter: DOM ref -> component -> source file
+adapters/build/vite          @reticlehq/vite-plugin  — Vite integration: stamps source + auto-injects connect()
+adapters/build/babel-plugin  @reticlehq/babel-plugin — stamps data-reticle-source (source mapping, React 19)
+adapters/build/next          @reticlehq/next         — Next.js source mapping (keeps SWC) via withReticle (CJS)
+adapters/lint/eslint         @reticlehq/eslint-plugin — dev-only lint rule: state changed ⇒ signal fired
 ```
 
-The TypeScript library packages (`-core`, `-browser`, `-server`, `-react`) are **strict TypeScript** and are the focus of the build/lint/test gates. `@reticlehq/babel-plugin` / `@reticlehq/next` are plain CJS tooling, and `apps/*` are local fixtures — these are excluded from the JS gates. `packages/tauri` is Rust and is invisible to all of them; CI's `rust` / `rust-macos` jobs are the only thing that compiles it.
+The TypeScript library packages are **strict TypeScript** and are the focus of the build/lint/test gates. `@reticlehq/babel-plugin` / `@reticlehq/next` are plain CJS tooling, and `apps/*` are local fixtures — these are excluded from the JS gates. `adapters/realm/tauri` is Rust and is invisible to all of them; CI's `rust` / `rust-macos` jobs are the only thing that compiles it.
 
 ### Root files worth knowing
 
@@ -107,7 +113,7 @@ pnpm lint && pnpm typecheck && pnpm test:unit    # ~2 min — ALWAYS
 | --- | --- | --- |
 | the tool surface, the wire contract (`core`), or an observer | `pnpm test:e2e` | ~8 min |
 | `reticle init`, `vite-plugin`, `next`, `babel-plugin` — anything before a user's first session | `pnpm gate:install` | ~15 min |
-| `packages/electron`, `packages/tauri`, the IPC observer, desktop capture | `pnpm test:e2e:desktop` | ~3 min |
+| `adapters/realm/electron`, `adapters/realm/tauri`, the IPC observer, desktop capture | `pnpm test:e2e:desktop` | ~3 min |
 | telemetry, feedback, or anything that emits an event | read [`docs/telemetry-contract.md`](docs/telemetry-contract.md) **first**, then `pnpm test:e2e` | — |
 
 **This routing is the whole rule, and [`docs/gates.md`](docs/gates.md) is the full map** — every gate, what it proves, what it is blind to, and which CI job runs it. CI runs everything regardless, so skipping a tier costs you a slower red, never a missed one.
