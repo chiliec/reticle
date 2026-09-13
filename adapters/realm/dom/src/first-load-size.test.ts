@@ -50,7 +50,21 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * measured, so an ordinary change does not fail on rounding; raising either one needs a reason
  * written here, the way the tool-surface budget does.
  */
-const MAX_FIRST_LOAD_BYTES = 233_300;
+const MAX_FIRST_LOAD_BYTES = 233_400;
+/*
+ * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
+ *
+ * `FlowExpect` had signal, net, console, element, text and state, and no route. Measured by driving
+ * a real upstream app: a nav click asserted with `until: { kind: "route" }` returned
+ * `verified: "yes"`, and the flow saved from that same drive graded `assertion-free` — "it claims
+ * to verify a goal it cannot actually check". Both true at once, which is the defect. Navigation is
+ * one of the commonest journeys there is, so every route-asserted drive persisted a flow that could
+ * never go red.
+ *
+ * In the page because the in-page RECORDER compiles FlowFile-shaped objects, the same reason
+ * `Flow.knownBugs` and the composition schema are here. Unlike those two, this one pays immediately:
+ * it is the difference between a saved navigation that can fail and one that cannot.
+ */
 /*
  * Raised a fourth time, 232_900 -> 233_300, for grammar v2 — and this one has NOT paid for itself yet.
  *

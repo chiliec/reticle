@@ -65,6 +65,16 @@ export function successToPredicate(
     parts.push(signal);
   }
 
+  if (success.route !== undefined) {
+    // The mirror of `predicateToExpect`'s ROUTE case. Replay evaluates predicates, so carrying the
+    // route back here is the whole of what makes a recorded navigation able to fail.
+    const route: { kind: typeof PredicateKind.ROUTE; pathname?: string; contains?: string } = {
+      kind: PredicateKind.ROUTE,
+    };
+    if (success.route.pathname !== undefined) route.pathname = success.route.pathname;
+    if (success.route.contains !== undefined) route.contains = success.route.contains;
+    return route;
+  }
   if (success.net !== undefined) {
     const net: Extract<Predicate, { kind: typeof PredicateKind.NET }> = { kind: PredicateKind.NET };
     if (success.net.method !== undefined) net.method = success.net.method;

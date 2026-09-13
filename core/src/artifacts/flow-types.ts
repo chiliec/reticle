@@ -83,6 +83,20 @@ export type FlowAnchor = z.infer<typeof FlowAnchorSchema>;
  */
 export const FlowExpectSchema = z
   .object({
+    /**
+     * The route the step must have reached — the consequence of a NAVIGATION.
+     *
+     * Absent until now, and its absence was not a corner case: navigation is one of the commonest
+     * journeys there is, and every route-asserted drive saved a flow that could never go red. Found
+     * by driving a real app, where `act_and_wait { until: { kind: "route" } }` returned
+     * `verified: "yes"` and the flow saved from that same drive graded `assertion-free`.
+     *
+     * Additive and optional, so a flow file written before it still parses and FLOW_FILE_VERSION
+     * stays 1 — the same treatment `signalData` and `signalCount` had.
+     */
+    route: z
+      .object({ pathname: z.string().optional(), contains: z.string().optional() })
+      .optional(),
     signal: z.string().optional(),
     /**
      * Optional payload shape an `assert-signal` annotation requires the signal

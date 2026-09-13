@@ -12,7 +12,7 @@ import { PredicateKind } from '@reticlehq/core';
  * worth anything if the recorded flow can go RED, and locally 32 of 39 saved flows cannot.
  *
  * The inverse of `successToPredicate`. Only the kinds FlowExpect can express are carried: `settled`
- * is a wait rather than a claim, and `route`/`animation`/`anyOf`/`not` have no representation at all.
+ * is a wait rather than a claim, and `animation`/`anyOf`/`not` have no representation at all (`route` gained one — see its case below).
  * Inventing one would write an assertion into the file that the agent never made, which is worse
  * than recording none — a flow that asserts something nobody chose is a false green with extra steps.
  */
@@ -32,6 +32,15 @@ export function predicateToExpect(predicate: Predicate): FlowExpect | undefined 
       if (predicate.dataMatches !== undefined) signal.signalData = predicate.dataMatches;
       if (predicate.count !== undefined) signal.signalCount = predicate.count;
       return signal;
+    }
+    case PredicateKind.ROUTE: {
+      // Carried, not invented: the agent said "until the route is X" in so many words. The kinds
+      // below this comment's twin in the header — animation, anyOf, not — stay refused because
+      // there the file would gain a claim nobody made.
+      const route: { pathname?: string; contains?: string } = {};
+      if (predicate.pathname !== undefined) route.pathname = predicate.pathname;
+      if (predicate.contains !== undefined) route.contains = predicate.contains;
+      return 0 === Object.keys(route).length ? undefined : { route };
     }
     case PredicateKind.NET: {
       const net: NonNullable<FlowExpect['net']> = {};
@@ -127,5 +136,11 @@ export function enforcedOnReplay(expect: FlowExpect | undefined): FlowExpect | u
   if (expect.signalCount !== undefined) kept.signalCount = expect.signalCount;
   if (expect.net !== undefined) kept.net = expect.net;
   if (expect.console !== undefined) kept.console = expect.console;
+  // `route` joined the list the day FlowExpect gained the field. This filter and
+  // `successToPredicate` are two allowlists for one question — "can replay check this?" — and the
+  // note above records them drifting once already. They drifted again here, in the same direction,
+  // within an hour: the field was added, the mapping was added, and a route assertion still reached
+  // disk as nothing because THIS list had not heard of it. Found by driving, not by a test.
+  if (expect.route !== undefined) kept.route = expect.route;
   return 0 === Object.keys(kept).length ? undefined : kept;
 }

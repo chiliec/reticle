@@ -106,10 +106,23 @@ describe('predicateToExpect', () => {
     ).toEqual({ signal: 'saved' });
   });
 
+  it('records a ROUTE, which FlowExpect can now express', () => {
+    // Moved out of the list below, not deleted from it. The rule there is "inventing an expectation
+    // the agent never made is worse than recording none", and it is right — but an agent asserting
+    // `until: { kind: "route" }` MADE a route assertion, so carrying it is the opposite of
+    // inventing one. While FlowExpect had no route field, every navigation drive — one of the
+    // commonest journeys there is — saved a flow that could never go red, which a drive against a
+    // real upstream app is what showed.
+    expect(predicateToExpect({ kind: 'route', pathname: '/x' })).toEqual({
+      route: { pathname: '/x' },
+    });
+    // A route predicate with nothing to match is still nothing to record.
+    expect(predicateToExpect({ kind: 'route' })).toBeUndefined();
+  });
+
   it('records NOTHING for predicates FlowExpect cannot express', () => {
     // Inventing an expectation the agent never made is worse than recording none.
     expect(predicateToExpect({ kind: 'settled' })).toBeUndefined();
-    expect(predicateToExpect({ kind: 'route', pathname: '/x' })).toBeUndefined();
     expect(predicateToExpect({ kind: 'animation', name: 'fade' })).toBeUndefined();
     expect(
       predicateToExpect({ kind: 'anyOf', predicates: [{ kind: 'signal', name: 'a' }] }),
