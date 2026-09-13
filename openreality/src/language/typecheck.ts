@@ -37,9 +37,43 @@ export const TypeErrorKind = {
 } as const;
 export type TypeErrorKind = (typeof TypeErrorKind)[keyof typeof TypeErrorKind];
 
-export interface FlowTypeError {
-  /** 0-based index of the offending step, so a fix has an address. */
+/**
+ * WHERE a step is, when "step 4" is no longer an answer.
+ *
+ * In a flat document an index is an address. In a composite it is not: step 2 of which document,
+ * reached how? Two journeys sharing a sub-flow produce the same number for different failures, and
+ * a reader has to open every document to find out which one moved.
+ *
+ * `via` is the invocation chain, NEAREST CALLER FIRST, so reading it left to right walks outward
+ * the way a stack trace does. Empty at the top level, which is the common case and costs nothing.
+ */
+export interface StepAddress {
+  /** The document the step is written in. */
+  flow: string;
+  /** 0-based index within THAT document. */
   step: number;
+  /** How the replay arrived, nearest caller first. Empty when the document is the entry. */
+  via: readonly { flow: string; step: number }[];
+}
+
+/** `onboarding/signup#2 (invoked from onboarding/full#1)` — one line a person can act on. */
+export function formatStepAddress(at: StepAddress): string {
+  const here = `${at.flow}#${String(at.step)}`;
+  if (0 === at.via.length) return here;
+  return `${here} (invoked from ${at.via.map((v) => `${v.flow}#${String(v.step)}`).join(', ')})`;
+}
+
+export interface FlowTypeError {
+  /**
+   * 0-based index of the offending step.
+   *
+   * Kept alongside `at` rather than replaced by it: every caller reading this today is checking a
+   * flat program, where the index IS the address, and breaking them to add composition would be
+   * charging the simple case for the complex one.
+   */
+  step: number;
+  /** Where the step lives, for a composite. Absent when the check was over a flat program. */
+  at?: StepAddress;
   kind: TypeErrorKind;
   detail: string;
 }
@@ -159,19 +193,21 @@ export function typecheckComposite(
    * does not merge these; it hands the realm the most recent guarantee, and a realm that needs
    * accumulation can express it in its own `ensures` values.
    */
-  const check = (doc: CompositeDocument, established: unknown, step: number): boolean => {
+  const check = (doc: CompositeDocument, established: unknown, at: StepAddress): boolean => {
     if (!stitching || satisfies === undefined || doc.requires === undefined) return true;
     const held = satisfies(established, doc.requires);
     if (true === held) return true;
     errors.push(
       undefined === held
         ? {
-            step,
+            step: at.step,
+            at,
             kind: TypeErrorKind.UNJUDGED_REQUIREMENT,
             detail: `"${doc.name}" declares a requirement this realm cannot judge, so the composite cannot be shown to stitch`,
           }
         : {
-            step,
+            step: at.step,
+            at,
             kind: TypeErrorKind.UNSATISFIED_REQUIREMENT,
             detail: `"${doc.name}" needs something the journey has not established by this point`,
           },
@@ -179,10 +215,16 @@ export function typecheckComposite(
     return false;
   };
 
-  const walk = (name: string, step: number, established: unknown): unknown => {
+  /**
+   * `at` is the CALL SITE — the step that tried to enter this document — not a position inside it.
+   * That is where a fix goes: an unresolved name is fixed where it is written, and a failed stitch
+   * is fixed by reordering the composite or establishing what the document needs before invoking it.
+   */
+  const walk = (name: string, at: StepAddress, established: unknown): unknown => {
     if (path.includes(name)) {
       errors.push({
-        step,
+        step: at.step,
+        at,
         kind: TypeErrorKind.CYCLIC_INVOCATION,
         detail: `invocation returns to a document already running: ${[...path, name].join(' → ')}`,
       });
@@ -191,7 +233,8 @@ export function typecheckComposite(
     const doc = byName.get(name);
     if (doc === undefined) {
       errors.push({
-        step,
+        step: at.step,
+        at,
         kind: TypeErrorKind.UNRESOLVED_FLOW,
         detail: `no document named "${name}"; the set holds: ${[...byName.keys()].join(', ') || '(nothing)'}`,
       });
@@ -200,7 +243,7 @@ export function typecheckComposite(
     // Only an INVOKED document is stitch-checked. The entry document's `requires` is a precondition
     // on the SUBJECT — nothing precedes it to establish anything, so judging it here would refuse
     // every composite that declares one. That check belongs at replay, against the real subject.
-    if (path.length > 0 && !check(doc, established, step)) {
+    if (path.length > 0 && !check(doc, established, at)) {
       // Stop stitching this branch once one requirement has failed. What the journey has
       // established is no longer knowable, so every later comparison is a consequence of the error
       // already named — the same rule `typecheckProgram` applies to a step that cannot run. The
@@ -212,6 +255,7 @@ export function typecheckComposite(
     // meets a DIFFERENT established state and may stitch there and not here. Cycles are still
     // caught by the path stack, so this cannot run away; `done` now only records that its own
     // structure has been checked.
+    const pathDepth = path.length;
     if (!done.has(name)) {
       path.push(name);
       // The entry document's own `requires` SEEDS what is established: a composite that declares
@@ -219,8 +263,14 @@ export function typecheckComposite(
       // document the requirement has just been checked and held, so using it as the new baseline
       // says no more than was already proved. `ensures` wins where it is given.
       let carried = doc.ensures ?? doc.requires ?? established;
+      // The chain that reached THIS document, nearest caller first. `at` is the call site that
+      // invoked it, so the chain is that call site followed by whatever reached the call site. The
+      // entry document has no caller, and an entry whose `at` is its own name would otherwise
+      // report itself as having invoked itself.
+      const chainHere = 0 === pathDepth ? [] : [{ flow: at.flow, step: at.step }, ...at.via];
       doc.steps.forEach((s, index) => {
-        if (s.invoke !== undefined) carried = walk(s.invoke, index, carried);
+        if (s.invoke === undefined) return;
+        carried = walk(s.invoke, { flow: name, step: index, via: chainHere }, carried);
       });
       path.pop();
       done.add(name);
@@ -228,6 +278,6 @@ export function typecheckComposite(
     return doc.ensures ?? doc.requires ?? established;
   };
 
-  walk(entry, 0, undefined);
+  walk(entry, { flow: entry, step: 0, via: [] }, undefined);
   return errors;
 }
