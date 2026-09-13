@@ -7,6 +7,7 @@ import {
   type ElementQuery,
 } from '@reticlehq/core';
 import { z } from 'zod';
+import { propertyAssertionSchema, type PropertyAssertion } from './property.js';
 
 export type Predicate =
   | {
@@ -79,7 +80,13 @@ export type Predicate =
       count?: number;
       since?: number;
     }
-  | { kind: typeof PredicateKind.STATE; store?: string; path: string; equals?: unknown }
+  | {
+      kind: typeof PredicateKind.STATE;
+      store?: string;
+      path: string;
+      equals?: unknown;
+      satisfies?: PropertyAssertion;
+    }
   | { kind: typeof PredicateKind.SETTLED; quietMs?: number }
   | { kind: typeof PredicateKind.ALL_OF; predicates: Predicate[] }
   | { kind: typeof PredicateKind.ANY_OF; predicates: Predicate[] }
@@ -442,6 +449,13 @@ function predicateUnion() {
         store: z.string().optional(),
         path: z.string(),
         equals: z.unknown().optional(),
+        /*
+         * Assert a PROPERTY instead of exact bytes, for output that is right differently every run.
+         * `equals` cannot express a generated summary, a classification or a computed total; this
+         * can, and stays decidable here with no model and no network. Supplying both is allowed and
+         * both must hold.
+         */
+        satisfies: propertyAssertionSchema.optional(),
       })
       .strict(),
     z

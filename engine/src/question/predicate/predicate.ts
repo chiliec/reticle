@@ -11,6 +11,7 @@ import {
 } from '@reticlehq/core';
 
 import type { KeepCallerContextFn, NoteFn } from '../../window/engine-host.js';
+import { satisfiesProperty } from './property.js';
 
 import { predicateToExpectedLinks } from './predicate-to-links.js';
 import type { ExpectedLink } from '@reticlehq/core';
@@ -226,6 +227,37 @@ async function evalStateNamed(
       evidence: { availableKeys: selection.availableKeys },
     };
   }
+  /*
+   * A PROPERTY assertion runs before equality and can stand alone.
+   *
+   * `satisfies` is what makes a generated value verifiable at all: its exact bytes differ every run
+   * and are right every time, so `equals` can only ever be wrong about it. Both may be supplied and
+   * then both must hold — `satisfies` narrows, it never excuses.
+   */
+  if (p.satisfies !== undefined) {
+    const r = satisfiesProperty(selection.value, p.satisfies);
+    if (!r.ok) {
+      return {
+        pass: false,
+        failureReason: `state '${p.path}' ${r.because}`,
+        observed: `${p.path} = ${JSON.stringify(capDepth(selection.value, 0))}`,
+        expected: `${p.path} to satisfy ${p.satisfies.property}`,
+        assertion: `state.${p.satisfies.property}`,
+        evidence: { store: storeName, path: p.path, value: capDepth(selection.value, 1) },
+      };
+    }
+    if (p.equals === undefined) {
+      return {
+        pass: true,
+        evidence: {
+          store: storeName,
+          path: p.path,
+          value: capDepth(selection.value, 1),
+          satisfied: r.because,
+        },
+      };
+    }
+  }
   const want = p.equals === undefined ? '*' : p.equals;
   if (matchValue(selection.value, want)) {
     return {
@@ -340,6 +372,37 @@ async function evalState(
       assertion: 'state.path-missing',
       evidence: { availableKeys: selection.availableKeys },
     };
+  }
+  /*
+   * A PROPERTY assertion runs before equality and can stand alone.
+   *
+   * `satisfies` is what makes a generated value verifiable at all: its exact bytes differ every run
+   * and are right every time, so `equals` can only ever be wrong about it. Both may be supplied and
+   * then both must hold — `satisfies` narrows, it never excuses.
+   */
+  if (p.satisfies !== undefined) {
+    const r = satisfiesProperty(selection.value, p.satisfies);
+    if (!r.ok) {
+      return {
+        pass: false,
+        failureReason: `state '${p.path}' ${r.because}`,
+        observed: `${p.path} = ${JSON.stringify(capDepth(selection.value, 0))}`,
+        expected: `${p.path} to satisfy ${p.satisfies.property}`,
+        assertion: `state.${p.satisfies.property}`,
+        evidence: { store: storeName, path: p.path, value: capDepth(selection.value, 1) },
+      };
+    }
+    if (p.equals === undefined) {
+      return {
+        pass: true,
+        evidence: {
+          store: storeName,
+          path: p.path,
+          value: capDepth(selection.value, 1),
+          satisfied: r.because,
+        },
+      };
+    }
   }
   const want = p.equals === undefined ? '*' : p.equals;
   if (matchValue(selection.value, want)) {

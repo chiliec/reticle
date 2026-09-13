@@ -61,7 +61,7 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // why this directory cannot come down by the usual rule — its FILENAMES are published API, so
   // moving one to tidy the count would be a breaking change for somebody outside this repository.
   'engine/src/evidence': 15,
-  'engine/src/question/predicate': 15,
+  'engine/src/question/predicate': 16,
   'init/src/patch': 14,
   // Crossed the line as the protocol grew the two things a subject must declare about ITSELF rather
   // than about what it can see: how it may be driven, and the state a suite starts from. Recorded
