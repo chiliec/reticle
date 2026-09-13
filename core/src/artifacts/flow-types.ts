@@ -204,6 +204,14 @@ export interface FlowStep {
   /** FlowStepTool.ACT | FlowStepTool.ACT_SEQUENCE (core, shared with ReticleTool). */
   tool: string;
   anchor: FlowAnchor;
+  /**
+   * Where this step's element came from in the source, when the build stamped one.
+   *
+   * Beside the anchor rather than inside it: only a COMPONENT anchor had room for a source, and a
+   * recorder prefers a TESTID anchor whenever the element has one — so the commonest flow could
+   * never say which files it covers, and a scoped re-verify had nothing to scope by.
+   */
+  source?: { file: string; line?: number };
   action?: ActionType;
   args?: Record<string, unknown>;
   expect?: FlowExpect;
@@ -240,6 +248,21 @@ export interface FlowStep {
 const baseFlowStep = z.object({
   tool: z.string(),
   anchor: FlowAnchorSchema,
+  /**
+   * Where this step's element came from in the source, when the build stamped one.
+   *
+   * Written alongside the anchor rather than inside it, because only a COMPONENT anchor had a place
+   * for a source and a recorder prefers a TESTID anchor whenever the element has one — so the most
+   * common flow in existence could never say which files it covers. `reticle_verify { action:
+   * "change" }` then had nothing to scope by and re-ran the whole suite: measured on this repo's own
+   * flows, 52 replayed, 46 seconds, verdict `unknown`.
+   *
+   * Optional, and its absence still means unknown provenance, which is still re-run by default. The
+   * fail-safe must keep failing safe.
+   */
+  source: z
+    .object({ file: z.string().min(1), line: z.number().int().positive().optional() })
+    .optional(),
   action: z.nativeEnum(ActionType).optional(),
   args: z.record(z.unknown()).optional(),
   expect: FlowExpectSchema.optional(),

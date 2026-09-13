@@ -61,8 +61,19 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * The fix is to stop re-exporting flow artifacts from the barrel the SDK imports (core has a
  * `./artifacts` subpath already), which is free while core is unpublished and is not free after.
  * Raising this constant a fourth time is the wrong answer.
+ *
+ * The fourth raise, 200 B, is a DIFFERENT kind and the distinction is the point. The three above
+ * were dead weight — a flow-file schema a browser can never use. This one is the recorder writing
+ * each step's source file, which is functionality, and it is what lets a saved flow say which
+ * source files it covers. Measured before it: `verify { action: "change" }` on two edited files
+ * replayed FIFTY-TWO flows, took 46 seconds, and answered `unknown`, because not one flow could say
+ * what it covered. `sourceFromDom` was already in the bundle — `a11y.ts` uses it — so this is the
+ * recorder's own code, not a new dependency.
+ *
+ * A ceiling is for catching weight nobody chose. Paying 200 B to turn a 46-second `unknown` into a
+ * scoped answer is a choice, and it is written here so the next reader can disagree with it.
  */
-const MAX_FIRST_LOAD_BYTES = 233_600;
+const MAX_FIRST_LOAD_BYTES = 233_800;
 /*
  * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
  *

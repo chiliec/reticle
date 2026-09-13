@@ -13,6 +13,7 @@ import {
   type FlowStep,
 } from '@reticlehq/core';
 import { REDACTED_VALUE } from '@reticlehq/core';
+import { sourceFromDom } from '../dom/addressing/source.js';
 import { getAccessibleName, getRole, isSensitiveField } from '../dom/a11y.js';
 import { isReticleOverlay } from '../dom/dom-ignore.js';
 import { getCapabilities } from '../registry/capabilities.js';
@@ -128,6 +129,24 @@ function buildStep(el: Element, action: ActionType, args?: Record<string, unknow
   const step: FlowStep = { tool: TOOL, anchor, action };
   if (args !== undefined) step.args = args;
   if (degraded) step.degraded = true;
+  /*
+   * Record WHERE this element came from, when the build stamped it.
+   *
+   * The anchor answers "how do I find this again"; the source answers "whose code is this", and
+   * only the second lets a later change decide whether this flow is worth re-running. It was
+   * already resolvable here and simply never written down, so a saved flow forgot the one fact
+   * that makes a scoped re-verify possible: measured against this repo's own flows,
+   * `verify { action: "change" }` replayed 52 of them in 46 seconds to answer `unknown`, because
+   * not one could say which files it covered.
+   *
+   * Only a COMPONENT anchor had anywhere to put this, and `anchorFor` prefers a TESTID whenever the
+   * element has one — which is the common case and therefore the one that lost it.
+   */
+  const source = sourceFromDom(el);
+  if (source !== undefined) {
+    step.source =
+      source.line === undefined ? { file: source.file } : { file: source.file, line: source.line };
+  }
   return step;
 }
 

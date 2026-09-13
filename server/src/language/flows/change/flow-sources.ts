@@ -16,6 +16,16 @@ export function flowSources(steps: readonly FlowStep[]): string[] {
       if (anchor.kind === AnchorKind.COMPONENT && anchor.source !== undefined) {
         files.add(anchor.source.file);
       }
+      /*
+       * The step's own source, which is where almost every real flow's coverage actually lives.
+       *
+       * Only a COMPONENT anchor had somewhere to put one, and a recorder prefers a TESTID anchor
+       * whenever the element has a testid — so the flows most likely to exist were exactly the ones
+       * that could never say what they cover. Every one came back unknown-provenance and the
+       * fail-safe re-ran the lot: measured against this repo's own saved flows, 52 replayed in 46
+       * seconds to answer `unknown`.
+       */
+      if (step.source !== undefined) files.add(step.source.file);
       if (step.steps !== undefined) walk(step.steps);
     }
   };
