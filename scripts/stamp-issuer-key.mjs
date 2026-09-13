@@ -37,13 +37,32 @@ const TARGET = resolve(
 const EMPTY_DECLARATION = "const BAKED_ISSUER_PUBLIC_KEY_PEM = '';";
 
 /**
- * Is this run actually producing a tarball for npm, as opposed to a build or a dry run?
+ * Is this run putting a tarball on a REAL registry, as opposed to a build, a dry run, or a test?
  *
- * npm and pnpm both set `npm_command` for the invoked command and `npm_config_dry_run` for `--dry-run`.
- * A plain `pnpm build` sets neither, which is the case that must stay unblocked.
+ * npm and pnpm both set `npm_command` for the invoked command, `npm_config_dry_run` for `--dry-run`,
+ * and `npm_config_registry` for `--registry`. A plain `pnpm build` sets none of them.
+ *
+ * The registry check is the one that is easy to leave out, and leaving it out broke `gate:install`
+ * on every one of its twenty matrix cells: that gate publishes this whole checkout to a Verdaccio on
+ * localhost so `init` resolves dependencies the way a user would, which is a real `pnpm -r publish`
+ * and is not a release. The danger being guarded against is an unstamped artifact reaching people —
+ * so the question is not "is this a publish" but "is this a publish somebody can install from".
+ * A scratch registry on loopback is neither.
  */
+function isLoopbackRegistry(url) {
+  if (url === undefined || url.length === 0) return false;
+  try {
+    const { hostname } = new URL(url);
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  } catch {
+    return false;
+  }
+}
+
 const isRealPublish =
-  process.env.npm_command === 'publish' && process.env.npm_config_dry_run !== 'true';
+  process.env.npm_command === 'publish' &&
+  process.env.npm_config_dry_run !== 'true' &&
+  !isLoopbackRegistry(process.env.npm_config_registry);
 
 const pem = process.env.RETICLE_ISSUER_PUBLIC_KEY;
 if (pem === undefined || pem.length === 0) {

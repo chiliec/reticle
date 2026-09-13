@@ -40,12 +40,26 @@ const TARGET = join(REPO_ROOT, 'server', 'dist', 'features', 'license', 'license
  * The same defect was found and fixed in openreality's prepack earlier in this release.
  */
 function run(env: Record<string, string>): { out: string; err: string; code: number } {
-  // spawnSync, not execFileSync: the latter returns only stdout, and on a SUCCESSFUL run it hands
-  // back no stderr at all — so a test asking "was this said on the right stream" could not see the
-  // answer in the case that matters most, the one that exits 0.
+  /*
+   * spawnSync, not execFileSync: the latter returns only stdout, and on a SUCCESSFUL run it hands
+   * back no stderr at all — so a test asking "was this said on the right stream" could not see the
+   * answer in the case that matters most, the one that exits 0.
+   *
+   * The inherited environment is stripped of any key this call overrides, COMPARED CASE-INSENSITIVELY,
+   * before the overrides go on. `process.env` reads are case-insensitive on Windows but a spread is
+   * not, so `{ ...process.env, npm_command: 'publish' }` can produce BOTH `NPM_COMMAND` (whatever the
+   * package manager set) and `npm_command` (what this test wants) in one object, and the child
+   * resolves that ambiguously. It cost a red Windows job: the refusal below exited 0 there and 1
+   * everywhere else, which reads as "the script is broken on Windows" and was really "the test asked
+   * an ambiguous question".
+   */
+  const overrides = Object.keys(env).map((k) => k.toLowerCase());
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([k]) => !overrides.includes(k.toLowerCase())),
+  );
   const r = spawnSync('node', [SCRIPT], {
     encoding: 'utf8',
-    env: { ...process.env, ...env },
+    env: { ...inherited, ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   return { out: r.stdout ?? '', err: r.stderr ?? '', code: r.status ?? -1 };
@@ -77,6 +91,35 @@ describe('the issuer key can actually be stamped into the built server', () => {
     expect(code).toBe(1);
     expect(err).toContain('refusing to publish');
     expect(readFileSync(TARGET, 'utf8')).toBe(before);
+  });
+
+  it('allows a publish to a LOCAL registry — this is what gate:install does', () => {
+    /*
+     * The regression this exists to prevent, and it was mine.
+     *
+     * The refusal above first asked only "is this a publish", and `gate:install` publishes the whole
+     * checkout to a Verdaccio on localhost so that `init` resolves dependencies the way a user would.
+     * That is a real `pnpm -r publish`, so all TWENTY matrix cells went red at once — on a change
+     * whose local verification had passed, because nothing locally performs a publish.
+     *
+     * The question a release guard must ask is not "is this a publish" but "is this a publish
+     * somebody can install from". A scratch registry on loopback is not one.
+     */
+    expect(
+      run({
+        RETICLE_ISSUER_PUBLIC_KEY: '',
+        npm_command: 'publish',
+        npm_config_registry: 'http://localhost:4873/',
+      }).code,
+    ).toBe(0);
+    // ...while a real registry, and the absent-registry default (which IS npmjs), still refuse.
+    expect(
+      run({
+        RETICLE_ISSUER_PUBLIC_KEY: '',
+        npm_command: 'publish',
+        npm_config_registry: 'https://registry.npmjs.org/',
+      }).code,
+    ).toBe(1);
   });
 
   it('still allows a dry run, a plain build, and a deliberate eval-mode publish', () => {
