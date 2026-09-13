@@ -344,6 +344,7 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   domain: ['args', 'dir', 'flows', 'oracles', 'project', 'tools'],
   ee: ['license'],
   flows: [
+    'machine',
     'navigation',
     'suite',
     'change',
@@ -368,7 +369,7 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   ],
   impact: ['cloud', 'session'],
   input: ['args', 'pool', 'telemetry', 'tools'],
-  intent: ['dir', 'fs', 'project', 'tools'],
+  intent: ['dir', 'fs', 'machine', 'project', 'tools'],
   // What a run artifact is FOR once it exists -- stored, compared, and read back as established
   // fact -- as against the rest of `runs`, which produces one. Named `artifact`, singular, and it
   // must stay singular: `core/src/artifacts` is a different package and a different node, and
@@ -403,7 +404,7 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   pool: ['browser', 'input', 'telemetry'],
   // `runs` dropped out: what project wanted from it was the artifact, which is what broke the
   // project <-> runs mutual pair and took the count from 24 to 23.
-  project: ['args', 'artifact', 'cloud', 'config', 'dir', 'flows', 'fs', 'tools'],
+  project: ['args', 'artifact', 'cloud', 'config', 'dir', 'fs', 'machine', 'tools'],
   // The MCP proxy: the transport half of `mcp`, which reaches nothing of its siblings and was
   // therefore extractable without tangling anything. Reaches out to two, reached in from two,
   // and no pair among them is mutual -- which is the only thing that would have raised the count.
@@ -678,8 +679,15 @@ const REACHES_FOR: Record<string, readonly string[]> = {
  * shape a third time, since what `tools` wanted from `mcp` was those two files. The move was
  * predicted safe and turned out to be subtractive, which is the pattern worth looking for --
  * see `would FREE` in scripts/safe-to-group.mjs.
+ *
+ * 22 to 21, a fourth time, and the smallest yet: what `project` wanted from `flows` was the `Clock`
+ * INTERFACE -- two lines, declared four times across this package because rule 7 says to inject a
+ * clock and nothing said where the type lives. `project-store` needed one, found the nearest
+ * declaration inside a 975-line module, and imported it. One `machine/clock.ts` and the pair is not
+ * mutual any more. Three directories now reach into `machine`, which costs nothing: it imports none
+ * of its siblings, so it cannot be half of a pair.
  */
-const MUTUAL_PAIRS_TODAY = 22;
+const MUTUAL_PAIRS_TODAY = 21;
 
 /**
  * Two directories may not share a name.

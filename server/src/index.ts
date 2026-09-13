@@ -123,7 +123,8 @@ export { BaselineStore, normalizeLines, diffLines } from './memory/project/basel
 export { RecordingStore } from './language/flows/recording/tape/recordings.js';
 export type { RecordedStep, CompiledProgram } from './language/flows/recording/tape/recordings.js';
 export { FlowStore, recordedStepToFlowStep } from './language/flows/flows.js';
-export type { FlowResult, Clock } from './language/flows/flows.js';
+export type { FlowResult } from './language/flows/flows.js';
+export type { Clock } from './machine/clock.js';
 export {
   assertSuccess,
   successToPredicate,

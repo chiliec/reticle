@@ -24,6 +24,7 @@ import type { FileSystemPort } from '../project/fs/fs-port.js';
 import { reticleDirPaths } from '../project/dir/reticle-dir.js';
 import { withFileLock } from '../project/file-lock.js';
 import { subjectFor } from './intent-subject.js';
+import type { Clock } from '../../machine/clock.js';
 import {
   emptyShard,
   indexFrom,
@@ -41,10 +42,6 @@ import {
 const INTENT_DIR = 'intent';
 const INDEX_FILE = 'index.json';
 const SHARD_SUFFIX = '.json';
-
-export interface Clock {
-  now: () => number;
-}
 
 /** What a caller supplies to write an intent. Everything optional is genuinely optional. */
 interface IntentInput {

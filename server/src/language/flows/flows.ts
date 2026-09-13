@@ -33,6 +33,7 @@ import {
   isValidFlowName,
 } from '../../memory/project/dir/reticle-dir.js';
 import { describeFlowZodFailure, parseFlowFileText } from './flow-expect-grammar.js';
+import type { Clock } from '../../machine/clock.js';
 
 /**
  * A projectId only scopes storage when it's a safe single path segment (it's stamped from the
@@ -41,11 +42,6 @@ import { describeFlowZodFailure, parseFlowFileText } from './flow-expect-grammar
  */
 const safeProjectId = (projectId?: string): string | undefined =>
   projectId !== undefined && isValidFlowName(projectId) ? projectId : undefined;
-
-/** A monotonic clock injected for createdAt — never call Date.now inside the store (rule 7). */
-export interface Clock {
-  now(): number;
-}
 
 /** Discriminated result so callers never branch on free strings. */
 export type FlowResult<T> =

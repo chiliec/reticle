@@ -13,6 +13,7 @@ import {
 import type { FileSystemPort } from '../project/fs/fs-port.js';
 import { reticleDirPaths } from '../project/dir/reticle-dir.js';
 import { withFileLock } from '../project/file-lock.js';
+import type { Clock } from '../../machine/clock.js';
 
 /**
  * The intent ledger on disk — `.reticle/intent.json`, git-checked and meant to be read in review.
@@ -27,10 +28,6 @@ import { withFileLock } from '../project/file-lock.js';
  */
 
 const JSON_INDENT = 2;
-
-export interface Clock {
-  now: () => number;
-}
 
 export class IntentStore {
   readonly #fs: FileSystemPort;
