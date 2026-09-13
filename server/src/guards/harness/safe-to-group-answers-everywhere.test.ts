@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { execFileSync } from 'node:child_process';
+import { execFile as execFileCb, execFileSync } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execFile = promisify(execFileCb);
 import { basename, dirname, join } from 'node:path';
 import { REPO_ROOT } from '../../machine/repo-root.js';
 
@@ -56,28 +59,49 @@ describe('the advice tool answers about every directory in this repository', () 
     expect(all.some((d) => d.dir.endsWith('/src'))).toBe(true);
   });
 
-  it('gives a verdict rather than a stack trace, everywhere', () => {
-    const silent: string[] = [];
-    for (const { dir, name } of askableDirectories()) {
-      let said = '';
+  it('gives a verdict rather than a stack trace, everywhere', async () => {
+    const ask = async (dir: string, name: string): Promise<string> => {
       try {
-        said = execFileSync('node', [TOOL, dir, name], { cwd: REPO_ROOT, encoding: 'utf8' });
+        const { stdout } = await execFile('node', [TOOL, dir, name], {
+          cwd: REPO_ROOT,
+          encoding: 'utf8',
+        });
+        return stdout;
       } catch (thrown) {
         // Exit 1 is UNSAFE, which is an answer. Anything without a verdict line is not.
-        said = (thrown as { stdout?: string }).stdout ?? '';
+        return (thrown as { stdout?: string }).stdout ?? '';
       }
-      if (!/\b(SAFE|UNSAFE)\b/.test(said)) silent.push(`${dir} (asked about ${name})`);
-    }
+    };
+    const asked = askableDirectories();
+    const silent: string[] = [];
+    // Bounded concurrency, and ASYNC, which is the part that matters. The synchronous version held
+    // the worker's event loop for the whole sweep — 80 s on a Windows runner, where a spawn costs
+    // several times what it does here — so vitest could not service its own `onTaskUpdate` RPC and
+    // the run died with `[vitest-worker]: Timeout calling "onTaskUpdate"`. No assertion failed and
+    // nothing was wrong with the code: a guard starved the harness reporting on it. The per-test
+    // timeout could never have caught this, because the test was not the thing timing out.
+    const LANES = 8;
+    let next = 0;
+    await Promise.all(
+      Array.from({ length: LANES }, async () => {
+        for (let i = next++; i < asked.length; i = next++) {
+          const entry = asked[i];
+          if (entry === undefined) continue;
+          const said = await ask(entry.dir, entry.name);
+          if (!/\b(SAFE|UNSAFE)\b/.test(said))
+            silent.push(`${entry.dir} (asked about ${entry.name})`);
+        }
+      }),
+    );
     expect(
       silent.sort(),
       'safe-to-group answered neither SAFE nor UNSAFE for these. A crash prints no verdict, ' +
         'so a sweep reads it as "no groups here" and the directory looks finished when the ' +
         'tool never looked at it.',
     ).toEqual([]);
-    // A hundred-odd node processes, one per directory, is slow on purpose: the tool is being asked
-    // the way a person asks it. It measured 4.2s alone and 7.3s beside the rest of the guard suite,
-    // over a 5s default, so the timeout is set well clear of both. The invariant is the verdict,
-    // never the duration, and a timeout tuned to the machine is how a green gate goes red under
-    // load and nowhere else.
+    // A hundred-odd node processes, one per directory, is the tool being asked the way a person
+    // asks it — that has not changed, only whether they wait in a queue. The invariant is the
+    // verdict, never the duration, and a timeout tuned to the machine is how a green gate goes red
+    // under load and nowhere else.
   }, 120_000);
 });
