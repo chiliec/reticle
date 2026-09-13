@@ -1,5 +1,12 @@
 import { bodyCaptureRemedy } from '@reticlehq/engine/evidence/body-capture-remedy.js';
 import { z } from 'zod';
+import {
+  witnessDisagreement,
+  type WitnessFinding,
+} from '@reticlehq/engine/disagreement/witness-disagreement.js';
+
+/** How long to wait on the outside observer. Short: it is a read model, not the app under test. */
+const WITNESS_MS = 5_000;
 import { EventType, ReticleCommand, SnapshotMode, urlForMatch } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
 import { cursorSchema } from './args/numeric-bounds.js';
@@ -70,6 +77,15 @@ export const RECONCILE_TOOLS: ToolDef[] = [
         .string()
         .optional()
         .describe('Only compare responses from URLs containing this, e.g. "/api/v1/settlements".'),
+      witness: z
+        .object({
+          url: z.string().url(),
+          expect: z.string().optional(),
+        })
+        .optional()
+        .describe(
+          'An observer OUTSIDE the app — a read-only endpoint that reports what really happened (a row count, a mail sink, an admin read model). Everything else this tool compares is the app describing itself, so an app that lies to itself repeats the lie on every channel. This is the one reading it cannot author. GET the url; `expect` is a substring the response must contain for the effect to count as SEEN. Unreachable is reported as inconclusive and NEVER as agreement.',
+        ),
     },
     outputSchema: {
       mismatches: z
@@ -80,6 +96,12 @@ export const RECONCILE_TOOLS: ToolDef[] = [
         .string()
         .optional()
         .describe('Present when nothing could be compared — never silent about an empty check.'),
+      witness: z
+        .object({ kind: z.string(), because: z.string(), inconclusive: z.boolean().optional() })
+        .optional()
+        .describe(
+          'Present only when a `witness` was supplied AND it disagreed with the app, or could not be reached. Two independent observers disagreeing is a fact, not an inference — it is the strongest finding this tool can produce.',
+        ),
     },
     handler: async (deps, args) => {
       const session = deps.sessions.resolve(asString(args['sessionId']));
@@ -138,7 +160,47 @@ export const RECONCILE_TOOLS: ToolDef[] = [
                 note: `compared ${String(withBody)} response(s); nothing on screen contradicts them`,
               }
             : {};
-      return withControl(session, { mismatches, compared: withBody, ...partial });
+      /*
+       * Consult the observer outside the app, when one was named.
+       *
+       * Everything above is the app describing itself — its own responses against its own page — so
+       * an app that lies to itself repeats the lie consistently and no amount of it settles
+       * anything. This is the one reading the subject cannot author.
+       *
+       * "The app claims" is taken as: it returned a body worth comparing and nothing on screen
+       * contradicts it. That is the strongest self-report available here, and it is exactly the
+       * claim a witness is for checking.
+       */
+      const witnessArg = args['witness'];
+      let witness: WitnessFinding | undefined;
+      if (witnessArg !== null && 'object' === typeof witnessArg) {
+        const { url, expect: needle } = witnessArg as { url: string; expect?: string };
+        const appClaims = withBody > 0 && 0 === mismatches.length;
+        let saw: boolean | undefined;
+        let unreachable: string | undefined;
+        try {
+          const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(WITNESS_MS) });
+          if (!res.ok) {
+            unreachable = `the observer answered ${String(res.status)}`;
+          } else {
+            const text = await res.text();
+            saw = needle === undefined ? text.trim().length > 0 : text.includes(needle);
+          }
+        } catch (e) {
+          unreachable = e instanceof Error ? e.message : String(e);
+        }
+        witness = witnessDisagreement({
+          appClaims,
+          witnessSaw: saw,
+          ...(unreachable === undefined ? {} : { unreachable }),
+        });
+      }
+      return withControl(session, {
+        mismatches,
+        compared: withBody,
+        ...partial,
+        ...(witness === undefined ? {} : { witness }),
+      });
     },
   },
 ];

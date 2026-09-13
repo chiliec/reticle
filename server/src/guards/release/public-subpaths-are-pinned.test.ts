@@ -60,6 +60,7 @@ const PINNED: readonly PublicSurface[] = [
       'disagreement/reconcile.ts',
       'disagreement/stale-response.ts',
       'disagreement/unit-mismatch.ts',
+      'disagreement/witness-disagreement.ts',
       'evidence/accepted-write.ts',
       'evidence/already-true.ts',
       'evidence/blind-spots.ts',
