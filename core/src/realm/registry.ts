@@ -46,6 +46,20 @@ import { PlatformProfile } from '../wire/platform.js';
 /** What Reticle needs to know about a realm that it cannot work out by looking. */
 export interface RealmTraits {
   /**
+   * Which of the protocol's surfaces this realm IS.
+   *
+   * Declared rather than derived. `surfaceOf` used to ask `isDesktopShell ? DESKTOP : WEB`, so of
+   * the six surfaces the protocol names — web, desktop, mobile, service, game, device — only two
+   * could ever be returned, while `DETERMINISM_BY_SURFACE` already carried a correct row for all
+   * six. A mobile, service, game or device realm had no way to be NAMED even though the rules
+   * governing it were written and waiting.
+   *
+   * A boolean answers two questions; a surface is not a question with two answers. With this here,
+   * adding a domain is a row in the table below rather than an edit to a branch — and the branch is
+   * the thing that would have answered `web` to everything it had not heard of.
+   */
+  readonly surface: Surface;
+  /**
    * Does the app run in a window of its own, rather than a browser tab?
    *
    * Decides whether advice about dev servers and tabs applies, and whether desktop-only coverage
@@ -102,12 +116,14 @@ export interface RealmTraits {
  */
 export const REALMS: Record<AppRuntime, RealmTraits> = {
   [AppRuntime.WEB]: {
+    surface: Surface.WEB,
     isDesktopShell: false,
     usesWebKit: false,
     ownsCoverageKinds: false,
     hasOwnBaselineDirectory: false,
   },
   [AppRuntime.ELECTRON]: {
+    surface: Surface.DESKTOP,
     isDesktopShell: true,
     // No config file of its own: an Electron app is one that depends on Electron.
     projectMarker: { dependency: 'electron' },
@@ -117,6 +133,7 @@ export const REALMS: Record<AppRuntime, RealmTraits> = {
     hasOwnBaselineDirectory: true,
   },
   [AppRuntime.TAURI]: {
+    surface: Surface.DESKTOP,
     isDesktopShell: true,
     projectMarker: { file: 'src-tauri/tauri.conf.json' },
     // The system webview: WKWebView on macOS, WebKitGTK on Linux.
@@ -177,7 +194,7 @@ export function realmOf(runtime: string | undefined): RealmTraits {
  * than misdescribing it.
  */
 export function surfaceOf(runtime: string | undefined): Surface {
-  return realmOf(runtime).isDesktopShell ? Surface.DESKTOP : Surface.WEB;
+  return realmOf(runtime).surface;
 }
 
 /**
