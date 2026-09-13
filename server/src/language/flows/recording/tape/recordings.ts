@@ -10,6 +10,14 @@ export interface RecordedStep {
   stable: boolean;
   /** Optional post-condition annotation carried into the on-disk flow's expect. */
   expect?: FlowExpect;
+  /**
+   * The document this step runs, when the step is an INVOCATION rather than an action.
+   *
+   * Written by `stop` when a nested recording closes inside an outer one. `tool` and `args` are
+   * still present and still describe nothing the replayer should dispatch — a consumer reads
+   * `invoke` first and treats the step as a call.
+   */
+  invoke?: string;
 }
 
 interface ActiveRecording {
@@ -17,6 +25,19 @@ interface ActiveRecording {
   steps: RecordedStep[];
   /** The route the journey began on. See CompiledProgram.startPath. */
   startPath?: string;
+  /**
+   * For each recording that was ALREADY in flight when this one started, how many steps it had.
+   *
+   * That mark is what makes a sub-flow boundary knowable. `capture` appends to every active
+   * recording, so a nested span lands in the outer one INLINED — which is a composite-shaped
+   * journey with none of composition's value: the drift still reports "step 34 of onboarding",
+   * repair still has to happen in every copy, and the sub-journey cannot be reused. With the mark,
+   * `stop` can replace exactly the span it owns with a single invocation.
+   *
+   * Recorded at START rather than derived at stop, because by then the outer recording has grown
+   * and there is nothing left to say where this one began.
+   */
+  openedOver: ReadonlyMap<string, number>;
 }
 
 /** A finished, replayable program compiled from a recording. */
@@ -44,6 +65,15 @@ export interface CompiledProgram {
 }
 
 /**
+ * The `tool` written on an invocation step.
+ *
+ * A named constant rather than an inline string: it crosses from the recorder to the compiler to
+ * whatever replays it, and a free string on a wire-ish shape is the thing this repository forbids
+ * precisely because a typo in one of three places fails silently.
+ */
+export const INVOKE_TOOL = 'reticle_invoke';
+
+/**
  * Tracks in-flight recordings (name -> { buffer cursor at record_start, captured steps })
  * and the last compiled program per name (for reticle_replay).
  */
@@ -52,9 +82,12 @@ export class RecordingStore {
   readonly #compiled = new Map<string, CompiledProgram>();
 
   start(name: string, cursor: number, startPath?: string): void {
+    const openedOver = new Map<string, number>();
+    for (const [outer, rec] of this.#active) openedOver.set(outer, rec.steps.length);
     this.#active.set(name, {
       cursor,
       steps: [],
+      openedOver,
       ...(startPath === undefined ? {} : { startPath }),
     });
   }
@@ -77,10 +110,34 @@ export class RecordingStore {
     for (const rec of this.#active.values()) rec.steps.push(step);
   }
 
-  /** Returns the active recording (cursor + steps) and clears it, or undefined if not recording. */
+  /**
+   * Returns the active recording (cursor + steps) and clears it, or undefined if not recording.
+   *
+   * Closing a NESTED recording also rewrites its parents: the span this recording owned is replaced
+   * in each still-open outer recording by one `invoke` step. That is the moment a sub-flow boundary
+   * becomes knowable — the sub-journey is complete and it has a name, neither of which was true
+   * when it started.
+   *
+   * Only recordings this one opened OVER are rewritten. Overlapping spans are not nesting: a
+   * recording that began before this one did not contain it, and a document that invokes something
+   * it never drove replays a journey nobody took.
+   */
   stop(name: string): ActiveRecording | undefined {
     const rec = this.#active.get(name);
     this.#active.delete(name);
+    if (rec === undefined) return undefined;
+    for (const [outer, mark] of rec.openedOver) {
+      const parent = this.#active.get(outer);
+      // Gone already, or somehow shorter than when we started: leave it exactly as it is rather
+      // than splice a range that no longer means what it meant.
+      if (parent === undefined || parent.steps.length < mark) continue;
+      parent.steps.splice(mark, parent.steps.length - mark, {
+        tool: INVOKE_TOOL,
+        args: { flow: name },
+        stable: true,
+        invoke: name,
+      });
+    }
     return rec;
   }
 
