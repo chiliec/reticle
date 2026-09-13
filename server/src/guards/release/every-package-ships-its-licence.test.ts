@@ -33,7 +33,23 @@ interface Manifest {
  * `pnpm -r list` is the publish surface itself, so this cannot drift from what a release
  * actually pushes. A hand-kept list would have been correct the day it was written.
  */
+/**
+ * Memoised: `pnpm -r list` is spawned ONCE for the file, not once per test.
+ *
+ * Four tests each asked independently, which is four full workspace walks. On macOS that is 6.6s
+ * and merely wasteful; on a Windows runner, where the call also has to go through a shell to reach
+ * `pnpm.CMD`, it ran past vitest's 5s default and the guard failed on its own cost rather than on
+ * anything about the packages. The publish surface cannot change between two reads a millisecond
+ * apart, so asking four times only ever bought four chances to be slow.
+ */
+let cached: { dir: string; manifest: Manifest }[] | undefined;
+
 function publishable(): { dir: string; manifest: Manifest }[] {
+  cached ??= readPublishable();
+  return cached;
+}
+
+function readPublishable(): { dir: string; manifest: Manifest }[] {
   const listed = JSON.parse(
     // `shell: true` on Windows, where pnpm is `pnpm.CMD` and a bare `execFileSync('pnpm', …)`
     // cannot execute it: the call dies with `spawnSync pnpm ENOENT`, which reads as "this guard
@@ -78,7 +94,11 @@ function publishable(): { dir: string; manifest: Manifest }[] {
  */
 const NO_LICENCE_TEXT_YET: Record<string, string> = {};
 
-describe('every published package carries the licence it claims', () => {
+// A generous SUITE timeout, on top of the memoisation above. The one remaining spawn has to reach
+// `pnpm.CMD` through a shell on Windows, which costs several times what it does here, and the
+// invariant this file asserts is about LICENCES — never about how long a workspace walk takes. A
+// timeout tuned to a fast machine is how a green gate goes red under load and nowhere else.
+describe('every published package carries the licence it claims', { timeout: 60_000 }, () => {
   it('finds the publishable packages, so a pass is not a pass over nothing', () => {
     const found = publishable();
     expect(found.length).toBeGreaterThan(8);
