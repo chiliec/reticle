@@ -96,6 +96,32 @@ export abstract class Realm extends Witness {
   abstract describe(query?: unknown): Promise<unknown>;
 
   /**
+   * Does what a journey has established meet what the next document declares it needs?
+   *
+   * The protocol carries `requires` and `ensures` and never parses them — a protocol that compared
+   * them would be a protocol with an opinion about what a subject is, which is the opinion it
+   * exists not to have. Only the realm knows what its own state values MEAN, so only the realm can
+   * answer this.
+   *
+   * NOT abstract, unlike `capabilities` and `determinism`, and the difference is deliberate. Those
+   * are questions every realm can already answer about itself, and a default would be the protocol
+   * putting words in its mouth. This one asks a realm to understand a vocabulary it may not have:
+   * a realm that has never seen a state contract has no honest answer, and forcing it to invent one
+   * would be worse than letting it say so.
+   *
+   * So the default is `undefined` — "I cannot tell" — and that is a real answer with a name.
+   * `typecheckComposite` reports it as `unjudged-requirement` and NEVER as agreement, because a
+   * check that reads "cannot tell" as "yes" can only ever pass, and a check that cannot fail is
+   * worse than no check since it reads as one.
+   *
+   * A realm that overrides this becomes able to refuse a composite whose parts cannot stitch —
+   * before it is run, rather than inside a sub-journey that is working correctly.
+   */
+  satisfies(_ensures: unknown, _requires: unknown): boolean | undefined {
+    return undefined;
+  }
+
+  /**
    * Perform one action and report that it was delivered.
    *
    * Return `dispatched: true` when the realm accepted it. That is all this means. Whether anything

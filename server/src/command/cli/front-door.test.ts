@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { spawnSync } from 'node:child_process';
+import { execFile as execFileCb } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execFile = promisify(execFileCb);
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { SERVER_VERSION } from '../version/identity/server-version.js';
@@ -51,9 +54,34 @@ interface Result {
   stderr: string;
 }
 
-function run(...args: string[]): Result {
-  const r = spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8' });
-  return { code: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
+/**
+ * Run the built CLI, ASYNCHRONOUSLY, and remember the answer.
+ *
+ * Async because `spawnSync` holds the worker's event loop for the whole spawn, and this file makes
+ * about fifteen of them at 2-4s each. Vitest could then not service its own reporter RPC and the
+ * run died with `[vitest-worker]: Timeout calling "onTaskUpdate"` — 892 tests passing and the suite
+ * reported as failed. That is the same cost that killed the Windows job, where a spawn is dearer
+ * still: process creation, not the work, and a failure that names something other than its cause.
+ *
+ * Memoised because `--help` is asked twice per command — once for the exit code and stdout, once
+ * for the silent stderr — and the CLI's answer to a help flag cannot differ between two runs a
+ * millisecond apart. Halves the spawns without weakening either assertion.
+ */
+const answers = new Map<string, Promise<Result>>();
+
+function run(...args: string[]): Promise<Result> {
+  const key = args.join(' ');
+  const existing = answers.get(key);
+  if (existing !== undefined) return existing;
+  const started = execFile(process.execPath, [CLI, ...args], { encoding: 'utf8' })
+    .then(({ stdout, stderr }) => ({ code: 0, stdout, stderr }))
+    .catch((thrown: { code?: number; stdout?: string; stderr?: string }) => ({
+      code: thrown.code ?? -1,
+      stdout: thrown.stdout ?? '',
+      stderr: thrown.stderr ?? '',
+    }));
+  answers.set(key, started);
+  return started;
 }
 
 /**
@@ -71,31 +99,31 @@ describe('the first commands anybody types', { timeout: 30_000 }, () => {
   });
 
   describe.each(HELP_MUST_ANSWER)('%s --help', (command) => {
-    it('answers with usage and succeeds', () => {
-      const r = run(command, '--help');
+    it('answers with usage and succeeds', async () => {
+      const r = await run(command, '--help');
       expect(r.code, `${command} --help exited ${String(r.code)}`).toBe(0);
       expect(r.stdout).toContain('usage:');
     });
 
-    it('says nothing on the error stream, because nothing went wrong', () => {
+    it('says nothing on the error stream, because nothing went wrong', async () => {
       // Asking a tool what it does and being answered on stderr with a non-zero exit reads as a
       // broken install. That is precisely how this looked before it was fixed.
-      expect(run(command, '--help').stderr).toBe('');
+      expect((await run(command, '--help')).stderr).toBe('');
     });
   });
 
-  it('the short flag works too', () => {
-    expect(run('init', '-h').code).toBe(0);
+  it('the short flag works too', async () => {
+    expect((await run('init', '-h')).code).toBe(0);
   });
 
-  it('the version is on stdout, bare, so a script or a bug report can capture it', () => {
-    expect(run('version').stdout.trim()).toBe(SERVER_VERSION);
-    expect(run('--version').stdout.trim()).toBe(SERVER_VERSION);
+  it('the version is on stdout, bare, so a script or a bug report can capture it', async () => {
+    expect((await run('version')).stdout.trim()).toBe(SERVER_VERSION);
+    expect((await run('--version')).stdout.trim()).toBe(SERVER_VERSION);
   });
 
-  it('an unknown command fails, and says what the real ones are', () => {
+  it('an unknown command fails, and says what the real ones are', async () => {
     // The negative control. If every command "succeeded", the checks above would mean nothing.
-    const r = run('deffinitelynotacommand');
+    const r = await run('deffinitelynotacommand');
     expect(r.code).toBe(1);
     expect(r.stderr).toContain('usage:');
   });
