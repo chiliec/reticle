@@ -79,6 +79,8 @@ export function buildDecision(
   result: FlowReplayResult,
   flow?: FlowFile,
   intentStatement?: string,
+  /** The flows this one invokes, already loaded — see `unverifiableReason`. */
+  invoked: ReadonlyMap<string, FlowFile> = new Map(),
 ): ReplayDecision {
   const { name, status, steps } = result;
   const intentSaid = intentStatement ?? flow?.intent;
@@ -86,7 +88,7 @@ export function buildDecision(
   if (status === ReplayStatus.OK) {
     // Green — but is it green-for-the-right-reason? A flow that asserts no consequence can pass while
     // broken, so the honest next action is to add one.
-    const grade = flow !== undefined ? classifyFlowAssertions(flow) : undefined;
+    const grade = flow !== undefined ? classifyFlowAssertions(flow, invoked) : undefined;
     const verifiesOutcome = true === grade?.hasConsequenceAssertion;
     return {
       verdict: 'pass',
@@ -161,12 +163,23 @@ function suiteVerdictOf(status: ReplayStatus): 'pass' | 'drift' | 'fail' {
  * turned that warning into "all 1 flow pass", which is a false green in the exact feature sold as
  * the regression suite. Classified only when the flow file is available; never guessed.
  */
-export function unverifiableReason(flow: FlowFile | undefined): string | undefined {
+export function unverifiableReason(
+  flow: FlowFile | undefined,
+  /**
+   * The flows this one invokes, already loaded.
+   *
+   * A composite asserts through what it RUNS. Without these it is graded on the one step it
+   * contains and reported `unverifiable` however thoroughly its sub-journeys check themselves —
+   * which is a warning that is right about the file and wrong about the journey, and the only ways
+   * to silence it are to duplicate assertions into every caller or to stop reading warnings.
+   */
+  invoked: ReadonlyMap<string, FlowFile> = new Map(),
+): string | undefined {
   if (flow === undefined) return undefined;
   if (0 === flow.steps.length) {
     return 'the flow has no steps — it replays green whatever the app does. Record it again, or add steps with reticle_annotate.';
   }
-  const c = classifyFlowAssertions(flow);
+  const c = classifyFlowAssertions(flow, invoked);
   if (c.grade !== FlowAssertionGrade.ASSERTION_FREE) return undefined;
   return (
     c.warning ??

@@ -25,7 +25,7 @@ import {
 import { homedir } from 'node:os';
 import { resolveProjectCloud } from '../../memory/cloud/cloud-config.js';
 import { buildSuiteVerdict } from './decision.js';
-import { classifyFlowAssertions } from './flow-classify.js';
+import { classifyFlowAssertions, flattenSteps } from './flow-classify.js';
 import { recordingBacktrackWarning } from './recording/recording-backtrack.js';
 import { isValidFlowName, flowPath } from '../../memory/project/dir/reticle-dir.js';
 import type { SuiteVerdict } from '@reticlehq/core';
@@ -264,11 +264,16 @@ export const FLOW_TOOLS: ToolDef[] = [
         const saved = res.value.name;
         const path = isValidFlowName(saved) ? flowPath(root, saved, projectId) : undefined;
         const backtrack = recordingBacktrackWarning(program.routes ?? []);
+        // Load what this flow INVOKES, so a composite is graded on the journey it runs rather than
+        // on the one step it contains. Without this a composite whose sub-flows all assert still
+        // warns that it checks nothing, and the only ways to silence that are to duplicate the
+        // sub-flow's assertion into every caller or to stop reading the warning.
+        const invoked = loaded.ok ? await loadInvoked(flows, loaded.value, projectId) : new Map();
         return loaded.ok
           ? {
               ...res.value,
               ...(path === undefined ? {} : { path }),
-              assertions: classifyFlowAssertions(loaded.value),
+              assertions: classifyFlowAssertions(loaded.value, invoked),
               ...(backtrack === undefined ? {} : { warning: backtrack }),
             }
           : {
@@ -866,3 +871,37 @@ export const FLOW_TOOLS: ToolDef[] = [
       healFlow(deps, args).then(({ name, ...rest }) => ({ flowName: name, ...rest })),
   },
 ];
+
+/**
+ * Every flow reachable from this one by `invoke`, loaded once.
+ *
+ * Breadth-first with a `seen` set so a cycle terminates: typecheck refuses those at rest, and this
+ * runs at SAVE, which is exactly where a bad composite arrives before anything has checked it.
+ *
+ * A sub-flow that fails to load is simply absent from the map. The classifier then declines to
+ * credit it, which is the conservative direction — a composite graded on a flow nobody could read
+ * would be graded on a promise.
+ */
+async function loadInvoked(
+  flows: { load: (name: string, projectId?: string) => Promise<{ ok: boolean; value?: FlowFile }> },
+  flow: FlowFile,
+  projectId?: string,
+): Promise<Map<string, FlowFile>> {
+  const out = new Map<string, FlowFile>();
+  const queue = [flow];
+  const seen = new Set<string>([flow.name]);
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === undefined) continue;
+    for (const step of flattenSteps(current.steps)) {
+      const name = step.invoke;
+      if (name === undefined || seen.has(name)) continue;
+      seen.add(name);
+      const sub = await flows.load(name, projectId);
+      if (!sub.ok || sub.value === undefined) continue;
+      out.set(name, sub.value);
+      queue.push(sub.value);
+    }
+  }
+  return out;
+}

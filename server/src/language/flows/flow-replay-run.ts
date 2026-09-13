@@ -27,7 +27,7 @@ import { anchorQueryArgs } from './flow-step-runners.js';
 import { queryRefs } from './replay.js';
 import { assertSuccess, dynamicTestids, successLabel, SUCCESS_STEP_TOOL } from './flow-success.js';
 import { buildDecision, unverifiableReason } from './decision.js';
-import { classifyFlowAssertions } from './flow-classify.js';
+import { classifyFlowAssertions, flattenSteps } from './flow-classify.js';
 import { dischargeFlowIntent, flowIntentStatement, flowReplayVerdictId } from './flow-intent.js';
 import { IntentStore } from '../../memory/intent/intent-store.js';
 import { sessionRoot } from '../../memory/project/session-root.js';
@@ -378,6 +378,39 @@ export async function navigateAndAwait(
  * status + decision. Shared by reticle_flow_replay (single flow) and reticle_flow_verify (whole suite) so
  * both produce identical FlowReplayResults. Every exit path records a run to project.json.
  */
+
+/**
+ * Every flow reachable from this one by `invoke`, loaded once for the whole replay.
+ *
+ * Breadth-first with a `seen` set so a cycle terminates rather than trusting that typecheck ran.
+ * A sub-flow that will not load is simply absent, and the grader then declines to credit it — the
+ * conservative direction, because a composite graded on a flow nobody could read is graded on a
+ * promise.
+ */
+async function loadInvokedFlows(
+  deps: ToolDeps,
+  flow: FlowFile,
+  projectId?: string,
+): Promise<Map<string, FlowFile>> {
+  const out = new Map<string, FlowFile>();
+  const queue: FlowFile[] = [flow];
+  const seen = new Set<string>([flow.name]);
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === undefined) continue;
+    for (const step of flattenSteps(current.steps)) {
+      const name = step.invoke;
+      if (name === undefined || seen.has(name)) continue;
+      seen.add(name);
+      const sub = await flowsForSession(deps, projectId).flows.load(name, projectId);
+      if (!sub.ok) continue;
+      out.set(name, sub.value);
+      queue.push(sub.value);
+    }
+  }
+  return out;
+}
+
 export async function replayNamedFlow(
   deps: ToolDeps,
   args: Record<string, unknown>,
@@ -436,6 +469,10 @@ export async function replayNamedFlow(
   // A recorded upload names a path on disk; the browser can only take bytes. Resolved once, before
   // step 1, through the same helper the live `reticle_act` uses. See resolveFlowUploads.
   const replayable = await resolveFlowUploads(deps, loaded.value);
+  // Loaded once and used for BOTH the replay and the grading below. A composite asserts through
+  // what it runs, and a grader that cannot see the sub-flows reports `unverifiable` on a journey
+  // that checks itself thoroughly — right about the file, wrong about the journey.
+  const invokedFlows = await loadInvokedFlows(deps, replayable, projectId);
   const steps = await replayFlow(
     session,
     replayable,
@@ -522,7 +559,7 @@ export async function replayNamedFlow(
     // assertion-free flow is never bound, and `dischargeIntent` refuses an unbound intent, so the
     // guard here is the cheap half of a rule the ledger already enforces. `grade` is what makes a
     // later weakening visible — an intent re-proved by a weaker flow says so in the git diff.
-    if (unverifiableReason(loaded.value) === undefined) {
+    if (unverifiableReason(loaded.value, invokedFlows) === undefined) {
       const provedAt = deps.now();
       await dischargeFlowIntent(intents, loaded.value, {
         verdictId: flowReplayVerdictId(name, provedAt),
@@ -551,7 +588,7 @@ export async function replayNamedFlow(
       steps,
       error: { code: ReplayStatus.ERROR, message: failed.error ?? 'flow action failed' },
     };
-    errored.decision = buildDecision(errored, loaded.value, intentSaid);
+    errored.decision = buildDecision(errored, loaded.value, intentSaid, invokedFlows);
     applyStartPathHint(errored, startPathHint);
     if (deviation !== undefined) errored.deviation = deviation;
     if (knows !== undefined) errored.knows = knows;
@@ -565,9 +602,11 @@ export async function replayNamedFlow(
   // via this same function -- a single-flow caller saw a bare `ok` and had no way to learn the flow
   // asserts nothing. Derived from the same helper on purpose: two copies of this judgement would
   // drift, and the sibling tools would then disagree about the same flow.
-  const cannotFail = status === ReplayStatus.OK ? unverifiableReason(loaded.value) : undefined;
+  const cannotFail =
+    status === ReplayStatus.OK ? unverifiableReason(loaded.value, invokedFlows) : undefined;
   if (cannotFail !== undefined) result.unverifiable = { reason: cannotFail };
-  if (status !== ReplayStatus.OK) result.decision = buildDecision(result, loaded.value, intentSaid);
+  if (status !== ReplayStatus.OK)
+    result.decision = buildDecision(result, loaded.value, intentSaid, invokedFlows);
   applyStartPathHint(result, startPathHint);
   if (deviation !== undefined) result.deviation = deviation;
   if (crossStep.length > 0) result.crossStep = crossStep;

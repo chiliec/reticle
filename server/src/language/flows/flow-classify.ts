@@ -77,7 +77,7 @@ const expectIsWeak = flowExpectIsPresenceOnly;
  * describes more than the other, the difference is a false green or a lost verification.
  */
 /** Walk steps + act_sequence sub-steps so an expect on either level is counted. */
-function flattenSteps(steps: readonly FlowStep[]): FlowStep[] {
+export function flattenSteps(steps: readonly FlowStep[]): FlowStep[] {
   const out: FlowStep[] = [];
   for (const s of steps) {
     out.push(s);
@@ -86,7 +86,53 @@ function flattenSteps(steps: readonly FlowStep[]): FlowStep[] {
   return out;
 }
 
-export function classifyFlowAssertions(flow: FlowFile): FlowAssertionClassification {
+/**
+ * Does this flow, or anything it invokes, assert a consequence?
+ *
+ * A composite is as asserted as what it runs. Driving one showed why this is not optional: a
+ * journey invoking a sub-flow that asserts a signal still graded `assertion-free`, warning that it
+ * "claims to verify a goal it cannot actually check". That was correct about the FILE — the invoke
+ * step carries no `expect` — and wrong about the JOURNEY, which asserts exactly once, in the
+ * document that owns the steps. Left alone it pushes people to duplicate the sub-flow's assertion
+ * into every caller, which is the copy-paste composition exists to remove.
+ *
+ * A sub-flow that cannot be READ is not credited. Same direction as every other "cannot tell" here:
+ * crediting an assertion nobody has looked at grades a composite on a promise.
+ *
+ * `seen` makes a cycle terminate. Typecheck refuses those at rest and this must not depend on that
+ * having run — grading is reached from save, which is exactly where a bad composite arrives first.
+ */
+function invokedAssertsConsequence(
+  flow: FlowFile,
+  invoked: ReadonlyMap<string, FlowFile>,
+  seen: ReadonlySet<string>,
+): boolean {
+  if (seen.has(flow.name)) return false;
+  const deeper = new Set([...seen, flow.name]);
+  for (const step of flattenSteps(flow.steps)) {
+    if (step.invoke === undefined) continue;
+    const sub = invoked.get(step.invoke);
+    if (sub === undefined) continue;
+    const subSteps = flattenSteps(sub.steps);
+    if (subSteps.some((s) => expectIsConsequence(s.expect)) || expectIsConsequence(sub.success)) {
+      return true;
+    }
+    if (invokedAssertsConsequence(sub, invoked, deeper)) return true;
+  }
+  return false;
+}
+
+export function classifyFlowAssertions(
+  flow: FlowFile,
+  /**
+   * The flows this one invokes, already loaded.
+   *
+   * A map rather than a loader so this stays pure and synchronous: the caller has the store and the
+   * async, and a classifier that could do IO would be a classifier that could fail for reasons that
+   * have nothing to do with the flow it is grading.
+   */
+  invoked: ReadonlyMap<string, FlowFile> = new Map(),
+): FlowAssertionClassification {
   const all = flattenSteps(flow.steps);
   let consequenceSteps = 0;
   let weakSteps = 0;
@@ -94,9 +140,10 @@ export function classifyFlowAssertions(flow: FlowFile): FlowAssertionClassificat
     if (expectIsConsequence(s.expect)) consequenceSteps++;
     else if (expectIsWeak(s.expect)) weakSteps++;
   }
+  const invokedAsserts = invokedAssertsConsequence(flow, invoked, new Set());
   const successIsConsequence = expectIsConsequence(flow.success);
   const successIsWeak = expectIsWeak(flow.success);
-  const hasConsequenceAssertion = consequenceSteps > 0 || successIsConsequence;
+  const hasConsequenceAssertion = consequenceSteps > 0 || successIsConsequence || invokedAsserts;
   const hasAnyAssertion = hasConsequenceAssertion || weakSteps > 0 || successIsWeak;
 
   const intent = flow.intent;
