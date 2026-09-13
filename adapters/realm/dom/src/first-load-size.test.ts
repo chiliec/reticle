@@ -50,7 +50,21 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * measured, so an ordinary change does not fail on rounding; raising either one needs a reason
  * written here, the way the tool-surface budget does.
  */
-const MAX_FIRST_LOAD_BYTES = 232_900;
+const MAX_FIRST_LOAD_BYTES = 233_300;
+/*
+ * Raised a fourth time, 232_900 -> 233_300, for grammar v2 — and this one has NOT paid for itself yet.
+ *
+ * The Flow document gained composition: `InvokeSchema`, `StepSchema` and a `FlowNameSchema` pattern,
+ * so `steps` is a union rather than a list of actions. The in-page RECORDER compiles FlowFile-shaped
+ * objects, which is what makes the schema genuinely reachable from the browser rather than dead
+ * weight — the same reason `Flow.knownBugs` was admitted above. 306 B measured.
+ *
+ * What it buys TODAY: nothing a user can see. The recorder cannot yet close a sub-flow boundary, so
+ * no composite can be authored from the page. What it buys once that lands is attribution: a drift
+ * inside `onboarding/signup` reports THAT address instead of "step 34 of onboarding", which is the
+ * whole reason composition is worth having. Written down as a debt rather than a benefit, because a
+ * ceiling raised for a promise is the kind that gets raised again for the next promise.
+ */
 /*
  * Raised a third time, 232_800 -> 232_900, for 36 B that PAY FOR THEMSELVES on the first navigation.
  *

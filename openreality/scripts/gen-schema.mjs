@@ -72,6 +72,9 @@ export const SCHEMAS = Object.freeze({
   anomaly: ovp.AnomalySchema,
   'verdict-record': ovp.VerdictRecordSchema,
   flow: ovp.FlowSchema,
+  // Published because a composite document is unreadable without it: a `steps` entry may be an
+  // invocation, and an implementation working from the contract alone has to be able to see that.
+  invoke: ovp.InvokeSchema,
   repair: ovp.RepairSchema,
   belief: ovp.BeliefSchema,
   implementation: ovp.ImplementationSchema,

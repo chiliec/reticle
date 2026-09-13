@@ -61,6 +61,10 @@ const PINNED: readonly SchemaSurface[] = [
       // another language validates a saved fixture against this by name.
       'fixture-ref.json',
       'flow.json',
+      // Added with grammar v2, when a document gained the ability to invoke another. A composite is
+      // unreadable without it: a `steps` entry may be an invocation, and an implementation working
+      // from the published contract alone has to be able to see that shape.
+      'invoke.json',
       'handle.json',
       'implementation.json',
       'intent.json',

@@ -42,7 +42,64 @@ import { Verdict } from './verdict.js';
  * ships as JSON for implementations that never load this package's code, and a number they have to
  * infer from prose is a number they will get wrong.
  */
-export const OVP_FLOW_GRAMMAR_VERSION = 1;
+export const OVP_FLOW_GRAMMAR_VERSION = 2;
+
+/**
+ * A document's address: one or more segments, `/`-separated.
+ *
+ * A directory is a NAMESPACE, not a filesystem fact — `onboarding/signup` addresses the same
+ * document in a store that has no directories at all, which is what keeps this usable for a realm
+ * whose memory is a table or a key-value bucket.
+ *
+ * The refusals are all the same refusal: a name that resolves somewhere other than where it reads
+ * is how a document ends up invoking something nobody named. A leading or trailing slash, an empty
+ * segment, `.` and `..` are rejected at the GRAMMAR so every realm does not have to invent the same
+ * check and disagree about it. A flat name stays valid — every document written before composition
+ * existed has one.
+ */
+export const FlowNameSchema = z
+  .string()
+  .min(1)
+  // A PATTERN rather than a refinement, so the rule survives the trip to JSON Schema. A `.refine`
+  // is invisible there, which would leave an implementation working from the published contract
+  // unable to see a constraint this package enforces -- the exact divergence
+  // `refinements-reach-the-contract` exists to forbid. The lookahead rejects a `.` or `..` segment
+  // anywhere; the body rejects an empty segment, and with it a leading slash, a trailing slash and
+  // a doubled slash.
+  .regex(/^(?!.*(?:^|\/)\.{1,2}(?:\/|$))[^/]+(?:\/[^/]+)*$/, {
+    message:
+      'a flow name is `/`-separated segments: no empty segment, no leading or trailing slash, no `.` or `..`',
+  });
+
+/**
+ * A step that runs ANOTHER document.
+ *
+ * The reason composition exists is attribution, not tidiness. A flat recording that drifts at step
+ * 34 reports step 34, so a regression in signup and a regression in payment-setup arrive as the same
+ * message and neither says whether the rest of the journey still holds. Nesting is only worth its
+ * cost where it makes a failure narrower.
+ *
+ * `with` is realm-opaque, exactly like `startState` and the state contract below. The protocol
+ * carries it to the invoked document and does not look inside.
+ */
+export const InvokeSchema = z.object({
+  id: z.string().min(1),
+  invoke: FlowNameSchema,
+  /** Parameters for the invoked document, interpreted by the REALM and not by the protocol. */
+  with: z.unknown().optional(),
+  at: z.number().int(),
+});
+export type Invoke = z.infer<typeof InvokeSchema>;
+
+/**
+ * A step: an action, or an invocation of another document.
+ *
+ * A union rather than a tagged `kind`, because the two shapes are already unambiguous — an action
+ * carries `actor` and `capability`, an invoke carries `invoke`, and neither can be read as the
+ * other. Adding a discriminator would be a field every existing document would have to grow.
+ */
+export const StepSchema = z.union([ActionSchema, InvokeSchema]);
+export type Step = z.infer<typeof StepSchema>;
 
 export const FlowSchema = z.object({
   name: z.string().min(1),
@@ -60,9 +117,24 @@ export const FlowSchema = z.object({
    * Absent means "start from wherever the subject already is", which is a real and common answer.
    */
   startState: z.unknown().optional(),
+  /**
+   * What must hold BEFORE step 1, and what the realm may assume AFTER the last one.
+   *
+   * The state contract is what makes stitching honest rather than hopeful. A sub-flow that assumes
+   * it starts signed-in passes alone and fails inside a composite for a reason neither document
+   * mentions — so a document says what it needs and what it leaves behind, and a composite can be
+   * refused before it is ever run.
+   *
+   * Realm-opaque for the same reason as `startState`: the protocol carries these and never parses
+   * them. `startState` is the narrower, older idea — where the subject must BE — and `requires` is
+   * the general one: what must be TRUE. A document may carry either or both; nothing here collapses
+   * them, because a realm that reads `startState` today must keep working unchanged.
+   */
+  requires: z.unknown().optional(),
+  ensures: z.unknown().optional(),
   /** The claim this route was recorded as establishing. */
   claim: z.string().min(1),
-  steps: z.array(ActionSchema),
+  steps: z.array(StepSchema),
   /** What must hold at the end for a replay to count as having reproduced the original. */
   expects: z.array(AssertionSchema).default([]),
   /**

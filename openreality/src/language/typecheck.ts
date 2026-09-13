@@ -26,6 +26,10 @@ export const TypeErrorKind = {
   UNDECLARED_CAPABILITY: 'undeclared-capability',
   /** The realm cannot SEE this. Checked against `channels()`. */
   UNOBSERVED_CHANNEL: 'unobserved-channel',
+  /** An `invoke` names a document that is not in the set being checked. */
+  UNRESOLVED_FLOW: 'unresolved-flow',
+  /** Following `invoke` edges comes back to a document already on the path. */
+  CYCLIC_INVOCATION: 'cyclic-invocation',
 } as const;
 export type TypeErrorKind = (typeof TypeErrorKind)[keyof typeof TypeErrorKind];
 
@@ -85,5 +89,67 @@ export function typecheckProgram(
       });
     }
   });
+  return errors;
+}
+
+/** A document reduced to what composition needs: its name, and what it invokes, in order. */
+export interface CompositeDocument {
+  name: string;
+  steps: readonly { invoke?: string }[];
+}
+
+/**
+ * Refuse a composite by READING it — no realm, no subject, no action spent.
+ *
+ * Both failures here are unrecoverable at runtime and cheap to find at rest. A cycle discovered
+ * while replaying is an infinite replay. A missing sub-document discovered while replaying is a
+ * journey abandoned midway, with the subject left wherever it got to and nothing able to put it
+ * back. Neither is a verdict about the app, so neither should cost the app anything.
+ *
+ * Depth-first with a path stack rather than a visited set alone, because the PATH is the whole
+ * value of a cycle message: "there is a cycle somewhere" sends a reader through every document to
+ * find what this already knew. A diamond — two routes to one leaf — is reuse, which is the point of
+ * composition, so a document already finished is not a cycle and is not re-walked.
+ *
+ * Pure, and ignorant of any flow format: anything that can list (name, invoked names) can be checked
+ * without importing a line of Reticle's TypeScript.
+ */
+export function typecheckComposite(
+  documents: readonly CompositeDocument[],
+  entry: string,
+): FlowTypeError[] {
+  const byName = new Map(documents.map((d) => [d.name, d]));
+  const errors: FlowTypeError[] = [];
+  const done = new Set<string>();
+  const path: string[] = [];
+
+  const walk = (name: string, step: number): void => {
+    if (path.includes(name)) {
+      errors.push({
+        step,
+        kind: TypeErrorKind.CYCLIC_INVOCATION,
+        detail: `invocation returns to a document already running: ${[...path, name].join(' → ')}`,
+      });
+      return;
+    }
+    const doc = byName.get(name);
+    if (doc === undefined) {
+      errors.push({
+        step,
+        kind: TypeErrorKind.UNRESOLVED_FLOW,
+        detail: `no document named "${name}"; the set holds: ${[...byName.keys()].join(', ') || '(nothing)'}`,
+      });
+      return;
+    }
+    if (done.has(name)) return; // reuse, not recursion
+    path.push(name);
+    doc.steps.forEach((s, index) => {
+      if (s.invoke !== undefined) walk(s.invoke, index);
+    });
+    path.pop();
+    done.add(name);
+  };
+
+  walk(entry, 0);
   return errors;
 }
