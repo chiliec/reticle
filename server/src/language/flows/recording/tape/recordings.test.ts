@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { ActionType, DANGEROUS_ACTION_CONFIRM_ARG, QueryBy } from '@reticlehq/core';
-import { RecordingStore, type RecordedStep, type CompiledProgram } from './recordings.js';
+import {
+  RecordingStore,
+  AMBIENT_RECORDING,
+  type RecordedStep,
+  type CompiledProgram,
+} from './recordings.js';
 import { captureAct, compileActStep, compileSequenceStep } from '../../replay.js';
 
 const step = (tool: string, stable = true): RecordedStep => ({ tool, stable, args: {} });
@@ -19,12 +24,22 @@ describe('RecordingStore', () => {
     expect(store.stop('flow')).toBeUndefined();
   });
 
-  it('capture with no active recording is a no-op', () => {
+  it('capture with no NAMED recording still records — the ambient tape opens itself', () => {
+    /*
+     * Inverted deliberately. This used to assert that a step driven with no recording open was a
+     * no-op, which is precisely the behaviour that threw away every journey an agent did not think
+     * to record first. Recording is now a property of the store rather than a rule an agent has to
+     * remember, and the step below is kept.
+     *
+     * `active()` is still empty of NAMED recordings, which is what callers listing user flows mean
+     * by the question.
+     */
     const store = new RecordingStore();
     expect(() => {
       store.capture(step('reticle_act'));
     }).not.toThrow();
-    expect(store.active()).toEqual([]);
+    expect(store.active().filter((n) => !n.startsWith('__'))).toEqual([]);
+    expect(store.stepCount(AMBIENT_RECORDING)).toBe(1);
   });
 
   it('appends captured steps to every active recording', () => {

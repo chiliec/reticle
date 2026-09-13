@@ -77,6 +77,16 @@ export const INVOKE_TOOL: string = FlowStepTool.INVOKE;
  * Tracks in-flight recordings (name -> { buffer cursor at record_start, captured steps })
  * and the last compiled program per name (for reticle_replay).
  */
+/**
+ * The recording that is always running.
+ *
+ * Reserved and double-underscored so an agent cannot name a flow this and silently merge with it.
+ * Taking it with `stop()` returns what has accumulated and leaves the store ready to open a fresh
+ * one on the next step, so a long session is a series of takeable tapes rather than one unbounded
+ * buffer.
+ */
+export const AMBIENT_RECORDING = '__ambient__';
+
 export class RecordingStore {
   readonly #active = new Map<string, ActiveRecording>();
   readonly #compiled = new Map<string, CompiledProgram>();
@@ -105,8 +115,27 @@ export class RecordingStore {
     return this.#active.get(name)?.steps.length;
   }
 
-  /** Append a captured step to every active recording (steps belong to all in-flight spans). */
+  /**
+   * Append a captured step to every active recording (steps belong to all in-flight spans).
+   *
+   * The AMBIENT recording is opened here if it is not already, which is what makes recording a
+   * property of the system rather than a rule an agent has to remember. Before this, a step driven
+   * with no recording open went into the loop below, matched nothing, and was gone — so the journey
+   * that could have become a regression test, for free, out of work the agent was doing anyway,
+   * existed only when somebody called `record_start` first. A rule that must be remembered on every
+   * drive is a rule that is followed on some of them.
+   *
+   * Opened lazily on the first step rather than in the constructor: a store that never records
+   * anything should not carry an empty tape, and "did anything happen at all" stays answerable.
+   */
   capture(step: RecordedStep): void {
+    if (!this.#active.has(AMBIENT_RECORDING)) {
+      this.#active.set(AMBIENT_RECORDING, {
+        cursor: 0,
+        steps: [],
+        openedOver: new Map(),
+      });
+    }
     for (const rec of this.#active.values()) rec.steps.push(step);
   }
 
