@@ -79,8 +79,19 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * evidence that content did not fit. Four numbers make the most common visual defect on the web
  * READABLE rather than something an agent has to infer from a picture. At roughly 14 bytes a field
  * this is the best ratio in the file.
+ *
+ * The sixth raise is 649 B for the paint context — an ancestor-chain walk for the five properties
+ * that change how an element rasterises without changing its own computed style. It is the largest
+ * raise here and the easiest to justify: it is the one regression this project has MEASURABLY lost
+ * to a screenshot. `filter: hue-rotate` on an ancestor moved 21,393 pixels while the element's own
+ * style stayed byte-identical, and the answer was readable from inside the whole time — we were
+ * composing nothing.
+ *
+ * 649 bytes once, against 1,365 image tokens EVERY look, for an answer a screenshot cannot give at
+ * any price: which element and which property. This is the trade the ceiling exists to make
+ * visible, and it is the right way round.
  */
-const MAX_FIRST_LOAD_BYTES = 233_900;
+const MAX_FIRST_LOAD_BYTES = 234_600;
 /*
  * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
  *

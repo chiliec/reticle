@@ -52,7 +52,7 @@ const FLAT_FILE_LIMIT = 10;
  */
 const OVER_THE_LINE: Readonly<Record<string, number>> = {
   'adapters/build/vite/src': 11,
-  'adapters/realm/dom/src/dom': 11,
+  'adapters/realm/dom/src/dom': 12,
   'adapters/realm/dom/src/observers': 23,
   'adapters/realm/dom/src/presenter': 16,
   'core/src/verdict': 11,

@@ -13,6 +13,7 @@ import {
   type ElementState,
 } from '@reticlehq/core';
 import { buildSnapshot } from '../dom/snapshot.js';
+import { paintContextOf } from '../dom/paint-context.js';
 import { matchQuery, runQuery } from '../dom/query.js';
 import {
   executeAction,
@@ -149,9 +150,18 @@ function inspect(ref: string): unknown {
     clientWidth: el.clientWidth,
     overflowX: cs?.overflowX ?? 'visible',
   };
+  /*
+   * What an ANCESTOR is doing to this element's pixels.
+   *
+   * Omitted when nothing is, so a clean element costs nothing — and present, it is the difference
+   * between "21,393 pixels changed" and "#wrap applies filter: hue-rotate(90deg)". The second is
+   * something an agent can act on; the first is something it has to guess about.
+   */
+  const paintContext = paintContextOf(el);
   return {
     ...describe(el),
     ...(source !== undefined ? { source } : {}),
+    ...(paintContext.length > 0 ? { paintContext } : {}),
     ...(sourceUnavailable !== undefined ? { sourceUnavailable } : {}),
     tag: el.tagName.toLowerCase(),
     href: el.getAttribute('href') ?? undefined,
