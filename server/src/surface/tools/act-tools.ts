@@ -91,6 +91,7 @@ import { sourceOf } from './tools-helpers.js';
 import { dispatchAct, preflightAct } from './act/act-preflight.js';
 import { followLostObservation } from './act/act-observation.js';
 import { type ToolDef, type ToolDeps, intentArg, sessionIdShape } from './tool-kit.js';
+import { verdictIntentGap } from '@reticlehq/engine/evidence/verdict-intent-gap.js';
 import { asActionType, gradeOf } from './act/act-helpers.js';
 import { resolveActTarget } from './act/act-target.js';
 import { tryRealInput, rewriteUploadArgs, HOVER_NEEDS_POINTER_MSG } from './real-input-attempt.js';
@@ -833,6 +834,10 @@ export const ACT_TOOLS: ToolDef[] = [
         const changeUndeclared = await isChangeUndeclared(session.currentEditEpoch, () =>
           Promise.resolve(openIntents),
         );
+        const intentGap = verdictIntentGap({
+          verified: decision.verified,
+          intent: asString(args['intent']),
+        });
         const gaps = gapsForAction({
           pass: verdict.pass,
           proved: decision.verifiedReason === VerifiedReason.PROVED,
@@ -915,7 +920,19 @@ export const ACT_TOOLS: ToolDef[] = [
           summary: actionSummary,
           // What the APP did not tell Reticle, and the one change that would fix it. Reported only
           // where an absence made this very verdict weaker — never as a survey of the page.
-          ...(gaps.length > 0 ? { instrumentationGaps: gaps } : {}),
+          /*
+           * …and, on a pass, whether anybody said what this verdict was FOR.
+           *
+           * Intent capture was reachable and unasked-for: the argument sits on this very tool, and
+           * the only nudge lived on `flow_save` — which a build-mode agent may never reach. An
+           * optional capability nobody is told about is one nobody uses, measured on `bodies` this
+           * same week.
+           */
+          ...(gaps.length > 0 || intentGap !== undefined
+            ? {
+                instrumentationGaps: intentGap === undefined ? gaps : [...gaps, intentGap],
+              }
+            : {}),
           // Cross-channel disagreement, reported WITH the action that caused it.
           //
           // This is the one finding here a human structurally cannot make — they watch one channel,

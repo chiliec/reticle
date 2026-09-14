@@ -60,7 +60,7 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // 15 since the shared step-effect builder. Recorded rather than grouped: the note above explains
   // why this directory cannot come down by the usual rule — its FILENAMES are published API, so
   // moving one to tidy the count would be a breaking change for somebody outside this repository.
-  'engine/src/evidence': 16,
+  'engine/src/evidence': 17,
   'engine/src/question/predicate': 16,
   /*
    * Crossed ten when the fast-drive budget and a portable byte counter landed. The guard asks for

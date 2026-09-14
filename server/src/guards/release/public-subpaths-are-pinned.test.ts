@@ -79,6 +79,7 @@ const PINNED: readonly PublicSurface[] = [
       'evidence/undeclared-change.ts',
       'evidence/unread-outcome.ts',
       'evidence/unsettled.ts',
+      'evidence/verdict-intent-gap.ts',
       'evidence/verified.ts',
       'question/declared.ts',
       'question/lineage.ts',
