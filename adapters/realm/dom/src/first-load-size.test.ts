@@ -72,8 +72,15 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  *
  * A ceiling is for catching weight nobody chose. Paying 200 B to turn a 46-second `unknown` into a
  * scoped answer is a choice, and it is written here so the next reader can disagree with it.
+ *
+ * The fifth raise is 57 B for four fields: `scrollLeft`, `scrollWidth`, `clientWidth`, `overflowX`.
+ * `inspect` reported the Y axis only, so a scrolling panel was diagnosable and a clipped label was
+ * not — and `text-overflow: ellipsis` is the one CSS property whose whole job is to hide the
+ * evidence that content did not fit. Four numbers make the most common visual defect on the web
+ * READABLE rather than something an agent has to infer from a picture. At roughly 14 bytes a field
+ * this is the best ratio in the file.
  */
-const MAX_FIRST_LOAD_BYTES = 233_800;
+const MAX_FIRST_LOAD_BYTES = 233_900;
 /*
  * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
  *

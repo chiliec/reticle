@@ -127,11 +127,27 @@ function inspect(ref: string): unknown {
       : documentHasSourceStamps(el.ownerDocument)
         ? 'This element has no source stamp. Others on the page do, so the stamping loader is running — the nearest stamped ancestor is out of range, or this element is rendered outside instrumented code.'
         : 'No element in this document carries a source stamp, so the stamping loader is not running: an older adapter, a bundler whose hook never ran, or a build the plugin was dropped from. Add @reticlehq/vite-plugin (or @reticlehq/babel-plugin) to the dev build and restart the dev server to get `file:line` back.';
+  /*
+   * Both axes, because the X one is where the most common visual defect on the web hides.
+   *
+   * This reported Y only, so a scrolling panel was diagnosable and a clipped label was not:
+   * `text-overflow: ellipsis` is the one CSS property whose entire job is to hide the evidence that
+   * content did not fit. `scrollWidth > clientWidth` is that evidence, and it is a number.
+   *
+   * It is also the answer to "the source already says `truncate`". That class is a request to clip
+   * IF the content overflows; whether it DID depends on the rendered string, the font that actually
+   * loaded, the width the flex parent granted and the user's zoom — none of which are in the source.
+   * The class proves clipping was permitted. Only this proves it happened.
+   */
   const scroll = {
     scrollTop: el.scrollTop,
     scrollHeight: el.scrollHeight,
     clientHeight: el.clientHeight,
     overflowY: cs?.overflowY ?? 'visible',
+    scrollLeft: el.scrollLeft,
+    scrollWidth: el.scrollWidth,
+    clientWidth: el.clientWidth,
+    overflowX: cs?.overflowX ?? 'visible',
   };
   return {
     ...describe(el),
