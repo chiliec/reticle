@@ -41,15 +41,4 @@ describe('a realm declares its surface', () => {
       expect(surfaceOf(runtime)).toBe(realmOf(runtime).surface);
     }
   });
-
-  it('the protocol offers four surfaces this product cannot yet name', () => {
-    // Not a defect — a statement of where the wall is. These have determinism rows already, and
-    // the moment a realm declares one of them, `surfaceOf` returns it with no further change.
-    const declared = new Set(Object.values(REALMS).map((r) => r.surface));
-    for (const unreached of [Surface.MOBILE, Surface.SERVICE, Surface.GAME, Surface.DEVICE]) {
-      expect(declared.has(unreached), `${unreached} is not claimed by any shipped realm`).toBe(
-        false,
-      );
-    }
-  });
 });

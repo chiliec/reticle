@@ -639,9 +639,12 @@ export const OBSERVE_TOOLS: ToolDef[] = [
       /*
        * The DEFAULT is now `auto`, which keeps a body only where it could decide a verdict.
        *
-       * Measured on a connected drive of the bench app: this tool returned 59,458 bytes and was
-       * 90.9% of every byte that drive spent, nearly all of it the response bodies of successful
-       * asset fetches nobody asked about. `bodies: false` already existed and would have cut it —
+       * Measured on a connected drive of the bench app with capture ON, this tool returned 59,458
+       * bytes and was 90.9% of every byte that drive spent. With capture OFF — the default — the
+       * same read is 28,408 bytes and carries NO bodies at all, so this gating is inert until
+       * somebody turns capture on. "Bodies dominate the payload" was the claim that motivated it and
+       * it is wrong; the bulk is asset URLs, which `asset-noise.ts` folds. `bodies: false` already
+       * existed and would have cut the bodies —
        * and defaulted the expensive way, which is the same defect in a different costume, because
        * an optional saving nobody is told about is a saving nobody takes.
        *

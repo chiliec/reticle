@@ -629,10 +629,24 @@ export async function replayNamedFlow(
     ),
     ...crossStep.map((c) => ({ kind: c.kind, step: CROSS_STEP_INDEX })),
   ];
+  /*
+   * `observed` must mean "the channels reported", not "some steps ran".
+   *
+   * It was `steps.length > 0`, which is true of essentially every replay — including one where an
+   * observer never attached and `seenNow` is empty because NOTHING WAS WATCHING. Two of those in a
+   * row promoted an open defect to a guard, which is a guard minted from absence of evidence: the
+   * exact failure `learnFromRun` refuses when it is told the truth, and cannot refuse when it is
+   * told `steps.length > 0`.
+   *
+   * The digest is the honest signal. Its own contract says `total` is written unconditionally
+   * "because a summary with no keys could not be told apart from one that was never computed" — so
+   * a step carrying a digest is a step whose window was actually read, and a replay where no step
+   * carries one observed nothing whatever its step count says.
+   */
   const learning = learnFromRun({
     guards: loaded.value.learned ?? [],
     seen: seenNow,
-    observed: steps.length > 0,
+    observed: steps.some((step) => step.digest !== undefined),
   });
   result.learned = learning.guards;
   if (learning.promoted.length > 0) result.promoted = learning.promoted;

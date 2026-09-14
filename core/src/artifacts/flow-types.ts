@@ -21,6 +21,9 @@ import {
  * there is one source of truth and a rename cannot silently desync the recorder from the replayer (a
  * tool rename once killed four e2e specs — this closes the browser/server half of that drift).
  */
+/** The `step` address of a finding that belongs to the whole journey, not to one step in it. */
+export const CROSS_STEP_ADDRESS = -1;
+
 export const FlowStepTool = {
   ACT: 'reticle_act',
   ACT_SEQUENCE: 'reticle_act_sequence',
@@ -757,7 +760,18 @@ export const FlowFileSchema = z.object({
     .array(
       z.object({
         kind: z.string().min(1),
-        step: z.number().int().nonnegative(),
+        /*
+         * A step index, or -1 for a finding that belongs to no single step.
+         *
+         * `-1` is the address this repo already uses for a whole-span contradiction (see
+         * `decision.ts`), and declaring it `nonnegative()` here made the first cross-step finding
+         * write a flow file that could never be loaded again — the narrow writer does not validate,
+         * `load` does, and the flow was lost permanently to what read like user corruption.
+         *
+         * `min(-1)` rather than any negative number: -1 is a convention somebody chose, and -2 is a
+         * bug arriving as data.
+         */
+        step: z.number().int().min(CROSS_STEP_ADDRESS),
         state: z.enum(['open', 'guarded']),
         /** Consecutive runs that did not show it. One quiet run is not a fix; see learnFromRun. */
         cleanRuns: z.number().int().nonnegative().optional(),

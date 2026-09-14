@@ -1,61 +1,109 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import type { FlowReplayResult } from '@reticlehq/core';
+import type { ToolDeps } from '../../surface/tools/tools.js';
+import { persistLearning } from './flow-learning.js';
 
 /**
- * What a replay learns reaches the flow file, and does it without trampling anything else.
+ * What a replay learns reaches the flow file — asserted by CALLING it, not by reading its source.
  *
- * Two failures are possible here and only one of them is obvious.
+ * The first version of this test read `flow-learning.ts` with `readFileSync` and asserted
+ * `toContain('recordLearned(')`. It was a false green, and it was proved so by mutation: commenting
+ * the real call out and leaving the name in the comment kept the test at 6 of 6.
  *
- * The obvious one: the learning is computed, returned, and never written, so every run re-learns
- * the same lesson and nothing compounds. That is the module built-and-unwired shape this project
- * keeps paying for.
+ * That is the failure this repository has already written down once — a source string-match went
+ * green because a comment quoted the code it replaced — and writing it again, in a test whose whole
+ * purpose was to catch a built-and-unwired feature, is worse than not having written the test. A
+ * check that cannot fail is a claim of safety that is not true.
  *
- * The one that actually happened: it IS written, through `saveFlow`, which re-runs intent linking
- * over the whole document — so persisting a learned guard reverted an intent the same replay had
- * just discharged, turning `proved` back into `bound`. A whole-document save is not a field update.
- * This asserts the narrow writer is the one used, because the wide one passes typecheck and looks
- * identical at the call site.
+ * So this drives the seam: a fake store records what it was asked to do, and the assertions are
+ * about behaviour. `recordLearned` could be renamed, moved, or inlined and these still hold; it
+ * could be deleted and they all go red.
  */
-const read = (...p: string[]): string => readFileSync(join(REPO_ROOT, ...p), 'utf8');
+interface Recorded {
+  readonly name: string;
+  readonly learned: unknown;
+}
+
+function depsThatRecord(): { deps: ToolDeps; calls: Recorded[]; wideSaves: number } {
+  const calls: Recorded[] = [];
+  const state = { wideSaves: 0 };
+  const flows = {
+    recordLearned: (name: string, learned: unknown) => {
+      calls.push({ name, learned });
+      return Promise.resolve({ ok: true, value: { name } });
+    },
+    // The wide writer must NOT be used here: it re-runs intent linking over the whole document and
+    // reverted a discharged intent the first time this was wired. Counted so the test can say so.
+    saveFlow: () => {
+      state.wideSaves += 1;
+      return Promise.resolve({ ok: true, value: {} });
+    },
+    load: () => Promise.resolve({ ok: true, value: { name: 'demo', steps: [] } }),
+  };
+  const deps = {
+    flows,
+    reticleRoot: '/tmp/none',
+    sessions: {
+      resolve: () => ({ projectId: undefined }),
+    },
+  } as unknown as ToolDeps;
+  return {
+    deps,
+    calls,
+    get wideSaves() {
+      return state.wideSaves;
+    },
+  };
+}
+
+const result = (learned: FlowReplayResult['learned']): FlowReplayResult =>
+  ({ status: 'ok', learned }) as FlowReplayResult;
 
 describe('learning reaches the flow file', () => {
-  it('the replay computes it', () => {
-    const src = read('server', 'src', 'language', 'flows', 'flow-replay-run.ts');
-    expect(src).toContain('learnFromRun(');
-    expect(src).toContain('result.learned');
+  it('writes what the replay learned, under the flow that was replayed', async () => {
+    const { deps, calls } = depsThatRecord();
+    const learned = [{ kind: 'request-never-settled', step: 2, state: 'guarded' as const }];
+    await persistLearning(deps, { flowName: 'checkout' }, result(learned));
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.name).toBe('checkout');
+    expect(calls[0]?.learned).toEqual(learned);
   });
 
-  it('something persists it — otherwise nothing compounds', () => {
-    const src = read('server', 'src', 'language', 'flows', 'flow-learning.ts');
-    expect(src).toContain('recordLearned(');
-  });
-
-  it('persistence uses the NARROW writer, never saveFlow', () => {
-    // saveFlow re-runs #linkIntent over the whole document. Using it here reverted a discharged
-    // intent, and the only thing that caught it was an unrelated intent test.
-    const src = read('server', 'src', 'language', 'flows', 'flow-learning.ts');
-    expect(src).not.toContain('saveFlow(');
-  });
-
-  it('the narrow writer touches only `learned`', () => {
-    const src = read('server', 'src', 'language', 'flows', 'flows.ts');
-    expect(src).toContain('async recordLearned(');
-    expect(src).toContain('{ ...loaded.value, learned }');
-  });
-
-  it('persistence runs OUTSIDE the replay, after it has finished its own writes', () => {
-    const replay = read('server', 'src', 'language', 'flows', 'flow-replay-run.ts');
-    expect(replay, 'the replay must not write the flow file itself').not.toContain(
-      'recordLearned(',
+  it('never uses the WIDE writer — that reverted a discharged intent', async () => {
+    const recorder = depsThatRecord();
+    await persistLearning(
+      recorder.deps,
+      { flowName: 'checkout' },
+      result([{ kind: 'x', step: 0, state: 'open' }]),
     );
-    expect(read('server', 'src', 'language', 'flows', 'flow-tools.ts')).toContain(
-      'persistLearning(',
-    );
+    expect(recorder.wideSaves, 'saveFlow re-runs intent linking over the whole document').toBe(0);
   });
 
-  it('the flow file can carry it', () => {
-    expect(read('core', 'src', 'artifacts', 'flow-types.ts')).toContain('learned: z');
+  it('writes nothing when the replay learned nothing', async () => {
+    const { deps, calls } = depsThatRecord();
+    await persistLearning(deps, { flowName: 'checkout' }, result([]));
+    await persistLearning(deps, { flowName: 'checkout' }, result(undefined));
+    expect(calls).toHaveLength(0);
+  });
+
+  it('writes nothing when there is no flow name to write under', async () => {
+    const { deps, calls } = depsThatRecord();
+    await persistLearning(deps, {}, result([{ kind: 'x', step: 0, state: 'open' }]));
+    expect(calls).toHaveLength(0);
+  });
+
+  it('returns the replay result unchanged, whatever the write does', async () => {
+    // Bookkeeping must never alter the verdict, and must never turn a completed replay into a
+    // failed one — so a throwing store is swallowed and the caller still gets its answer.
+    const throwing = {
+      flows: {
+        recordLearned: () => Promise.reject(new Error('disk full')),
+        load: () => Promise.resolve({ ok: true, value: { name: 'demo', steps: [] } }),
+      },
+      reticleRoot: '/tmp/none',
+      sessions: { resolve: () => ({ projectId: undefined }) },
+    } as unknown as ToolDeps;
+    const r = result([{ kind: 'x', step: 0, state: 'open' }]);
+    await expect(persistLearning(throwing, { flowName: 'checkout' }, r)).resolves.toBe(r);
   });
 });

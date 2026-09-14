@@ -463,6 +463,33 @@ export const FLOW_TOOLS: ToolDef[] = [
         ),
       // Declared here or a validating profile strips it -- the same way `name` was stripped once.
       // A field the handler sets and the schema omits arrives as nothing, silently.
+      /*
+       * What this flow has learned, and the two answers that are the whole point of learning.
+       *
+       * Declared because an undeclared field is STRIPPED from a validating profile's response — the
+       * comment a few lines above records the same defect happening to `name`, which made a replay
+       * result arrive anonymous. Omitting these meant a guarded defect could come back, the flow
+       * could detect it, and the field naming the regression never reached the caller: the feature's
+       * entire stated payoff, unobservable.
+       */
+      learned: z
+        .array(z.unknown())
+        .optional()
+        .describe(
+          'Every defect this flow has seen: `open` while it is still happening, `guarded` once a run stopped showing it. Written back to the flow, so the next replay starts from it.',
+        ),
+      promoted: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Defects this run saw disappear for the second consecutive time. The app got better here.',
+        ),
+      regressed: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Guarded defects that came back. This flow proved once that they were gone, so their return is a regression nothing else would have caught.',
+        ),
       unverifiable: z
         .object({ reason: z.string() })
         .optional()

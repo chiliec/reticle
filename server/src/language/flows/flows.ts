@@ -1,4 +1,7 @@
 import { asFlowName, type FlowName } from '@reticlehq/core';
+import { safeProjectId, type FlowResult } from './flow-result.js';
+import { changeInPlace } from './narrow-write.js';
+export type { FlowResult } from './flow-result.js';
 import {
   AnchorKind,
   DEGRADED_ANCHOR_ROLE,
@@ -34,18 +37,6 @@ import {
 } from '../../memory/project/dir/reticle-dir.js';
 import { describeFlowZodFailure, parseFlowFileText } from './flow-expect-grammar.js';
 import type { Clock } from '../../machine/clock.js';
-
-/**
- * A projectId only scopes storage when it's a safe single path segment (it's stamped from the
- * session's HELLO, but the store defends the disk boundary itself). An unsafe/absent value collapses
- * to `undefined` — the flat, global store — so a malformed id can never escape `.reticle/flows/`.
- */
-const safeProjectId = (projectId?: string): string | undefined =>
-  projectId !== undefined && isValidFlowName(projectId) ? projectId : undefined;
-
-/** Discriminated result so callers never branch on free strings. */
-export type FlowResult<T> =
-  { ok: true; value: T } | { ok: false; code: FlowErrorCode; detail?: string };
 
 /**
  * The anchor for a DEGRADED step (no resolvable testid). A volatile eXX ref is NEVER persisted —
@@ -825,61 +816,63 @@ export class FlowStore {
   }
 
   /**
-   * Apply confident testid rebinds to an on-disk flow (the reticle_flow_heal
-   * apply path). Loads + validates the flow (so it gets NOT_FOUND / PARSE_FAILED for free), then
-   * rewrites ONLY the named steps' testid anchors — preserving createdAt + every other field — and
-   * re-serializes byte-stably via the same #serialize that save uses. The name guard runs
-   * FIRST, before any path is joined, so a traversal name never reaches the disk.
+   * Load a flow, change one thing, write the SAME file load resolved.
    *
-   * This writer is PURE of the confidence policy: it trusts the changes it is handed (the tool only
-   * calls it with proposals that already cleared HEAL_CONFIDENCE_MIN). A change whose `from` no
-   * longer matches the step's testid anchor is skipped (idempotent / defensive), never throwing.
+   * Guards the name before a path is joined (traversal), writes where load found it (never forks a
+   * copy), and VALIDATES first — `load` validates, and a writer that does not authors files its own
+   * reader rejects, which cost a flow permanently. Not `saveFlow`: that re-runs `#linkIntent` over
+   * the whole document and reverts an intent a replay just discharged.
    */
-  /**
-   * Write back only what a replay LEARNED, touching nothing else on the file.
-   *
-   * Not `saveFlow`, and the difference is not style. `saveFlow` re-runs `#linkIntent` on the whole
-   * document, which re-binds an intent that the replay had just discharged — so persisting a
-   * learned guard through it turned a `proved` intent back into `bound`. The test
-   * `a passing replay marks the intent proved with the verdict that did it` caught it, and the
-   * general shape is worth naming: a whole-document save is not a field update, and using one to
-   * change a single field re-applies every rule the document has ever been subject to.
-   *
-   * So this follows `heal` above: load, replace one field, write the same path load resolved.
-   */
+  async #changeInPlace<T>(
+    name: string,
+    projectId: string | undefined,
+    change: (flow: FlowFile) => { next: FlowFile; value: T },
+  ): Promise<FlowResult<T>> {
+    return await changeInPlace(
+      {
+        load: (n, p) => this.load(n, p),
+        // Branded at the boundary: the port speaks strings, the store speaks FlowName, and the
+        // name has already passed isValidFlowName inside changeInPlace.
+        resolvePath: (n, p) => this.#resolveReadPath(asFlowName(n), p),
+        write: (path, contents) => this.#fs.writeFile(path, contents),
+        serialize: (flow) => this.#serialize(flow),
+      },
+      name,
+      projectId,
+      change,
+    );
+  }
+
+  /** Write back only what a replay LEARNED. See `#changeInPlace` for why it is not `saveFlow`. */
   async recordLearned(
     name: string,
     learned: NonNullable<FlowFile['learned']>,
     projectId?: string,
   ): Promise<FlowResult<{ name: string }>> {
-    if (!isValidFlowName(name)) return { ok: false, code: FlowErrorCode.INVALID_NAME };
-    const pid = safeProjectId(projectId);
-    const loaded = await this.load(name, pid);
-    if (!loaded.ok) return { ok: false, code: loaded.code };
-    const path = await this.#resolveReadPath(name, pid);
-    if (null === path) return { ok: false, code: FlowErrorCode.NOT_FOUND };
-    await this.#fs.writeFile(path, this.#serialize({ ...loaded.value, learned }));
-    return { ok: true, value: { name } };
+    return await this.#changeInPlace(name, projectId, (flow) => ({
+      next: { ...flow, learned },
+      value: { name },
+    }));
   }
 
+  /**
+   * Apply confident testid rebinds to an on-disk flow (the `reticle_flow_heal` apply path),
+   * rewriting ONLY the named steps' anchors and preserving every other field. Loading, the name
+   * guard, validation and byte-stable serialisation are `#changeInPlace`'s.
+   *
+   * PURE of the confidence policy: it trusts the changes handed to it, because the tool only calls
+   * it with proposals that already cleared HEAL_CONFIDENCE_MIN. A change whose `from` no longer
+   * matches the step's anchor is skipped — idempotent and defensive, never throwing.
+   */
   async heal(
     name: string,
     changes: HealChange[],
     projectId?: string,
   ): Promise<FlowResult<{ name: string; changed: HealChange[] }>> {
-    if (!isValidFlowName(name)) return { ok: false, code: FlowErrorCode.INVALID_NAME };
-    const pid = safeProjectId(projectId);
-    const loaded = await this.load(name, pid);
-    if (!loaded.ok) return { ok: false, code: loaded.code };
-    const flow = loaded.value;
-
-    // Write back to the SAME file load resolved (nested if it lives there, else legacy flat), so a
-    // heal never forks a second copy and byte-stability holds regardless of where the flow lives.
-    const path = await this.#resolveReadPath(name, pid);
-    if (null === path) return { ok: false, code: FlowErrorCode.NOT_FOUND };
-    const { flow: next, applied } = applyHealChanges(flow, changes);
-    await this.#fs.writeFile(path, this.#serialize(next));
-    return { ok: true, value: { name, changed: applied } };
+    return await this.#changeInPlace(name, projectId, (flow) => {
+      const { flow: next, applied } = applyHealChanges(flow, changes);
+      return { next, value: { name, changed: applied } };
+    });
   }
 
   /** The `.json` basenames (no extension) directly inside `dir`. [] if the dir is absent/unreadable. */

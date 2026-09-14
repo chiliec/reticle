@@ -1,9 +1,16 @@
 /**
  * Whether a network call's body earns the bytes it costs.
  *
- * Bodies dominate `reticle_network`: measured on a connected drive of the bench app, that one tool
- * returned 59,458 bytes and was 90.9% of every byte the drive spent, nearly all of it response
- * bodies from successful asset fetches the agent never asked about.
+ * `reticle_network` was the most expensive read an agent makes: measured on a connected drive of the
+ * bench app with body capture ON, that one tool returned 59,458 bytes and was 90.9% of every byte
+ * the drive spent.
+ *
+ * It is NOT true that bodies dominate it, and that claim is retracted here rather than quietly
+ * dropped, because it is what motivated this file and it was written into the tool's own
+ * description. Re-measured with the DEFAULT configuration — capture off — the same tool returned 200
+ * calls and 28,408 bytes with ZERO bodies, and 68% of those bytes were URLs. So this gating is
+ * correct and INERT until somebody turns capture on; the bulk is the number of dev-server asset
+ * calls, which is what `asset-noise.ts` addresses.
  *
  * The flag to avoid that already existed and defaulted the expensive way, which is the same defect
  * in a different costume — an optional saving nobody is told about is a saving nobody takes. So the
@@ -45,7 +52,7 @@ const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
  *
  * This is the actual bulk. Measured on a connected drive of the bench app, 200 calls averaged 142
  * bytes and 68% of the payload was URLs of exactly this kind — `/src/main.tsx`, `/@vite/client`,
- * `/node_modules/.vite/deps/...`. They carry no verdict and are the reason the tool cost 59,458
+ * `/node_modules/.vite/deps/...`. They carry no verdict and are the reason the tool cost 28,408
  * bytes on that drive.
  *
  * Exported because the same question is asked twice: whether to keep this call's BODY, and whether

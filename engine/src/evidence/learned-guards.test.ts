@@ -103,6 +103,25 @@ describe('learnFromRun', () => {
     expect(r.guards).toHaveLength(1);
   });
 
+  it('a blind run does not promote, however many steps it ran', () => {
+    /*
+     * The seam supplying this flag got it wrong first, and the wrongness is the reason to state it
+     * twice. It passed `steps.length > 0`, which is true of essentially every replay — including one
+     * where no observer attached and `seen` is empty because NOTHING WAS WATCHING. Two of those in a
+     * row promoted an open defect into a guard: a guard minted from absence of evidence, which is
+     * precisely what this function refuses when it is told the truth and cannot refuse when it is
+     * told "some steps ran". It now reads whether any step carries a digest.
+     */
+    const before = [{ kind: 'duplicate-request', step: 3, state: GuardState.OPEN, cleanRuns: 1 }];
+    const blind = learnFromRun({ guards: before, seen: [], observed: false });
+    expect(blind.promoted).toHaveLength(0);
+    expect(blind.guards[0]?.state).toBe(GuardState.OPEN);
+    // …and the same input from a run that DID observe is the promotion. Same guards, same empty
+    // `seen`, opposite answers — which is the whole point of the flag.
+    const sighted = learnFromRun({ guards: before, seen: [], observed: true });
+    expect(sighted.promoted).toEqual(['duplicate-request']);
+  });
+
   it('learns nothing from a run that observed nothing, rather than promoting everything', () => {
     // A run that could not observe is not a run that found the app clean. Promoting on it would
     // manufacture guards out of an absence of evidence — the false green, one level up.

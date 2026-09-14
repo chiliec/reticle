@@ -2,6 +2,7 @@ import { bodyCaptureRemedy } from '@reticlehq/engine/evidence/body-capture-remed
 import { z } from 'zod';
 import {
   witnessDisagreement,
+  WitnessOutcome,
   type WitnessFinding,
 } from '@reticlehq/engine/disagreement/witness-disagreement.js';
 
@@ -135,37 +136,17 @@ export const RECONCILE_TOOLS: ToolDef[] = [
         }),
       );
       const mismatches: Mismatch[] = reconcile(bodies, page.tree);
-      // ASYMMETRIC on purpose. A mismatch FOUND in a partial page is still found — one witness proves
-      // presence, and withholding it because the rest of the page was unread helps nobody. An EMPTY
-      // result is the universal claim "nothing anywhere disagrees", and a partial page cannot support
-      // it. So the positive keeps working and only the negative is refused.
-      if (0 === mismatches.length && !page.complete) {
-        throw new Error(
-          `the page could not be read completely — ${page.incompleteBecause ?? 'the snapshot was cut'}. ` +
-            'Nothing was found to disagree with the API, but that is not the same as nothing disagreeing: ' +
-            'the record that does could be in the part that was never read. Narrow the page (close overlays, ' +
-            'navigate to the view holding these records) and re-run.',
-        );
-      }
-      // A truncated body is declared whether or not anything was found in it: "no mismatches" over a
-      // partially-read payload is a weaker statement than over a whole one, and the difference is
-      // exactly the kind of omission this layer exists to refuse.
-      const partial =
-        truncated > 0
-          ? {
-              note: `${String(truncated)} of ${String(withBody)} response(s) exceeded the body cap and were read only up to the cut — records after it were not compared`,
-            }
-          : 0 === mismatches.length
-            ? {
-                note: `compared ${String(withBody)} response(s); nothing on screen contradicts them`,
-              }
-            : {};
       /*
        * Consult the observer outside the app, when one was named.
        *
        * Everything above is the app describing itself — its own responses against its own page — so
        * an app that lies to itself repeats the lie consistently and no amount of it settles
        * anything. This is the one reading the subject cannot author.
+       *
+       * Consulted BEFORE the completeness refusal below, for the reason that refusal itself gives:
+       * a finding FOUND in a partial page is still found. The witness was last, so a page that could
+       * not be read fully threw before the outside observer was ever contacted — discarding the
+       * strongest evidence available at exactly the moment the app's own evidence is unreadable.
        *
        * "The app claims" is taken as: it returned a body worth comparing and nothing on screen
        * contradicts it. That is the strongest self-report available here, and it is exactly the
@@ -195,6 +176,37 @@ export const RECONCILE_TOOLS: ToolDef[] = [
           ...(unreachable === undefined ? {} : { unreachable }),
         });
       }
+
+      // ASYMMETRIC on purpose. A mismatch FOUND in a partial page is still found — one witness proves
+      // presence, and withholding it because the rest of the page was unread helps nobody. An EMPTY
+      // result is the universal claim "nothing anywhere disagrees", and a partial page cannot support
+      // it. So the positive keeps working and only the negative is refused.
+      /*
+       * A DISAGREEMENT outranks the completeness refusal, by the same asymmetry stated above: two
+       * independent observers disagreeing is a fact about the app, and a partial page cannot make it
+       * less of one. Only the universal claim "nothing anywhere disagrees" needs a whole page.
+       */
+      if (0 === mismatches.length && !page.complete && witness?.kind !== WitnessOutcome.DISAGREES) {
+        throw new Error(
+          `the page could not be read completely — ${page.incompleteBecause ?? 'the snapshot was cut'}. ` +
+            'Nothing was found to disagree with the API, but that is not the same as nothing disagreeing: ' +
+            'the record that does could be in the part that was never read. Narrow the page (close overlays, ' +
+            'navigate to the view holding these records) and re-run.',
+        );
+      }
+      // A truncated body is declared whether or not anything was found in it: "no mismatches" over a
+      // partially-read payload is a weaker statement than over a whole one, and the difference is
+      // exactly the kind of omission this layer exists to refuse.
+      const partial =
+        truncated > 0
+          ? {
+              note: `${String(truncated)} of ${String(withBody)} response(s) exceeded the body cap and were read only up to the cut — records after it were not compared`,
+            }
+          : 0 === mismatches.length
+            ? {
+                note: `compared ${String(withBody)} response(s); nothing on screen contradicts them`,
+              }
+            : {};
       return withControl(session, {
         mismatches,
         compared: withBody,
