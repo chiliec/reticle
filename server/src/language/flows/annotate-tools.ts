@@ -15,7 +15,7 @@ const UNKNOWN_KIND_RECOVERY =
 import { ReticleTool } from '@reticlehq/core';
 import { asString } from '@reticlehq/core';
 import { compileAnnotation } from './annotate-notes/annotate.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 
 import { resolveAnnotateTarget } from './annotate-notes/annotate-target.js';
 

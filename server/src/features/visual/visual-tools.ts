@@ -21,7 +21,7 @@ import type {
   RealInputProvider,
   ScreenshotOpts,
 } from '../../portal/input/real-input.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 
 const rectShape = z.object({
   x: z.number(),

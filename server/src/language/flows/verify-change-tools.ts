@@ -4,7 +4,7 @@ import { verdictForSuite } from '../../judgement/outcome/verify-change-verdict.j
 import { attributedFailures } from '../../judgement/outcome/attributed-failure.js';
 import { Verified } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
 import { workerCountSchema } from '../../surface/tools/args/numeric-bounds.js';
 import { loadNamedFlows, resolveChangedFiles } from '../../command/cli/cli-flow-commands.js';

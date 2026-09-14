@@ -5,7 +5,7 @@ import { ReticleTool } from '@reticlehq/core';
 import { asString } from '@reticlehq/core';
 import { sessionIdShape } from '../../surface/tools/tool-kit.js';
 import { isValidRunId } from '../../memory/project/dir/reticle-dir.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 import { RunStore } from './artifact/run-store.js';
 import { renderRunReport } from './artifact/render-report.js';
 import { diffRuns } from './artifact/run-diff.js';

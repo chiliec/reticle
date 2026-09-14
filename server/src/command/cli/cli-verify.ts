@@ -60,7 +60,7 @@ import { ProjectStore } from '../../memory/project/project-store.js';
 import { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
 import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
 import type { SessionManager } from '../../portal/session/session-manager.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDeps } from '../../surface/tools/tool-kit.js';
 
 const EXIT_PASS = 0;
 const EXIT_FAIL = 1;

@@ -3,7 +3,7 @@ import { ReticleCommand } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
 import { asNumber, asString } from '@reticlehq/core';
 import { idleMsSchema } from '../../surface/tools/args/numeric-bounds.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 
 /**
  * Session lifecycle controls. The presenter session begins on the agent's first action and ends

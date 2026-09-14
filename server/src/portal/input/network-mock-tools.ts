@@ -6,7 +6,7 @@ import { delayMsSchema, httpStatusSchema } from '../../surface/tools/args/numeri
 import { asString } from '@reticlehq/core';
 import type { RealInputProvider } from './real-input.js';
 import type { MockRule } from './network-mock.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 
 /** A provider that can install network mocks — narrows the optional capability so callers branch once. */
 type MockCapable = RealInputProvider & {

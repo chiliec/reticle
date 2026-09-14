@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { CROSS_STEP_ADDRESS, FlowStepTool } from './flow-step-tool.js';
+export { CROSS_STEP_ADDRESS, FlowStepTool } from './flow-step-tool.js';
 import { ActionType } from '../wire/constants/constants.js';
 import type { Contradiction } from '../verdict/findings.js';
 // Its own directory's constants, which this file had been reaching through `wire/constants/constants.js`
@@ -21,23 +23,7 @@ import {
  * there is one source of truth and a rename cannot silently desync the recorder from the replayer (a
  * tool rename once killed four e2e specs — this closes the browser/server half of that drift).
  */
-/** The `step` address of a finding that belongs to the whole journey, not to one step in it. */
-export const CROSS_STEP_ADDRESS = -1;
 
-export const FlowStepTool = {
-  ACT: 'reticle_act',
-  ACT_SEQUENCE: 'reticle_act_sequence',
-  ACT_AND_WAIT: 'reticle_act_and_wait',
-  /**
-   * Run another flow. The step drives nothing itself; `invoke` names the document to replay.
-   *
-   * Here rather than in the recorder, for the reason stated above this object: it crosses the
-   * recorder, the saved file and the replayer, and a string spelled in three places is a rename
-   * away from a recorder that writes what no replayer reads. That is the exact drift this enum was
-   * created to end, and a new one would have re-opened it.
-   */
-  INVOKE: 'reticle_invoke',
-} as const;
 export type FlowStepTool = (typeof FlowStepTool)[keyof typeof FlowStepTool];
 
 /**

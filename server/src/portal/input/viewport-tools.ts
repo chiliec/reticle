@@ -9,7 +9,7 @@ import {
 } from '../../surface/tools/args/numeric-bounds.js';
 import { asString } from '@reticlehq/core';
 import type { RealInputProvider } from './real-input.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 
 /** Bounds so a viewport request stays sane (and a typo can't ask for a 1px or 100k-px window). */
 const MIN_DIM = MIN_VIEWPORT_PX;

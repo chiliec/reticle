@@ -30,7 +30,7 @@ import { recordingBacktrackWarning } from './recording/recording-backtrack.js';
 import { isValidFlowName, flowPath } from '../../memory/project/dir/reticle-dir.js';
 import type { SuiteVerdict } from '@reticlehq/core';
 import { type FlowAnnotations } from './flows.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 import { flowsForSession } from './flow-store-for-session.js';
 import { resolveSuiteSelection } from './suite-selection.js';
 import {

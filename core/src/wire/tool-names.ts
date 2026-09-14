@@ -1,4 +1,13 @@
-import { FlowStepTool } from '../artifacts/flow-types.js';
+/*
+ * From the LEAF, not from `flow-types`.
+ *
+ * Every file in the browser SDK imports `ReticleTool` from here. `flow-types` builds eleven zod
+ * schemas at module scope, so importing one constant through it loaded all of them into every page
+ * Reticle instruments — and a browser never validates a flow FILE. Measured: the schemas were
+ * reachable from the SDK entry, and three separate additions to them moved the first-load ceiling
+ * in a single week.
+ */
+import { FlowStepTool } from '../artifacts/flow-step-tool.js';
 
 /**
  * The names an agent calls Reticle by.

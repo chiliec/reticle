@@ -45,7 +45,7 @@ import { cloudFetch, syncRunRecordToCloud, SyncOutcome } from '../../memory/clou
 import { resolveProjectCloud } from '../../memory/cloud/cloud-config.js';
 import { consultSubjectFor, selectConsulted, type ConsultedMemory } from './flow-memory-consult.js';
 import { log } from '../../log.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDeps } from '../../surface/tools/tool-kit.js';
 import { flowsForSession } from './flow-store-for-session.js';
 import { FlowParseNote } from './flow-expect-grammar.js';
 

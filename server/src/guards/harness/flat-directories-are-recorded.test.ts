@@ -60,6 +60,12 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // 15 since the shared step-effect builder. Recorded rather than grouped: the note above explains
   // why this directory cannot come down by the usual rule — its FILENAMES are published API, so
   // moving one to tidy the count would be a breaking change for somebody outside this repository.
+  /*
+   * Crossed ten when `flow-step-tool.ts` was split out of `flow-types.ts`. Recorded rather than
+   * grouped: the split is the POINT — those constants are imported by the browser SDK, and living
+   * beside eleven zod schemas meant every page Reticle instruments loaded schemas it can never use.
+   */
+  'core/src/artifacts': 11,
   'engine/src/evidence': 17,
   'engine/src/question/predicate': 16,
   /*

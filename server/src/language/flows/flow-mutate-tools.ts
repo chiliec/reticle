@@ -18,7 +18,7 @@ import { sessionMutationPort } from '../../surface/tools/lease-tools.js';
 import { mutationTest } from './mutation-run.js';
 import { replayNamedFlow, sessionProjectId } from './flow-replay-run.js';
 import { flowsForSession } from './flow-store-for-session.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 import { ReplayStatus } from '@reticlehq/core';
 
 const NOTHING_DECLARED =

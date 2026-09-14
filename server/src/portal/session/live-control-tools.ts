@@ -10,7 +10,7 @@ import {
 import { ReticleTool } from '@reticlehq/core';
 import { sessionIdShape } from '../../surface/tools/tool-kit.js';
 import { asString } from '@reticlehq/core';
-import type { ToolDef } from '../../surface/tools/tools.js';
+import type { ToolDef } from '../../surface/tools/tool-kit.js';
 
 /**
  * Is this a turn ending with nothing attached, rather than a call about a specific tab?

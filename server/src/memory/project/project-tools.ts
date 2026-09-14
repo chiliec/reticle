@@ -9,7 +9,7 @@ import {
   fetchProjectRegressionFromCloud,
   resolveCloudConfig,
 } from '../cloud/cloud-sync.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
 import { RunStore } from '../../judgement/runs/artifact/run-store.js';
 import {
   diffRuns as diffVerificationRuns,
