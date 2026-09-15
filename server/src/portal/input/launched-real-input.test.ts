@@ -167,7 +167,10 @@ describe('LaunchedRealInputProvider', () => {
     await provider.navigate();
 
     expect(spy.calls).toEqual([{ headless: true }]);
-    expect(spy.state.page.gotoCalls).toEqual([DRIVE_URL]);
+    // Stamped with `__reticle_opened`, so the page can tell Reticle opened it. Without that the
+    // first-run tour mounts over a driven page and its scrim — `pointer-events: auto`, on purpose —
+    // swallowed every native click and hover the drive made. See drive-url-stamp.ts.
+    expect(spy.state.page.gotoCalls).toEqual([`${DRIVE_URL}?__reticle_opened=1`]);
   });
 
   it('passes headless:false through to chromium.launch', async () => {

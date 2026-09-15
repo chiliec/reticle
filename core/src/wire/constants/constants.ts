@@ -88,6 +88,15 @@ export function bridgeWsUrl(
 export const RETICLE_URL_PARAM = {
   SESSION: '__reticle_session',
   PROJECT: '__reticle_project',
+  /**
+   * "Reticle opened this page for itself" — and nothing more.
+   *
+   * Deliberately NOT the session stamp. `resolveConnectIdentity` reads SESSION as the session id
+   * when the app names none, so marking a drive with it would rename every driven session to one
+   * shared constant and make two concurrent drives collide. This carries the one fact the page
+   * needs (nobody is sitting in front of it) without touching identity.
+   */
+  OPENED: '__reticle_opened',
 } as const;
 
 /** The loopback bind address. The daemon/bridge bind here by default — never expose Reticle off-host. */

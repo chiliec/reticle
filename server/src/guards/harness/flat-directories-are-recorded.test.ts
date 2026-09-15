@@ -125,6 +125,11 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // Both are pure — their telemetry reporter is INJECTED, because this directory does not own a
   // telemetry client and the reach guard was right to say so.
   'server/src/command/setup': 17,
+  // Crossed the line with `drive-url-stamp.ts`: the mark that tells a page Reticle opened it for
+  // itself. Its own leaf because the SDK reads the same constant to decide not to show a human a
+  // first-run tour over a page nobody is looking at -- a rule split across two packages is worth
+  // one file that names it.
+  'server/src/portal/input': 11,
   'server/src/portal/session': 20,
   // 32 since two leaves were extracted out of `flow-replay.ts` to break the last runtime cycle in
   // this directory: `flow-replay-types.ts` (shapes two collaborators share) and `flow-anchor.ts`

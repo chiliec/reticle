@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "drive-see992567-a7f0-4475-94f1-6d95b0b6f397",
+  "createdAt": 1789496533963,
+  "steps": [
+    {
+      "tool": "reticle_act",
+      "anchor": {
+        "kind": "testid",
+        "value": "login-submit",
+        "source": {
+          "file": "src/components/Login.tsx",
+          "line": 81,
+          "column": 8
+        }
+      },
+      "args": {},
+      "action": "click",
+      "expect": {
+        "state": {
+          "path": "view",
+          "equals": "this-view-does-not-exist"
+        }
+      }
+    }
+  ],
+  "startPath": "/"
+}

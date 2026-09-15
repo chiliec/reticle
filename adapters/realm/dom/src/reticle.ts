@@ -509,6 +509,10 @@ export class Reticle {
             projectId:
               reticleParamsFromSearch(window.location.search).projectId ?? window.location.origin,
             isDriving: () => PresenterMode.IDLE !== panel.mode,
+            // The stamp Reticle puts on every page it opens for itself. `isDriving` cannot answer
+            // this yet at mount — the presenter is IDLE until the agent's first command — so the
+            // tour used to mount over a leased page and its scrim swallowed the drive.
+            search: window.location.search,
             copy: (text) => void navigator.clipboard?.writeText(text).catch(() => undefined),
           });
         });

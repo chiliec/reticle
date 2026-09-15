@@ -10,6 +10,7 @@
  * pay for it; the type-only import is elided by `tsc`, so the build stays green without it.
  */
 import type { Browser, Page } from 'playwright';
+import { stampedDriveUrl } from './drive-url-stamp.js';
 import { chromiumLaunchOptions } from '../../chromium-launch-options.js';
 import { gotoOptions } from '../pool/playwright-launcher.js';
 import { BrowserLaunchKind } from '@reticlehq/core/telemetry';
@@ -500,7 +501,9 @@ export class LaunchedRealInputProvider implements OwnedRealInputProvider {
       // waits for `load`, which an app with one never-finishing subresource never fires — 30s of
       // nothing and then a failure that blames the app. The SDK connect is a module script, so it
       // has already run by DOMContentLoaded. See gotoOptions.
-      await page.goto(this.#driveUrl, gotoOptions(undefined));
+      // Stamped, so the page can tell Reticle opened it — see drive-url-stamp.ts. Without it the
+      // first-run tour mounts over a driven page and its scrim swallows every native gesture.
+      await page.goto(stampedDriveUrl(this.#driveUrl), gotoOptions(undefined));
     } catch (e) {
       throw new DriveError(
         DriveErrorCode.NAVIGATE_FAILED,

@@ -25,6 +25,7 @@ import {
   tourSlides,
 } from './tour-view.js';
 import { TourAnchor } from '@reticlehq/core/tour';
+import { RETICLE_URL_PARAM } from '@reticlehq/core';
 
 /** Where "they have seen it" is remembered. Per project, so a second app still gets its tour. */
 export const TOUR_SEEN_KEY_PREFIX = 'reticle.tour.seen.';
@@ -74,6 +75,15 @@ export interface TourDeps {
   readonly projectId: string;
   /** True while a tool is acting. The tour stays away rather than eating the clicks. */
   readonly isDriving: () => boolean;
+  /**
+   * `window.location.search` of the page being mounted into.
+   *
+   * Reticle stamps a session or project id onto every URL it opens for itself — a lease, or a
+   * drive. A page carrying one has no human on it, so there is nobody to onboard and the scrim can
+   * only get in the way of the agent. Optional: a caller that cannot supply it gets the old
+   * behaviour rather than a crash.
+   */
+  readonly search?: string;
   /** Copying is a capability, not a guarantee — an insecure origin has no clipboard. */
   readonly copy?: (text: string) => void;
 }
@@ -82,6 +92,22 @@ export interface TourHandle {
   readonly destroy: () => void;
   /** Visible right now. Exposed for the tests that assert it went away. */
   readonly isOpen: () => boolean;
+}
+
+/**
+ * Did Reticle open this page for its own use?
+ *
+ * Read off the URL rather than asked of the presenter, because the presenter cannot answer it yet
+ * at mount time — which is the whole defect this closes.
+ */
+export function openedByReticle(search: string | undefined): boolean {
+  if (search === undefined || '' === search) return false;
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  return (
+    params.has(RETICLE_URL_PARAM.OPENED) ||
+    params.has(RETICLE_URL_PARAM.SESSION) ||
+    params.has(RETICLE_URL_PARAM.PROJECT)
+  );
 }
 
 /**
@@ -116,6 +142,18 @@ function markSeen(storage: TourStorage | undefined, projectId: string): void {
  */
 export function mountTour(deps: TourDeps): TourHandle | undefined {
   if (deps.isDriving()) return undefined;
+  /*
+   * `isDriving()` is the right rule read one moment too early.
+   *
+   * It is evaluated at page load, when the presenter is still IDLE because the agent has not acted
+   * yet -- the agent acts a second later, into a scrim that takes `pointer-events: auto` on purpose.
+   * MEASURED on next-smoke: a hover reporting `dispatched: true, inputMode: "real"` produced no
+   * `mouseenter` at all, and Playwright named the scrim as the interceptor when asked directly.
+   *
+   * The URL stamp is known at mount and cannot race: Reticle puts it on every page it opens for
+   * itself. A tour is for the person who ran `npm run dev`, never for a page nobody is looking at.
+   */
+  if (openedByReticle(deps.search)) return undefined;
   if (tourAlreadySeen(deps.storage, deps.projectId)) return undefined;
 
   const doc = deps.document;
