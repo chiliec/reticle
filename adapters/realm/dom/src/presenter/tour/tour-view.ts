@@ -59,7 +59,11 @@ export function tourSlides(): readonly TourSlide[] {
     {
       index: HANDOFF_INDEX,
       title: 'Hand it to your agent',
-      body: 'That is the whole loop. Paste this to your agent and it will do it against this app.',
+      // Names WHERE, because the slide before this one is the last thing between somebody and the
+      // point of the product, and "paste this to your agent" assumes they have already worked out
+      // which window that is. The clients are named rather than described: a person who uses one of
+      // them recognises it instantly, and a person who uses none learns that any of them will do.
+      body: 'That is the whole loop. Paste this into Claude Code, Cursor, Codex — wherever your agent takes instructions — and it will run against this app.',
       anchor: TourAnchor.NONE,
       prompt: TOUR_HANDOFF_PROMPT,
     },
@@ -191,6 +195,12 @@ export const TOUR_CSS = `
 [${TOUR_ATTR}] .reticle-tour-back:hover{background:rgba(255,255,255,.06);color:#e8eaf0;}
 [${TOUR_ATTR}] .reticle-tour-ring{position:absolute;border-radius:14px;pointer-events:none;
   box-shadow:0 0 0 3px #6366f1,0 0 0 9999px rgba(6,8,14,.55);transition:all .25s ease;}
+/* A REGION, not a target. The spotlight above cuts a hole in the dimming, which is right for
+   something small and wrong for the app: the hole becomes the whole viewport, the dimming
+   disappears, and the card is left competing with a fully lit page while the ring edges sit off at
+   the margins pointing at nothing. An outline says "all of this" without turning the lights on. */
+[${TOUR_ATTR}] .reticle-tour-ring.is-region{box-shadow:none;border:2px dashed #7c83f5;
+  background:rgba(99,102,241,.06);}
 @media (prefers-reduced-motion:reduce){
   [${TOUR_ATTR}] .reticle-tour-ring{transition:none;}
 }

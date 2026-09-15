@@ -6,6 +6,7 @@ import { LOG_CSS } from './chrome/presenter-log.js';
 import { buildSnapshot } from '../dom/snapshot.js';
 import { isIgnored } from '../dom/dom-ignore.js';
 import { until, wait } from './presenter-test-helpers.js';
+import { ACT_STRIP } from './presenter-config.js';
 
 describe('presenter / transparency layer', () => {
   it('mounts an overlay that is excluded from snapshots, then narrates + destroys', () => {
@@ -434,5 +435,60 @@ describe('the panel never calls a live agent idle', () => {
     await wait(24);
     expect(act(), 'an ended session is stopped, and must not read as a pause').toBe('stopped');
     expect(act()).not.toContain('planning');
+  });
+
+  /**
+   * A connected page with no agent on it is not an agent thinking.
+   *
+   * The clock ran on time-since-last-activity without asking whether there had EVER been an action,
+   * so a page that had just connected and had nobody attached counted upward at "planning next
+   * action · 8s" — inventing an agent and then reporting its progress. It is the first thing
+   * somebody sees on a first run, next to a tour whose argument is that Reticle does not make
+   * things up. Seen in a screenshot of that tour.
+   *
+   * `Ready` is already the text on screen and is exactly true: connected, waiting.
+   */
+  it('stays Ready when nothing has ever acted, rather than inventing an agent to be planning', async () => {
+    document.body.innerHTML = '';
+    let clock = 0;
+    const p = new Presenter({
+      now: () => clock,
+      heartbeatMs: 8,
+      idleNoticeMs: 20,
+      idleEndMs: 10_000,
+    });
+    p.mount();
+    p.sessionStart();
+    const act = (): string => document.querySelector('.reticle-act')?.textContent ?? '';
+
+    clock = 5000; // long past idleNoticeMs, but no action has ever happened
+    await wait(24);
+    expect(act(), 'nothing has acted, so there is no next action to be planning').not.toContain(
+      'planning',
+    );
+    expect(act()).toBe(ACT_STRIP.READY);
+    p.destroy();
+  });
+
+  // The control: once something HAS acted, the quiet clock is about a real agent and must run.
+  it('still reports planning once an action has happened', async () => {
+    document.body.innerHTML = '';
+    let clock = 0;
+    const p = new Presenter({
+      now: () => clock,
+      heartbeatMs: 8,
+      idleNoticeMs: 20,
+      idleEndMs: 10_000,
+    });
+    p.mount();
+    p.sessionStart();
+    p.status('Clicking Deploy');
+
+    clock = 5000;
+    await wait(24);
+    expect(document.querySelector('.reticle-act')?.textContent ?? '').toContain(
+      'planning next action',
+    );
+    p.destroy();
   });
 });

@@ -215,6 +215,64 @@ describe('driving the carousel on a real document', () => {
   });
 
   /**
+   * The tour points at the app at least once.
+   *
+   * Every slide was drawn centred over a dimmed page, so the one thing the tour spends five slides
+   * talking about — the running app — was the one thing it never directed attention at. It read as
+   * a modal that happened to be on top of an app rather than a tour of one.
+   */
+  it('points at the app on the slide that is about the app', () => {
+    const looking = TOUR_STEPS.findIndex((s) => TourAnchor.APP === s.anchor);
+    expect(looking, 'no slide points at the app').toBeGreaterThanOrEqual(0);
+
+    const main = document.createElement('main');
+    main.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 }) as DOMRect;
+    document.body.appendChild(main);
+    try {
+      const handle = mountTour(freshDeps());
+      for (let i = 0; i < looking; i += 1) click('next');
+      const ring = document.querySelector('[data-reticle-tour] .reticle-tour-ring');
+      expect(ring).not.toBeNull();
+
+      // Outlined, not spotlit, and the scrim stays. A spotlight cuts a hole in the dimming, which
+      // for a region the size of the app is the whole viewport: the dimming vanishes and the card
+      // is left on a fully lit page. Tried it, looked at it, and it was worse than no ring at all.
+      expect(ring?.className).toContain('is-region');
+      const scrim = document.querySelector('[data-reticle-tour] .reticle-tour-scrim');
+      expect(scrim?.className ?? '', 'an outlined region keeps its dimming').not.toContain(
+        'is-clear',
+      );
+      handle?.destroy();
+    } finally {
+      main.remove();
+    }
+  });
+
+  // The same rule as the HUD: an app with no content region we can name is one we would be GUESSING
+  // at, and a ring drawn on a guess points somebody at the wrong thing with total confidence.
+  // `document.body` is not a fallback — it contains the HUD and every overlay, so ringing it rings
+  // the viewport, which points at nothing by pointing at everything.
+  it('draws no app highlight when there is no content region it can name', () => {
+    const handle = mountTour(freshDeps());
+    const looking = TOUR_STEPS.findIndex((s) => TourAnchor.APP === s.anchor);
+    for (let i = 0; i < looking; i += 1) click('next');
+    expect(document.querySelector('[data-reticle-tour] .reticle-tour-ring')).toBeNull();
+    handle?.destroy();
+  });
+
+  // Every slide's code block is something you can run. One of them was a placeholder comment, on
+  // the slide carrying the idea the whole tour is built around.
+  it('gives every slide a call that is a call, not a comment standing in for one', () => {
+    const placeholders = tourSlides().filter(
+      (s) => undefined !== s.call && s.call.trimStart().startsWith('//'),
+    );
+    expect(
+      placeholders.map((s) => s.title),
+      'a slide whose example is only a comment teaches nothing runnable',
+    ).toEqual([]);
+  });
+
+  /**
    * The spotlight has to actually light something.
    *
    * The ring dims the page with its own `0 0 0 9999px` shadow, which leaves a HOLE where the ringed

@@ -22,15 +22,22 @@
 /**
  * What a slide points at when the tour is drawn over a real page.
  *
- * Only the HUD is addressable today: it is the one thing Reticle itself put on the page, so it is
- * the one thing a tour can promise is there. Pointing at the user's own markup would be a guess
- * about an app we have never seen.
+ * The HUD is addressable because Reticle put it there. The APP is addressable because the slide
+ * that uses it is about the app as a WHOLE — "here is the thing being snapshotted" — which needs a
+ * region, not a control. That is the line: a tour may point at the app, and may not point at a
+ * button inside it, because the button would be a guess about markup we have never seen.
+ *
+ * It matters that the tour points at the app at least once. The pitch is verifying YOUR RUNNING
+ * APP from the inside, and a tour drawn entirely over a dimmed page reads as a modal that happens
+ * to sit on top of one.
  */
 export const TourAnchor = {
   /** No target: the slide is prose, centred. */
   NONE: 'none',
   /** Reticle's own in-page HUD. */
   HUD: 'hud',
+  /** The app's own content region — `<main>`, else the framework's mount node. */
+  APP: 'app',
 } as const;
 export type TourAnchor = (typeof TourAnchor)[keyof typeof TourAnchor];
 
@@ -66,7 +73,11 @@ export const TOUR_STEPS: readonly TourStep[] = [
   {
     id: 'connect',
     title: 'It is connected',
-    say: 'Check that your app is actually talking to Reticle. One session listed here is the proof; until one appears, nothing else can tell you anything about this app.',
+    // The ring points at the HUD, so the prose has to make the HUD the evidence. It used to say the
+    // proof was a session "listed here", which is the output of the call below — a reader followed
+    // the ring to the panel and the panel was not what proved the claim. The panel IS proof: it is
+    // mounted only on a connected session and never appears without one.
+    say: 'That panel is Reticle, live on your page. It only appears once a session has connected, so seeing it IS the proof; ask your agent for the list and it will say the same thing.',
     why: 'Having the tools is not the same as being set up. Every later answer is about a page that must already be connected.',
     call: 'reticle_sessions',
     anchor: TourAnchor.HUD,
@@ -77,14 +88,20 @@ export const TOUR_STEPS: readonly TourStep[] = [
     say: 'Take a semantic snapshot. You get the controls and their refs, not pixels, so you can point at things by name.',
     why: 'A ref is stable across snapshots, which is what lets you plan several steps before spending any of them.',
     call: 'reticle_snapshot { mode: "interactive" }',
-    anchor: TourAnchor.NONE,
+    // The one slide that points at the app itself, and the only one where that is the subject: a
+    // snapshot is OF this region. Without it the tour never once directs attention at the thing it
+    // spends five slides talking about.
+    anchor: TourAnchor.APP,
   },
   {
     id: 'declare',
     title: 'Say it first',
     say: 'Decide what should happen BEFORE you touch anything. "Clicking Pay makes the receipt appear" is a claim that can be wrong.',
     why: 'This is the whole idea. A consequence named first is a check; the same sentence written after the fact is a rationalisation, and it is the difference between a verdict and a story.',
-    call: '// choose the consequence you will pass as `until`',
+    // Every other slide's block is something you can run; this one was a comment — a placeholder on
+    // the most important screen in the tour. It now shows the distinction it is teaching, because
+    // "name the consequence" means nothing until you see one next to a wait that proves nothing.
+    call: 'until: { signal: "order:placed" }   // a consequence — not until: { ms: 500 }',
     anchor: TourAnchor.NONE,
   },
   {

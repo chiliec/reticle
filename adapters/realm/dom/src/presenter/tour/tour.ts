@@ -29,6 +29,37 @@ import { TourAnchor } from '@reticlehq/core/tour';
 /** Where "they have seen it" is remembered. Per project, so a second app still gets its tour. */
 export const TOUR_SEEN_KEY_PREFIX = 'reticle.tour.seen.';
 
+/**
+ * Where the app's own content lives, in preference order.
+ *
+ * `<main>` first because an app that has one has said where its content is. Then the two mount
+ * nodes that between them cover most of what `create-vite` and friends scaffold. `document.body`
+ * is deliberately NOT a fallback: it includes the HUD and every fixed overlay, so a ring around it
+ * is a ring around the whole viewport, which points at nothing by pointing at everything.
+ */
+const APP_SELECTORS = ['main', '#root', '#app'] as const;
+
+/**
+ * The box to ring for a slide's anchor, or undefined when there is nothing honest to ring.
+ *
+ * Both anchors decline the same way and for the same reason: the HUD is genuinely absent when the
+ * panel is disabled, and an app with none of the selectors above is an app whose content region we
+ * would be guessing at. A tour that guesses points somebody at the wrong thing with full confidence.
+ */
+function anchorBox(doc: Document, anchor: TourAnchor): DOMRect | undefined {
+  if (TourAnchor.HUD === anchor) {
+    return doc.querySelector('[data-reticle-hud]')?.getBoundingClientRect();
+  }
+  if (TourAnchor.APP !== anchor) return undefined;
+  for (const selector of APP_SELECTORS) {
+    const found = doc.querySelector(selector);
+    if (null === found) continue;
+    const box = found.getBoundingClientRect();
+    if (box.width > 0) return box;
+  }
+  return undefined;
+}
+
 export const tourSeenKey = (projectId: string): string => `${TOUR_SEEN_KEY_PREFIX}${projectId}`;
 
 /** The storage this needs. Injected, because `localStorage` throws outright in some embeddings. */
@@ -115,22 +146,28 @@ export function mountTour(deps: TourDeps): TourHandle | undefined {
     // The highlight is drawn only when the thing it points at is actually on the page. A ring
     // floating over nothing is worse than no ring: it tells somebody to look where there is
     // nothing to see, and the HUD is genuinely absent when the panel is disabled.
-    if (TourAnchor.HUD === slide.anchor) {
-      const hud = doc.querySelector('[data-reticle-hud]');
-      const box = hud?.getBoundingClientRect();
+    if (TourAnchor.NONE !== slide.anchor) {
+      const box = anchorBox(doc, slide.anchor);
       if (undefined !== box && box.width > 0) {
+        // A REGION is outlined; a TARGET is spotlit. The app is the whole content area, so cutting
+        // a hole for it removes the dimming entirely — the card ends up competing with a fully lit
+        // page and the ring edges sit at the margins pointing at nothing. Measured by looking at it.
+        const region = TourAnchor.APP === slide.anchor;
         const ring = doc.createElement('div');
-        ring.className = 'reticle-tour-ring';
-        ring.style.left = `${String(Math.round(box.left - 6))}px`;
-        ring.style.top = `${String(Math.round(box.top - 6))}px`;
-        ring.style.width = `${String(Math.round(box.width + 12))}px`;
-        ring.style.height = `${String(Math.round(box.height + 12))}px`;
+        ring.className = region ? 'reticle-tour-ring is-region' : 'reticle-tour-ring';
+        // Inset for a region, outset for a target: an outline reads as "all of this" when it sits
+        // just inside the thing, and a spotlight needs clearance around what it lights.
+        const pad = region ? -2 : 6;
+        ring.style.left = `${String(Math.round(box.left - pad))}px`;
+        ring.style.top = `${String(Math.round(box.top - pad))}px`;
+        ring.style.width = `${String(Math.round(box.width + pad * 2))}px`;
+        ring.style.height = `${String(Math.round(box.height + pad * 2))}px`;
         root.appendChild(ring);
-        // The ring dims the page itself and leaves a hole where the HUD is. Leaving the scrim opaque
-        // fills that hole back in, so the one element the slide is pointing at ends up dimmed like
-        // everything else — and the page takes the wash twice. Only ever set alongside a ring: with
-        // no hole to preserve, the scrim is the only thing doing the dimming.
-        root.querySelector('.reticle-tour-scrim')?.classList.add('is-clear');
+        // The spotlight dims the page itself and leaves a hole where the target is. Leaving the
+        // scrim opaque fills that hole back in, so the one element the slide points at ends up
+        // dimmed like everything else — and the page takes the wash twice. Only for a spotlight: an
+        // outlined region keeps its dimming, which is the entire difference between the two.
+        if (!region) root.querySelector('.reticle-tour-scrim')?.classList.add('is-clear');
       }
     }
   };

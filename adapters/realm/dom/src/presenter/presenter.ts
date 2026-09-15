@@ -484,7 +484,19 @@ export class Presenter {
       return;
     }
     if (idleMs < this.#idleNoticeMs) return; // still active (or a brief think) - keep the action text
-    const since = this.#lastActionText !== '' ? ACT_STRIP.SINCE_LAST : '';
+    /*
+     * Nothing has acted in this session yet, so there is no NEXT action being planned.
+     *
+     * A page that has just connected and has no agent attached sat there counting — "planning next
+     * action · 8s" — which invents an agent and then reports on its thinking. It is the first thing
+     * a person sees on their first run, next to a tour explaining that Reticle does not make things
+     * up. `Ready` is already on screen and is exactly true: connected, waiting.
+     *
+     * `#lastActionText` is the right test because it is set on every path that paints an action and
+     * on nothing else, so "still empty" means no action has ever been painted in this session.
+     */
+    if ('' === this.#lastActionText) return;
+    const since = ACT_STRIP.SINCE_LAST;
     // Alive and between actions — NOT idle. The session is still running and the next action is
     // being decided; `#endIdle` below is the only path that says nothing more is coming.
     this.#paintActStrip(`${ACT_STRIP.PLANNING_PREFIX}${humanDuration(idleMs)}${since}`, true);
