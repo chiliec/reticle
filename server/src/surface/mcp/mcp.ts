@@ -22,7 +22,7 @@ import { resultIsError } from './faults/mcp-is-error.js';
 import { consumerVerdictRefusal, reservedVerdictKeysIn } from './consumer-verdict-guard.js';
 import { buildServerInstructions } from './server-instructions.js';
 import { unadvertisedToolHelp } from '../tools/unadvertised-help.js';
-import { liveCallText } from '../tools/live-call-text.js';
+import { liveCallText, liveCallValues } from '../tools/live-call-text.js';
 
 /** The JSON-RPC method the SDK registers its tool dispatcher under. */
 export const CALL_TOOL_METHOD = 'tools/call';
@@ -663,7 +663,10 @@ export function createMcpServer(
             };
           }
         }
-        const text = liveCallText(encodeResult(result, encoding), advertisedNames);
+        // Rewritten BEFORE encoding: the replacements carry double quotes, and splicing those
+        // into an encoded payload leaves them unescaped and the whole result unparseable.
+        const advised = liveCallValues(result, advertisedNames);
+        const text = encodeResult(advised, encoding);
         // A tool that RETURNS `{ error, recovery }` refused just as surely as one that threw, and
         // `isError` is the field a caller branches on. Without this it was set only on the throw
         // path, so half the surface reported a refusal as a success. See mcp-is-error.
@@ -672,7 +675,7 @@ export function createMcpServer(
           return {
             ...(isError ? { isError: true as const } : {}),
             content: [{ type: 'text' as const, text }],
-            structuredContent: result as Record<string, unknown>,
+            structuredContent: advised as Record<string, unknown>,
           };
         }
         return {
@@ -692,9 +695,8 @@ export function createMcpServer(
           content: [
             {
               type: 'text' as const,
-              text: liveCallText(
-                JSON.stringify(takeVersionSkewOnto(buildErrorPayload(message))),
-                advertisedNames,
+              text: JSON.stringify(
+                liveCallValues(takeVersionSkewOnto(buildErrorPayload(message)), advertisedNames),
               ),
             },
           ],

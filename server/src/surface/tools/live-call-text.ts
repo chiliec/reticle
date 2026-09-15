@@ -92,3 +92,28 @@ export function liveCallText(text: string, advertised: ReadonlySet<string>): str
     return replacementFor(name, advertised) ?? name;
   });
 }
+
+/**
+ * The same rewrite, applied to a result's STRING VALUES instead of to its encoded form.
+ *
+ * This exists because the encoded form was the wrong place. The replacements above contain double
+ * quotes -- `reticle_verify { action: "flows" }` -- and splicing those into serialised JSON leaves
+ * them unescaped, so the payload stops parsing. MEASURED: three e2e specs that pass on the parent
+ * commit went red, each reporting an EMPTY session list, because the sessions diagnostic names
+ * `reticle_flow` and the rewrite broke the envelope around the data it was describing. The advice
+ * was corrected and the result became unreadable, which is a worse trade than the advice was worth.
+ *
+ * Values, not keys: a key is a contract with the caller and nothing in a key is advice.
+ */
+export function liveCallValues(value: unknown, advertised: ReadonlySet<string>): unknown {
+  if ('string' === typeof value) return liveCallText(value, advertised);
+  if (Array.isArray(value)) return value.map((each) => liveCallValues(each, advertised));
+  if (null !== value && 'object' === typeof value) {
+    const out: Record<string, unknown> = {};
+    for (const [key, each] of Object.entries(value as Record<string, unknown>)) {
+      out[key] = liveCallValues(each, advertised);
+    }
+    return out;
+  }
+  return value;
+}

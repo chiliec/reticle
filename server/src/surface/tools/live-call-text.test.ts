@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { liveCallText } from './live-call-text.js';
+import { liveCallText, liveCallValues } from './live-call-text.js';
 import { ReticleTool } from '@reticlehq/core';
 
 /**
@@ -79,6 +79,39 @@ describe('advice names a call the reader can actually make', () => {
     const out = liveCallText('run reticle_flow{action:"list"} to see saved flows', MERGED);
     expect(out).not.toContain('reticle_flow{');
     expect(out).toContain('reticle_verify { action: "flows" }');
+  });
+
+  it('rewrites the VALUES of a result without breaking it, quotes and all', () => {
+    /*
+     * The first version ran over the serialised payload, and its replacements contain double
+     * quotes -- `reticle_verify { action: "flows" }`. Injected into an already-encoded JSON string
+     * those quotes are not escaped, so the payload stopped parsing and every client reading it saw
+     * nothing at all.
+     *
+     * MEASURED: three e2e specs that pass on the commit before this one went red, each reporting
+     * an EMPTY session list, because the sessions payload carries a diagnostic that names
+     * `reticle_flow`. The rewrite corrupted the envelope around the data it was describing. Found
+     * by running the battery against the parent commit and diffing the two arms, not by the suite.
+     */
+    const payload = {
+      why: 'run reticle_flow{action:"list"} to see saved flows',
+      sessions: [{ id: 's1' }],
+    };
+    const out = liveCallValues(payload, MERGED) as typeof payload;
+    expect(JSON.stringify(out)).toContain('reticle_verify');
+    // The shape survives: this is the half that broke.
+    expect(out.sessions).toEqual([{ id: 's1' }]);
+    expect(JSON.parse(JSON.stringify(out))).toEqual(out);
+  });
+
+  it('walks nested values and arrays, leaving non-strings alone', () => {
+    const out = liveCallValues(
+      { a: { b: ['call reticle_sessions', 7, null, true] }, n: 3 },
+      MERGED,
+    ) as { a: { b: unknown[] }; n: number };
+    expect(out.a.b[0]).toBe('call reticle_session { action: "list" }');
+    expect(out.a.b.slice(1)).toEqual([7, null, true]);
+    expect(out.n).toBe(3);
   });
 
   it('leaves text naming no tool untouched', () => {
