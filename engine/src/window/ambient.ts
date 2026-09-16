@@ -37,6 +37,35 @@ export function ambientKeyOf(event: {
 /** A ref must churn ambiently at least this many times before it is treated as ambient. */
 export const DEFAULT_AMBIENT_THRESHOLD = 20;
 
+/**
+ * An element ref: the letter `e` and a sequence number, minted per session by the SDK's ref table.
+ *
+ * It is an address within ONE session's numbering, not an identity. `e404` is whatever that session
+ * happened to hand out 404th.
+ */
+const REF_SHAPED = /^e\d+$/;
+
+/**
+ * Is this ambient key meaningful in a DIFFERENT session?
+ *
+ * `regionKeyOf` prefers the nearest `data-testid` — a name the app chose, stable across every run —
+ * and falls back to the element's ref when the region has none. Within a session that fallback is
+ * correct and useful. Across one it is not merely useless, it is WRONG: the next session hands `e404`
+ * to some other element, and the learned suppression lands on whatever that turns out to be.
+ *
+ * Measured: real action-caused DOM events disappeared from the window on a freshly opened page,
+ * because the map seeded from disk marked refs that session had never issued. Clearing the file and
+ * repeating the identical click took `domChanged` from 0 to 7.
+ */
+export function isStableAmbientKey(key: string): boolean {
+  return !REF_SHAPED.test(key);
+}
+
+/** The counts worth carrying between sessions — the stable keys, and nothing else. */
+export function onlyStableAmbient(counts: AmbientCounts): AmbientCounts {
+  return Object.fromEntries(Object.entries(counts).filter(([key]) => isStableAmbientKey(key)));
+}
+
 /** Fold a batch of events into the running ambient counts. Only unattributed, ref-bearing events count. */
 export function accumulateAmbient(
   counts: AmbientCounts,

@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import type { FileSystemPort } from '../project/fs/fs-port.js';
 import { reticleDirPaths } from '../project/dir/reticle-dir.js';
 import { AmbientFileSchema } from './on-disk/ambient-file.js';
-import { type AmbientCounts } from '@reticlehq/engine/window/ambient.js';
+import { onlyStableAmbient, type AmbientCounts } from '@reticlehq/engine/window/ambient.js';
 
 /** Bumped on any breaking change to the persisted ambient-map shape. */
 const AMBIENT_FILE_VERSION = 1;
@@ -36,12 +36,18 @@ export class AmbientStore {
       return {};
     }
     const result = AmbientFileSchema.safeParse(parsed);
-    return result.success ? result.data.regions : {};
+    // Ref-keyed entries are dropped on the way IN as well as out: a file written before this rule
+    // existed is full of them, and seeding a session with another session's ref numbering is the
+    // defect itself. An older file therefore degrades to its stable entries rather than misfiring.
+    return result.success ? onlyStableAmbient(result.data.regions) : {};
   }
 
   async save(counts: AmbientCounts): Promise<void> {
     await this.#fs.mkdir(dirname(this.#path));
-    const body = `${JSON.stringify({ version: AMBIENT_FILE_VERSION, regions: counts }, null, 2)}\n`;
+    // Only what means anything in the next session. A ref is an address within ONE session's
+    // numbering, so persisting it teaches the next session to suppress an element it never saw.
+    const regions = onlyStableAmbient(counts);
+    const body = `${JSON.stringify({ version: AMBIENT_FILE_VERSION, regions }, null, 2)}\n`;
     const tmp = `${this.#path}.tmp`;
     await this.#fs.writeFile(tmp, body);
     await this.#fs.rename(tmp, this.#path);
