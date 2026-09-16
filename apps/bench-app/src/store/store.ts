@@ -179,7 +179,15 @@ export const useApp = create<AppState>((set, get) => ({
     emit(Sig.DRAWER_OPENED, { id: drawerId });
   },
   closeDrawer: () => set({ drawerId: null }),
+  /**
+   * Same rule as `setPalette` below, and the same fix.
+   *
+   * This one is worse in one respect: it announces on BOTH edges, so a close that closed nothing
+   * claimed `modal:closed` just as readily as a redundant open claimed `modal:opened`. A dialog that
+   * reports being dismissed when it was never on screen is the kind of thing a flow then asserts on.
+   */
   setNewDeploy: (newDeployOpen) => {
+    if (get().newDeployOpen === newDeployOpen) return;
     set({ newDeployOpen });
     emit(newDeployOpen ? Sig.MODAL_OPENED : Sig.MODAL_CLOSED, { modal: 'new-deploy' });
   },
