@@ -203,7 +203,13 @@ export class Presenter {
     if (command.name === ReticleCommand.FLOWS) return void this.#panel.setFlows(a['flows']);
     if (command.name === ReticleCommand.IMPACT) {
       const snapshot = parseImpactSnapshot(a['snapshot']);
-      if (snapshot !== undefined) this.#shell.report.setSnapshot(snapshot);
+      if (snapshot !== undefined) {
+        this.#shell.report.setSnapshot(snapshot);
+        // The toolbar capsule too, from the same push. Signing in happens in a terminal while this
+        // page stays open, so the chrome has to learn about it from the next snapshot rather than
+        // from the mount it missed.
+        this.#shell.paintAccount(snapshot.account, snapshot.dashboardUrl);
+      }
       return;
     }
     const state = a['state'];

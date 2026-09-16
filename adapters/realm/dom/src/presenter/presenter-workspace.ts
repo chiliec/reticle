@@ -1,5 +1,7 @@
 import { RETICLE_ROOT_GLOBAL, RETICLE_URL_PARAM } from '@reticlehq/core';
 import { PresenterIcon, PRESENTER_ICON_SIZE, hiIconHtml } from './icons/presenter-icons.js';
+import type { AccountState } from '@reticlehq/core';
+import { ACCOUNT_SIGNIN_ATTR, ACCOUNT_TEXT, accountCapsuleHtml } from './presenter-account.js';
 
 const WORKSPACE_BTN_ATTR = 'data-reticle-workspace-btn';
 const WORKSPACE_MENU_ATTR = 'data-reticle-workspace-menu';
@@ -7,6 +9,18 @@ const WORKSPACE_NAME_ATTR = 'data-reticle-workspace-name';
 const WORKSPACE_PATH_ATTR = 'data-reticle-workspace-path';
 const WORKSPACE_PROJECT_ATTR = 'data-reticle-workspace-project';
 const WORKSPACE_COPY_ATTR = 'data-reticle-workspace-copy';
+/**
+ * Where the account capsule lands: a slot, filled later, rather than markup built here.
+ *
+ * This row is built ONCE at mount, and whether the machine is signed in arrives later and can change
+ * — a `reticle login` in another terminal while the page is open is an ordinary thing to do. So the
+ * row reserves the space and `paintWorkspaceAccount` fills it whenever a snapshot lands, the same
+ * way the folder and project rows are painted rather than interpolated.
+ */
+export const WORKSPACE_ACCOUNT_ATTR = 'data-reticle-workspace-account';
+
+/** How long the Sign in control says "Copied" before returning to its label. */
+const COPIED_MS = 1_200;
 
 const WORKSPACE_LABEL = 'Workspace';
 const PROJECT_LABEL = 'Project';
@@ -60,7 +74,10 @@ export function workspaceRowHtml(): string {
     <div class="reticle-workspace-menu" ${WORKSPACE_MENU_ATTR} role="region" aria-label="${WORKSPACE_LABEL}" aria-hidden="true" hidden>
       <div class="reticle-workspace-menu-head">
         <div class="reticle-workspace-menu-title">${WORKSPACE_LABEL}</div>
-        <button type="button" class="reticle-workspace-copy" ${WORKSPACE_COPY_ATTR} title="${COPY_PATH_LABEL}" aria-label="${COPY_PATH_LABEL}">${copyIcon}</button>
+        <div class="reticle-workspace-menu-actions">
+          <span ${WORKSPACE_ACCOUNT_ATTR}></span>
+          <button type="button" class="reticle-workspace-copy" ${WORKSPACE_COPY_ATTR} title="${COPY_PATH_LABEL}" aria-label="${COPY_PATH_LABEL}">${copyIcon}</button>
+        </div>
       </div>
       <div class="reticle-workspace-menu-row"><span class="reticle-workspace-menu-k">Folder</span><span class="reticle-workspace-menu-v" data-reticle-workspace-folder></span></div>
       <div class="reticle-workspace-menu-row"><span class="reticle-workspace-menu-k">Path</span><span class="reticle-workspace-menu-v reticle-workspace-menu-path" ${WORKSPACE_PATH_ATTR}></span></div>
@@ -136,6 +153,28 @@ export function mountWorkspaceSelector(root: HTMLElement): () => void {
     e.stopPropagation();
     toggle();
   };
+  /*
+   * Sign in, from the capsule in the menu head. Delegated on the MENU because the capsule is
+   * repainted on every snapshot — a listener bound to the button itself would work until the first
+   * push and then silently stop, which demos perfectly and is broken by the time anyone uses it.
+   *
+   * Copies the command rather than starting anything: signing in is a device flow in a terminal, a
+   * page cannot run a CLI, and a button that quietly does nothing is worse than a line of text.
+   */
+  const onMenuClick = (e: MouseEvent): void => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    const signin = target.closest(`[${ACCOUNT_SIGNIN_ATTR}]`);
+    if (null === signin) return;
+    e.stopPropagation();
+    void navigator.clipboard?.writeText(ACCOUNT_TEXT.SIGNIN_COMMAND).catch(() => undefined);
+    const previous = signin.textContent;
+    signin.textContent = ACCOUNT_TEXT.COPIED;
+    setTimeout(() => {
+      signin.textContent = previous;
+    }, COPIED_MS);
+  };
+  menu.addEventListener('click', onMenuClick);
   const onDocPointer = (e: PointerEvent): void => {
     const target = e.target;
     if (!(target instanceof Node)) return;
@@ -175,4 +214,22 @@ export function mountWorkspaceSelector(root: HTMLElement): () => void {
     document.removeEventListener('pointerdown', onDocPointer);
     document.removeEventListener('keydown', onKeyDown);
   };
+}
+
+/**
+ * Fill the account slot in the workspace menu.
+ *
+ * `offerSignIn` is TRUE here and false in the panels, which is the one asymmetry worth stating. This
+ * is persistent chrome: a capsule in the toolbar answering "whose machine is this", the way an
+ * account avatar does in every other product. A panel is something somebody opened to read a
+ * result, and interrupting that with a sign-in offer is the nag the report panel's own tests refuse.
+ */
+export function paintWorkspaceAccount(
+  root: HTMLElement,
+  account: AccountState | undefined,
+  dashboardUrl: string | undefined,
+): void {
+  const slot = root.querySelector(`[${WORKSPACE_ACCOUNT_ATTR}]`);
+  if (!(slot instanceof HTMLElement)) return;
+  slot.innerHTML = accountCapsuleHtml(account, dashboardUrl, true);
 }

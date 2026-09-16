@@ -77,6 +77,26 @@ export const CONTROLS_CSS = `
   background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);cursor:pointer;line-height:0;transition:background .12s,color .12s;}
 [data-reticle-chat-panel] .reticle-workspace-copy:hover:not(:disabled){background:rgba(255,255,255,.12);color:#fff;}
 [data-reticle-chat-panel] .reticle-workspace-copy:disabled{opacity:.35;cursor:not-allowed;}
+/* The account capsule, to the right of the menu title. Matches the local idiom in this block:
+   the workspace menu predates the design tokens used in the report panel and states its own
+   greys, so a token here would be the only one and would not match its neighbours. */
+[data-reticle-chat-panel] .reticle-workspace-menu-actions{
+  display:flex;align-items:center;gap:6px;}
+[data-reticle-chat-panel] .reticle-account{display:inline-flex;align-items:center;gap:4px;}
+[data-reticle-chat-panel] .reticle-account-avatar{
+  display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:999px;font-size:9px;font-weight:600;
+  background:rgba(255,255,255,.12);color:rgba(255,255,255,.92);user-select:none;}
+[data-reticle-chat-panel] .reticle-account-signin{
+  border:none;border-radius:6px;padding:3px 9px;cursor:pointer;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font:inherit;font-size:10.5px;
+  transition:background .12s,color .12s;}
+[data-reticle-chat-panel] .reticle-account-signin:hover{background:rgba(255,255,255,.12);color:#fff;}
+[data-reticle-chat-panel] .reticle-account-dashboard{
+  display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:6px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);
+  cursor:pointer;line-height:0;transition:background .12s,color .12s;}
+[data-reticle-chat-panel] .reticle-account-dashboard:hover{background:rgba(255,255,255,.12);color:#fff;}
 [data-reticle-chat-panel] .reticle-workspace-menu-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:4px 0;}
 [data-reticle-chat-panel] .reticle-workspace-menu-k{flex:none;color:rgba(255,255,255,.42);}
 [data-reticle-chat-panel] .reticle-workspace-menu-v{min-width:0;text-align:right;color:rgba(255,255,255,.9);font-weight:500;word-break:break-all;}

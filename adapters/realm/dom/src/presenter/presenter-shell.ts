@@ -1,4 +1,6 @@
 import { PresenterReport, reportPanelHtml } from './presenter-report.js';
+import type { AccountState } from '@reticlehq/core';
+import { paintWorkspaceAccount } from './presenter-workspace.js';
 import {
   CHAT_MIN_ATTR,
   CHAT_PILL_ATTR,
@@ -104,6 +106,12 @@ export class HudShell {
     onSyncNow: () => this.#callbacks.onSyncNow?.(),
   });
   #callbacks: HudShellCallbacks;
+
+  /** Paint the toolbar's account capsule. No-op before mount, like every other painter here. */
+  paintAccount(account: AccountState | undefined, dashboardUrl: string | undefined): void {
+    if (this.#root === undefined) return;
+    paintWorkspaceAccount(this.#root, account, dashboardUrl);
+  }
   constructor(callbacks: HudShellCallbacks = {}) {
     this.#callbacks = callbacks;
     this.#settings = new PresenterSettingsPanel({
