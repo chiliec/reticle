@@ -83,6 +83,51 @@ function unresolvedAlias(text) {
   return undefined;
 }
 
+/**
+ * The same check, over the packages this one REFERENCES.
+ *
+ * `tsc -b` builds the reference graph; `tsc-alias` rewrites one `outDir`. So a package's own build
+ * re-emitted its dependencies' dist with the alias back in it, and the dependency — already packed
+ * and gone — never got a second rewrite. That is `scripts/alias-dist.mjs`, and this is what makes
+ * forgetting it loud: a dist somebody else's build broke fails HERE, naming the file, instead of at
+ * the first `import` of a sibling's built output.
+ */
+function referencedDists() {
+  let config;
+  try {
+    config = readFileSync('tsconfig.json', 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+      .replace(/,(\s*[}\]])/g, '$1');
+  } catch {
+    return [];
+  }
+  const refs = JSON.parse(config).references ?? [];
+  return refs
+    .map((ref) => join(ref.path.replace(/tsconfig\.json$/, ''), 'dist'))
+    .filter((dir) => {
+      try {
+        return statSync(dir).isDirectory();
+      } catch {
+        return false;
+      }
+    });
+}
+
+for (const dist of referencedDists()) {
+  for (const file of walk(dist)) {
+    if (!file.endsWith('.js') && !file.endsWith('.d.ts') && !file.endsWith('.cjs')) continue;
+    const unresolved = unresolvedAlias(readFileSync(file, 'utf8'));
+    if (unresolved !== undefined) {
+      throw new Error(
+        `prepare-dist: ${file} still imports ${unresolved}. A referenced package's dist was rebuilt ` +
+          `without its alias rewrite — build with \`node scripts/alias-dist.mjs\`, which covers the ` +
+          `whole project-reference graph, not \`tsc-alias\`, which covers one package.`,
+      );
+    }
+  }
+}
+
 let removed = 0;
 let stripped = 0;
 
