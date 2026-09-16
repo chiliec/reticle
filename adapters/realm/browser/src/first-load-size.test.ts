@@ -134,7 +134,25 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  * `reticle.ts` already owns. Both were fixed rather than absorbed. The 171 B left is the mount call
  * itself, which a page cannot avoid downloading if the tour is ever to appear.
  */
-const MAX_FIRST_LOAD_BYTES = 238_100;
+/*
+ * 238_100 -> 239_100, for a modal that mounts in a bare div. 222 B measured.
+ *
+ * The observer flushed on rAF and reported a mutation only when the mounted subtree carried
+ * something it recognised, so a dialog rendered into an unadorned `<div>` read as SILENCE — and
+ * silence is evidence here: it is what `settled` waits for and what an absence-derived finding
+ * rests on. A modal that opened correctly could therefore be reported as a control that did
+ * nothing, which is the false negative this product exists to refuse.
+ *
+ * Raised by 1,000 rather than to the measurement, per the note above: an ordinary change should
+ * not fail on rounding.
+ *
+ * The structural fix named further down this file is still available and still unspent: moving
+ * `verdict/verification-run` behind a `core` subpath takes back its own 3,635 B and the
+ * protocol barrel's 8,352 B with it, about 12 kB. That is a public-surface change to
+ * `@reticlehq/core` and wants deciding rather than doing under a size guard — but it is the
+ * reason this ceiling keeps climbing, and every raise borrows against it.
+ */
+const MAX_FIRST_LOAD_BYTES = 239_100;
 /*
  * Raised a fifth time, 233_300 -> 233_400, for a route to be assertable in a SAVED flow. 57 B.
  *
