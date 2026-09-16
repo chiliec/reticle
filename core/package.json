@@ -18,6 +18,10 @@
       "types": "./dist/artifacts/artifacts-entry.d.ts",
       "default": "./dist/artifacts/artifacts-entry.js"
     },
+    "./hooks": {
+      "types": "./dist/hooks/hooks-entry.d.ts",
+      "default": "./dist/hooks/hooks-entry.js"
+    },
     "./schema/*.json": "./dist/schema/*.json",
     "./desktop-contract": {
       "types": "./dist/desktop-contract.d.cts",

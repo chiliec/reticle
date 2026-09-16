@@ -210,8 +210,13 @@ function loopBody(text: string, headOpen: number): string | null {
  * a fixed 1,200ms and hoping — which is the same defect this rule exists for, one layer down, and
  * had failed three unrelated PRs as `expected '' not to be ''`. The poll is the IO loop; both tests
  * in that file already declare `15_000`, so it satisfies the rule and only this count moved.
+ *
+ * 14th: `hooks/hook-commands.test.ts`. It spawns REAL child processes and polls a temp directory for
+ * the file one of them writes, which is the same shape again — fast on a quiet laptop, seconds on a
+ * loaded runner. It declares `HOOK_SPAWN_TIMEOUT_MS`, so it satisfies the rule and only this count
+ * moved.
  */
-const EXPECTED_IO_LOOP_FILES = 13;
+const EXPECTED_IO_LOOP_FILES = 14;
 
 function testFiles(dir: string): string[] {
   const out: string[] = [];

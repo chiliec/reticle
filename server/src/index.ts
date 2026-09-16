@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolveProjectCloud } from './memory/cloud/cloud-config.js';
 import { startSyncDaemon } from './memory/cloud/sync-daemon.js';
+import { installCommandHooks } from './hooks/hook-commands.js';
+import { setHookProjectId } from './hooks/hook-emit.js';
 import {
   PROJECT_REGISTRY_FILE,
   emptyProjectRegistry,
@@ -84,7 +86,8 @@ import { hasProjectConnectedBefore } from './memory/recall/prior/connection-memo
 import { reticleStateHome } from './command/daemon/daemon.js';
 import { probeChromium } from './command/cli/doctor/browser/chromium-hint.js';
 import { makeJournalAttach } from './memory/journal/attach-journal.js';
-import { makeSessionEnd } from './memory/journal/session-end.js';
+import { makeSessionEnd, recordDriveRun } from './memory/journal/session-end.js';
+import { attachDriveRunFlush } from './memory/journal/drive-run-flush.js';
 import type { TapeStep } from './memory/journal/drive-flow.js';
 import type { OnboardingStep } from '@reticlehq/core/telemetry';
 import { reportOnboardingStep } from './telemetry/onboarding-funnel.js';
@@ -258,6 +261,8 @@ function attachJournal(
     enabled: boolean;
     takeAmbientTape?: () => { steps: readonly TapeStep[]; startPath?: string } | undefined;
     reportStep?: (step: OnboardingStep) => Promise<boolean>;
+    /** Tell cloud sync a run landed, so it cycles instead of waiting for its timer. */
+    onRunPersisted?: () => void;
     flows?: FlowStore;
   },
 ): void {
@@ -283,6 +288,24 @@ function attachJournal(
   });
   // Teardown: flush the journal tail to disk + persist what this session learned.
   bridge.attachSessionEnd(makeSessionEnd(deps));
+  /*
+   * And the same write, DURING the session rather than only at the end of it.
+   *
+   * Teardown was the only writer of a run artifact, so every verdict produced while a tab stayed
+   * open was invisible to cloud sync — which can only push artifacts that exist. Reported as "sync
+   * is not happening" and diagnosed as the agent forgetting to sync; there is no sync command to
+   * forget. The evidence simply was not on disk yet.
+   *
+   * Safe to call repeatedly because the run id is derived from the session, so this rewrites one
+   * artifact rather than accumulating them — a property `recordDriveRun` already had, for the
+   * unrelated reason that a reconnecting tab must not publish two overlapping rows.
+   */
+  if (deps.enabled) {
+    attachDriveRunFlush({
+      resolve: (sessionId: string) => bridge.sessions.get(sessionId),
+      write: (session) => recordDriveRun(deps, session),
+    });
+  }
   if (deps.enabled) {
     void pruneSessions(deps.fs, deps.reticleRoot);
     // The largest thing in the workspace, and until now the only one with no delete path at all.
@@ -613,6 +636,14 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
   // Built here rather than inside `deps` below, so teardown can save what a drive recorded. Both
   // paths pass the same pair — `daemon-parity.test.ts` is what keeps them from drifting apart.
   const recordings = new RecordingStore();
+  /*
+   * Bound AFTER the sync daemon exists, read only when a run is actually written.
+   *
+   * `attachJournal` runs before `startSyncDaemon` because the journal has to be capturing before
+   * anything can connect, and reordering them so this could be a direct reference would put sync
+   * setup ahead of session capture for the sake of one callback.
+   */
+  const syncNudge: { run?: () => void } = {};
   attachJournal(bridge, {
     fs,
     reticleRoot,
@@ -620,6 +651,7 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
     takeAmbientTape: () => recordings.stop(AMBIENT_RECORDING),
     reportStep: reportOnboardingStep,
     flows,
+    onRunPersisted: () => syncNudge.run?.(),
   });
   const project = new ProjectStore(fs, reticleRoot, { now });
   attachRouteLearning(bridge, project);
@@ -635,6 +667,18 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
    * process to remember. Safe for an UNLINKED project: it resolves the link on every tick and does
    * nothing until one exists, so `reticle link` takes effect without a restart.
    */
+  /*
+   * The config half of hooks, attached for the life of the daemon.
+   *
+   * Installed here rather than lazily on first use because the events it listens for start the
+   * moment a session attaches, and a surface that wires itself up on first need would miss exactly
+   * the events a user most wants — the ones at the start of a run.
+   *
+   * Costs nothing when unused: with no `.reticle/hooks.json` the listener reads an absent file,
+   * gets an empty map and returns, which is the case for every user who has not asked for hooks.
+   */
+  installCommandHooks(reticleRoot);
+  setHookProjectId(readProjectId(process.cwd()));
   const cloudSync = startSyncDaemon({
     reticleRoot,
     cloud: () => resolveProjectCloud(fs, reticleRoot, homedir(), process.env),
@@ -644,6 +688,7 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
     otherRoots: () => Promise.resolve(knownProjectRoots()),
     cloudFor: (root) => resolveProjectCloud(fs, root, homedir(), process.env),
   });
+  syncNudge.run = (): void => cloudSync.nudge();
   // Scope auto-selection to the active project (from .reticle.json) so a stray tab from another app is
   // never picked when the agent omits a sessionId. Explicit per-call scope/sessionId still overrides.
   // Scope + the no-session diagnosis: "no browser session connected" is the error that ends most
@@ -944,3 +989,9 @@ export type {
   ElementBox,
   RealInputArgs,
 } from './portal/input/real-input.js';
+
+// Hooks, in-process half. The config half needs no export: a user writes `.reticle/hooks.json`.
+// Payload TYPES live in `@reticlehq/core/hooks`; `hook-bus.ts` has the design.
+export { onHook as onReticleEvent, emitHook, hookListenerCount } from './hooks/hook-bus.js';
+export type { HookListener } from './hooks/hook-bus.js';
+export { readHookConfig } from './hooks/hook-commands.js';

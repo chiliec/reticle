@@ -18,6 +18,7 @@ import { noteToolServed, reportToolRefused } from '../../telemetry/tool-refused.
 import { buildErrorPayload, refusalReasonFor } from './error-recovery.js';
 import { resultIsError } from '../mcp/faults/mcp-is-error.js';
 import { verificationOf } from '../../telemetry/verification-of.js';
+import { emitBugFoundHook, emitVerdictHook } from '../../hooks/hook-emit.js';
 import { reportOnboardingStep } from '../../telemetry/onboarding-funnel.js';
 import { noteFirstVerdict, noteOnboardingFirst } from '../../telemetry/onboarding-firsts.js';
 import { OnboardingPhase, OnboardingStepStatus } from '@reticlehq/core/telemetry';
@@ -191,6 +192,7 @@ function recordVerification(
   result: Record<string, unknown>,
   durationMs: number,
   brand: BrowserBrand | undefined,
+  sessionId: string | undefined,
 ): void {
   const verification = verificationOf(toolName, result, durationMs, brand);
   if (verification === undefined) return;
@@ -209,6 +211,10 @@ function recordVerification(
   // Idempotency is deliberately NOT applied: the funnel step is per verdict, and a session that
   // proves ten things is a different shape from one that proves one. The FIRST is what a funnel
   // query takes; the rest are how much the product was used after conversion.
+  // The public half of the same moment. Emitted from the site that already decided a verdict
+  // happened, for the reason stated just above about the telemetry pair: a second listener deciding
+  // for itself is a second thing that can stop agreeing about whether a verdict occurred.
+  emitVerdictHook(toolName, result, verification.verified, sessionId);
   // The ONBOARD half of the same moment: the first verdict of this run, once.
   noteFirstVerdict();
   void reportOnboardingStep({
@@ -226,7 +232,11 @@ function recordVerification(
  * works. Discrete events rather than only a counter, because the KIND distribution is the argument —
  * "we found 4,000 bugs" is a claim, "1,200 were greens that lied" is evidence.
  */
-function reportBugsFound(toolName: string, result: Record<string, unknown>): void {
+function reportBugsFound(
+  toolName: string,
+  result: Record<string, unknown>,
+  sessionId: string | undefined,
+): void {
   const bugs = bugsInResult(toolName, result);
   if (0 === bugs.length) return;
   const metrics = getSessionMetrics();
@@ -245,6 +255,10 @@ function reportBugsFound(toolName: string, result: Record<string, unknown>): voi
       actor: TelemetryActor.AGENT,
       bug: { ...bug, repeat: !first, fingerprint },
     });
+    // The same defect, said out loud to whoever is building on Reticle. Inside the loop rather than
+    // after it because the event is PER DEFECT — one event carrying a list would make a consumer
+    // unpack it to answer "what was found", which is the question they are subscribing to ask.
+    emitBugFoundHook(toolName, bug, { repeat: !first, fingerprint, route, sessionId });
   }
 }
 
@@ -506,8 +520,8 @@ export async function runTool<Ext>(
     // The brand comes from the session's own PAGE_HEALTH report, so it is present for the four
     // session-bound verification tools and absent for flow_verify (session-exempt) — which replays
     // into a browser Reticle launched, where `browser` already says what happened.
-    recordVerification(tool.name, raw, Date.now() - startedAt, session?.brand);
-    reportBugsFound(tool.name, raw);
+    recordVerification(tool.name, raw, Date.now() - startedAt, session?.brand, session?.id);
+    reportBugsFound(tool.name, raw, session?.id);
   }
   // The other half of the refusal surface. A top-level `error` string IS this codebase's refusal
   // convention, so half the tools refuse by RETURNING one rather than throwing — and reading only the

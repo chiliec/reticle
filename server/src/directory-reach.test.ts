@@ -273,6 +273,8 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   /** What a human wrote on a step, and where they pointed when they wrote it. */
   'annotate-notes': [],
   bridge: [
+    // The event bus. See the note on `cloud` below for why many directories reach it.
+    'hooks',
     'stores',
     'facts',
     'flows',
@@ -318,7 +320,20 @@ const REACHES_FOR: Record<string, readonly string[]> = {
     'tools',
     'update',
   ],
-  cloud: ['cli', 'fs', 'intent'],
+  /**
+   * The event bus, and the one directory it is CORRECT for several others to reach.
+   *
+   * `hooks` is a pure SINK: it imports nothing from this package, so no reach into it can ever
+   * become a mutual pair — the same argument `facts` makes above, and the property this file
+   * actually protects. Three directories reach it, and each is a place where something BECAME TRUE:
+   * `tools` decided a verdict, `bridge` saw a session attach, `cloud` finished a sync. Routing them
+   * through one courier would mean a courier that has to know about all three, which is a hub where
+   * there is currently a sink.
+   *
+   * If a FOURTH kind of caller appears, the question is whether the new event is a moment something
+   * became true or an internal step wearing an event's clothes — the bar stated in `hook-events.ts`.
+   */
+  cloud: ['cli', 'fs', 'hooks', 'intent'],
   command: [
     'answers',
     'demo',
@@ -415,7 +430,9 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   // a success, and reporting that the tools are gone. What `tools` wanted from `mcp` was these
   // two files and nothing else, which is why lifting them broke the `mcp <-> tools` pair.
   faults: ['telemetry'],
-  journal: ['on-disk', 'artifact', 'dir', 'fs', 'project', 'runs'],
+  // `hooks` for the same reason `tools`, `bridge` and `cloud` reach it: a verdict landing is what
+  // tells a drive to publish its run, and the bus is a sink that can never reach back.
+  journal: ['on-disk', 'artifact', 'dir', 'fs', 'hooks', 'project', 'runs'],
   license: ['config'],
   mcp: [
     'binding',
@@ -596,6 +613,7 @@ const REACHES_FOR: Record<string, readonly string[]> = {
    */
   'page-commands': [],
   tools: [
+    'hooks',
     'navigation',
     'lifetime',
     'args',

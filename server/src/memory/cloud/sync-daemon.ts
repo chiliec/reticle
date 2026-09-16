@@ -22,6 +22,7 @@
  * everyone to ignore it.
  */
 import { log } from '../../log.js';
+import { emitSyncHook } from '../../hooks/hook-emit.js';
 import { describeSync, runSyncCycle, type SyncReport } from './sync-cycle.js';
 import { diskSink, diskSource, readCloudState } from './sync-disk.js';
 import type { ProjectCloud } from './cloud-config.js';
@@ -235,6 +236,15 @@ export function startSyncDaemon(deps: SyncDaemonDeps): SyncDaemon {
       const report = await pushRoot(deps.reticleRoot, cloud);
       // `pushRoot` returns undefined only for an unlinked root, which the guard above has ruled out.
       if (report === undefined) return undefined;
+      // Said out loud on EVERY cycle, including the ones that moved nothing and the ones that
+      // failed. The log below is deliberately quiet when idle, which is right for a log and wrong
+      // for a hook: from outside, "nothing changed" and "sync has been broken since Tuesday" are
+      // the same silence, and a consumer that cannot tell them apart has to guess.
+      emitSyncHook({
+        runsPushed: report.runsSent,
+        ok: report.error === undefined,
+        ...(report.error === undefined ? {} : { error: report.error }),
+      });
       if (report.error !== undefined) {
         if (report.error !== reportedError) {
           reportedError = report.error;

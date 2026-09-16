@@ -87,6 +87,12 @@ interface SessionEndDeps {
   flows?: {
     save: (program: DriveProgram, annotations?: undefined, projectId?: string) => Promise<unknown>;
   };
+  /**
+   * Called when a run artifact is written, so cloud sync can cycle instead of waiting for its timer.
+   *
+   * Optional, like everything else here: absent simply means the next scheduled cycle picks it up.
+   */
+  onRunPersisted?: () => void;
 }
 
 /**
@@ -175,7 +181,10 @@ export function makeSessionEnd(deps: SessionEndDeps): (session: SessionEndTarget
  * stands in `$HOME`, and writing there is how one app's evidence once reached another account's
  * dashboard.
  */
-async function recordDriveRun(deps: SessionEndDeps, session: SessionEndTarget): Promise<void> {
+export async function recordDriveRun(
+  deps: SessionEndDeps,
+  session: SessionEndTarget,
+): Promise<void> {
   // Called through the object, not lifted into a local: a lifted method loses its `this`, and the
   // real Session's reader closes over the journal it was constructed with.
   if (session.readJournalActions === undefined) return;
@@ -203,7 +212,14 @@ async function recordDriveRun(deps: SessionEndDeps, session: SessionEndTarget): 
           currentDocumentId: session.currentDocumentId,
           currentEditEpoch: session.currentEditEpoch,
         });
-  const store = new RunStore(deps.fs, session.artifactRoot ?? deps.reticleRoot);
+  const store = new RunStore(
+    deps.fs,
+    session.artifactRoot ?? deps.reticleRoot,
+    // Tell the sync daemon a run landed, rather than letting it find out on its next tick. Teardown
+    // used to write this artifact with no callback at all, so the evidence from a whole session sat
+    // on disk until a timer noticed — which, for the last session of the day, could be never.
+    deps.onRunPersisted === undefined ? undefined : { onWrote: deps.onRunPersisted },
+  );
   await store.write(
     buildVerificationRun(
       { ...input, ...(subject === undefined ? {} : { subject }) },

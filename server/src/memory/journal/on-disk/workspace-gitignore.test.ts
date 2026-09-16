@@ -128,6 +128,11 @@ describe('the partition of what .reticle holds', () => {
     ReticleDir.CAPSULES_SUBDIR,
     ReticleDir.INTENT_FILE,
     ReticleDir.CLOUD_LINK_FILE,
+    // A hook is a decision the whole team shares, exactly like a package script: one that exists
+    // only on the machine that wrote it is a rule nobody else is following. It names COMMANDS and
+    // never a credential, so it is safe to commit — the same reasoning that puts `cloud.json` here
+    // while its API key stays in ~/.reticle.
+    ReticleDir.HOOKS_FILE,
   ];
 
   /** Names that are not entries IN `.reticle/` — the root itself, and files inside a session dir. */

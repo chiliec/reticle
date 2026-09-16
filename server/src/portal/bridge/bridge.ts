@@ -3,6 +3,8 @@ import { authFailureReason } from './auth-failure-reason.js';
 import { impactSnapshot, recordImpact } from '../../memory/impact/impact-recorder.js';
 import type { AddressInfo } from 'node:net';
 import { WebSocketServer, type RawData, type WebSocket } from 'ws';
+import { HookEvent } from '@reticlehq/core/hooks';
+import { emitSessionHook } from '../../hooks/hook-emit.js';
 import {
   EventType,
   HumanControlKind,
@@ -576,6 +578,13 @@ export class Bridge {
           const attached = session;
           attached.pushImpact(() => impactSnapshot(attached.artifactRoot), true);
           const replaced = this.sessions.add(session);
+          // Said out loud once the session is actually in the registry, never before: a hook that
+          // fires on a session a consumer cannot then look up describes a moment that did not happen.
+          emitSessionHook(HookEvent.SESSION_STARTED, {
+            id: attached.id,
+            url: attached.url,
+            runtime: attached.runtime,
+          });
           if (replaced !== undefined) {
             // Name the newcomer. A field report had a live session vanish during `reticle_lease` and the
             // only evidence was "session replaced by a newer connection" in the page console — which
@@ -682,6 +691,14 @@ export class Bridge {
           // Best-effort teardown: flush the journal tail + persist ambient learning. Never awaited here
           // (the socket is already closing) and never allowed to reject into the close handler.
           void this.#onSessionEnd?.(ended).catch(() => undefined);
+          // AFTER teardown is started, and deliberately not awaited on it. The payload says a
+          // session ended, which is already true here; making it wait for the journal flush would
+          // put a hook in the path of a socket close for no gain to the consumer.
+          emitSessionHook(HookEvent.SESSION_ENDED, {
+            id: ended.id,
+            url: ended.url,
+            runtime: ended.runtime,
+          });
         }
       }
     });

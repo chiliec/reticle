@@ -73,14 +73,20 @@ describe('the contract knows only what it is allowed to know', () => {
     expect(reaches(CORE).size).toBeGreaterThan(4);
   });
 
-  it('has 8 directories, and each one was a decision', () => {
+  it('has 9 directories, and each one was a decision', () => {
     // the contract. Eight directories; the two constant tables moving into wire/constants/ made the eighth and took core from four mutual pairs to two.
+    //
+    // The ninth is `hooks/`: what Reticle says happened, for anyone building on top of it. It is a
+    // contract like the wire types — the moment somebody writes `event.kind === 'bug_found'` the
+    // spelling is theirs as much as ours — so it belongs in the package that holds contracts rather
+    // than in the daemon that emits them. It reaches for nothing and nothing in core reaches it,
+    // which is why the mutual-pair count below did not move.
     //
     // Recorded by EQUALITY, not as a floor. The check above only proves the scan read
     // something; it stays green when a directory appears, and appearing unnoticed is how a
     // grouping gets made without anybody looking at what it did to the shape of the package.
     // Adding or removing one here means writing the new number down in the same commit.
-    expect(directories(CORE).length).toBe(8);
+    expect(directories(CORE).length).toBe(9);
   });
 
   it('has no two directories sharing a basename', () => {

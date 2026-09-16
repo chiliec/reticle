@@ -319,6 +319,17 @@ export const ReticleDir = {
   /** Per-flow assertion tiers recorded on each PASSING replay — the gate's anti-downgrade baseline. */
   TIERS_FILE: 'assertion-tiers.json',
   /**
+   * what to run when something happens — .reticle/hooks.json. Git-checked on purpose: a hook is a
+   * decision the whole team shares, the same way a git hook or a package script is, and one that
+   * only exists on the machine that wrote it is a rule nobody else is following.
+   *
+   * It names COMMANDS, so it is exactly as trusted as `package.json` scripts in the same repository
+   * and no more: opening a repo does not run them, and Reticle runs one only when the event it is
+   * attached to actually happens. The event payload is handed over on stdin, never interpolated into
+   * the command line, so a defect's own text can never become part of a command.
+   */
+  HOOKS_FILE: 'hooks.json',
+  /**
    * Auto-provisioned bridge pairing token, stored at ~/.reticle/pairing-token (mode 0600). Written by
    * the daemon, read Node-side by the build plugins to inject into connect. A browser sandbox cannot
    * read it, so a rogue localhost app can't present it — that's what stops cross-app session hijack.

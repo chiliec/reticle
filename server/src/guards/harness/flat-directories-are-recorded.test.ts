@@ -141,7 +141,11 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // and the gate that refuses to save one asserting nothing. It sits beside `session-end.ts` because
   // teardown is the only caller and the tape is data by then — the reach guard already refused the
   // alternative, which was for this file to live near the recorder and pull teardown into it.
-  'server/src/memory/journal': 12,
+  // 13 with `drive-run-flush.ts`, which publishes a session's run while the drive is still running.
+  // It belongs beside `session-end.ts` for the same reason the line above gives: teardown owns the
+  // final write of that artifact, and the flush is the same write on a different trigger. Putting it
+  // near the event bus instead would pull the run store and the journal in behind it.
+  'server/src/memory/journal': 13,
   // 35 since the setup funnel: `onboarding-funnel.ts` (the one emit chokepoint), `onboarding-firsts.ts`
   // (the first look / act / verdict of a run, which only the daemon can witness) and
   // `install-trace.ts` (draining what the installer could not report, because it ran before there
