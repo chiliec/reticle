@@ -412,6 +412,9 @@ const REACHES_FOR: Record<string, readonly string[]> = {
     'tools',
   ],
   impact: ['cloud', 'session'],
+  // `read` for `shapeQueryResult`: the scrolling find answers in the SAME shape as a plain find,
+  // and sharing the shaper is what stops `scroll: true` being a different tool wearing one name.
+  // One way only — `read` reaches nothing, which is the property that keeps it movable.
   input: ['args', 'pool', 'telemetry', 'tools'],
   intent: ['dir', 'fs', 'machine', 'project', 'tools'],
   // What a run artifact is FOR once it exists -- stored, compared, and read back as established

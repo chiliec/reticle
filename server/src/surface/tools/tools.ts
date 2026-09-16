@@ -6,7 +6,7 @@ import { applySnapshotDelta, SnapshotCache } from './read/snapshot-delta.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
 import { countSchema } from './args/numeric-bounds.js';
 import { normalizeQueryArgs } from './read/query-shape.js';
-import { paginateQueryResult } from './read/query-paginate.js';
+import { shapeQueryResult } from './read/query-windowed.js';
 
 /**
  * The query strategies, derived from the enum in core — never retyped.
@@ -511,11 +511,7 @@ export const RAW_TOOLS: ToolDef[] = [
         // now asserts the payload, because a comment is not a guard.
         attrs: args['attrs'],
         self: args['self'],
-      }).then((result) =>
-        withSizeCost(
-          paginateQueryResult(result, asNumber(args['limit']), true === args['count_only']),
-        ),
-      );
+      }).then((result) => withSizeCost(shapeQueryResult(result, args)));
     },
   },
   {
