@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { driveFlowsFrom, driveFlowName, carriesAnAssertion } from './drive-flow.js';
+import { driveFlowsFrom, driveFlowName, carriesAnAssertion, type TapeStep } from './drive-flow.js';
+import type { FlowExpect } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
 import type { RecordedStep } from '../../language/flows/recording/tape/recordings.js';
 
@@ -15,7 +16,9 @@ describe('a drive becomes a flow without anybody asking', () => {
   it('saves a tape that declared a consequence', () => {
     const { programs, outcome } = driveFlowsFrom('tab-1', { steps: [step(false), step(true)] });
     expect(programs[0]?.steps).toHaveLength(2);
-    expect(outcome.saved).toEqual([driveFlowName('tab-1')]);
+    // The name now carries the claim, so it is derived from the same steps the tape held.
+    expect(outcome.saved).toEqual([driveFlowName('tab-1', undefined, [step(false), step(true)])]);
+    expect(outcome.saved?.[0]).toContain('saved');
     expect(outcome.unprovenSteps).toBeUndefined();
   });
 
@@ -110,5 +113,77 @@ describe('a session that visited several routes becomes several flows', () => {
     });
     expect(programs.map((p) => p.startPath)).toEqual(['/compose']);
     expect(outcome.unprovenSteps).toBe(1);
+  });
+});
+
+/**
+ * The name a human reads off the HUD.
+ *
+ * `drive-sdc991872-6d66-4adf-8780-f931c62905f9` is what the replay buttons rendered, twice, for two
+ * different journeys — and `presenter-controls.ts` puts `flow.name` straight into `textContent`, so
+ * that string IS the label. A session id is stable, which is the property the name was chosen for,
+ * and it says nothing whatever about what the flow proves. Both are obtainable: lead with what was
+ * PROVED, keep a short session discriminator so two journeys cannot collide.
+ */
+describe('a drive flow is named after what it proved', () => {
+  const proving = (expect_: FlowExpect, route?: string): TapeStep => ({
+    tool: ReticleTool.ACT,
+    args: { ref: 'e1', action: 'click' },
+    stable: true,
+    expect: expect_,
+    ...(route === undefined ? {} : { route }),
+  });
+
+  it('leads with the signal, which is the strongest thing a flow can claim', () => {
+    const name = driveFlowName('sdc991872-6d66-4adf', undefined, [
+      proving({ signal: 'auth:granted' }),
+    ]);
+    expect(name).toContain('auth-granted');
+    expect(name.indexOf('auth-granted')).toBeLessThan(name.indexOf('sdc99187'));
+  });
+
+  it('falls to the request, then the store path, when there is no signal', () => {
+    expect(
+      driveFlowName('s1', undefined, [
+        proving({ net: { method: 'POST', urlContains: '/api/login' } }),
+      ]),
+    ).toContain('post-api-login');
+    expect(driveFlowName('s1', undefined, [proving({ state: { path: 'auth.email' } })])).toContain(
+      'auth-email',
+    );
+  });
+
+  it('still carries the route, so two journeys in one session stay apart', () => {
+    const a = driveFlowName('s1', '/deployments', [proving({ signal: 'x:done' })]);
+    const b = driveFlowName('s1', '/compose', [proving({ signal: 'x:done' })]);
+    expect(a).toContain('deployments');
+    expect(b).toContain('compose');
+    expect(a).not.toBe(b);
+  });
+
+  /*
+   * The property the session id was there for in the first place.
+   *
+   * Teardown fires on every socket close and a reconnecting tab keeps its id, so the same journey
+   * must land on the same name or one drive ends up scattered across several near-identical files.
+   */
+  it('is stable for the same session, route and claim', () => {
+    const args = ['s1', '/deployments', [proving({ signal: 'x:done' })]] as const;
+    expect(driveFlowName(...args)).toBe(driveFlowName(...args));
+  });
+
+  it('keeps two sessions apart even when they prove the same thing', () => {
+    const steps = [proving({ signal: 'x:done' })];
+    expect(driveFlowName('tab-one', '/a', steps)).not.toBe(driveFlowName('tab-two', '/a', steps));
+  });
+
+  it('is still a safe filename, whatever the claim contained', () => {
+    const name = driveFlowName('s1', undefined, [proving({ signal: 'weird/../sig with spaces' })]);
+    expect(name).toMatch(/^drive-[a-zA-Z0-9-]+$/);
+  });
+
+  // No steps, or steps that declare nothing nameable, must not lose the old behaviour.
+  it('falls back to the session name when nothing nameable was proved', () => {
+    expect(driveFlowName('tab-1', undefined, [])).toBe(driveFlowName('tab-1'));
   });
 });
