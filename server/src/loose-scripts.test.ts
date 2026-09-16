@@ -32,7 +32,16 @@ import { REPO_ROOT } from './machine/repo-root.js';
  * `install` is the one a user actually runs, and it was not on this list until the launchers got
  * their own directory — before that they lived in `setup`, which is now `break`.
  */
-const LOOSE_SCRIPT_DIRECTORIES = ['scripts', 'install', 'break', 'bench', 'apps/e2e'];
+const LOOSE_SCRIPT_DIRECTORIES = [
+  'scripts',
+  'install',
+  'break',
+  'bench',
+  'apps/e2e',
+  // Absent until the scan learned to recurse, which is how twelve runnable files in the
+  // protocol's own conformance harness were never asked whether anything still calls them.
+  'conformance',
+];
 
 /** Pages that describe every script by obligation, so a mention in one proves nothing. */
 const INDEX_PAGES = new Set(['scripts/README.md']);
@@ -78,13 +87,34 @@ function trackedFiles(): string[] {
     .filter((line) => line.length > 0);
 }
 
+/**
+ * Every runnable file under `directory`, at any depth.
+ *
+ * It read the TOP LEVEL only, which made the guard a near-fiction over the directory it most needed
+ * to cover: `bench/` has one runnable file at its root and 103 below it, so 1% was checked and the
+ * green tick spoke for the other 99%. `conformance/` was not in the list at all.
+ *
+ * `node_modules` and build output are skipped: neither is a loose script, and walking them is slow
+ * enough to be noticed in the fast gate.
+ */
+function runnableFilesUnder(directory: string, found: string[] = []): string[] {
+  for (const name of readdirSync(join(REPO_ROOT, directory))) {
+    if ('node_modules' === name || 'dist' === name || '.turbo' === name) continue;
+    const path = join(directory, name);
+    if (statSync(join(REPO_ROOT, path)).isDirectory()) {
+      runnableFilesUnder(path, found);
+      continue;
+    }
+    if (!RUNNABLE.test(name)) continue;
+    found.push(path);
+  }
+  return found;
+}
+
 function looseScripts(): string[] {
   const found: string[] = [];
   for (const directory of LOOSE_SCRIPT_DIRECTORIES) {
-    for (const name of readdirSync(join(REPO_ROOT, directory))) {
-      const path = join(directory, name);
-      if (!statSync(join(REPO_ROOT, path)).isFile()) continue;
-      if (!RUNNABLE.test(name)) continue;
+    for (const path of runnableFilesUnder(directory)) {
       // Repo-relative paths are compared against `git ls-files` output and against POSIX literals
       // spelled in this file, and `join` yields `scripts\check-boundaries.mjs` on Windows. Every
       // comparison then misses and the scan reads as "no loose scripts", which is a guard that
@@ -111,12 +141,33 @@ function collectedByAGate(script: string, runners: readonly string[]): boolean {
   if (!/\.test\.[cm]?[jt]sx?$/.test(script)) return false;
   const parts = script.split('/');
   // Any ancestor directory named on a runner's command line collects this file.
-  return parts.some((_, index) => {
+  const namedByRoot = parts.some((_, index) => {
     const ancestor = parts.slice(0, index + 1).join('/');
     return (
       ancestor !== script && runners.some((command) => command.split(/\s+/).includes(ancestor))
     );
   });
+  if (namedByRoot) return true;
+  /*
+   * Or the file's OWN package runs a test runner over itself.
+   *
+   * `conformance/package.json` is `"test:unit": "vitest run"` with no path, which collects every
+   * test in that package — turbo runs it on every `pnpm test:unit`. Asking only about root scripts
+   * reported three live conformance specs as unreachable the moment this scan learned to recurse.
+   */
+  for (let index = parts.length - 1; index > 0; index -= 1) {
+    const manifest = join(REPO_ROOT, ...parts.slice(0, index), 'package.json');
+    let scripts: Record<string, string>;
+    try {
+      scripts =
+        (JSON.parse(readFileSync(manifest, 'utf8')) as { scripts?: Record<string, string> })
+          .scripts ?? {};
+    } catch {
+      continue;
+    }
+    return Object.values(scripts).some((command) => command.includes('vitest'));
+  }
+  return false;
 }
 
 /** The command line of every script in the root manifest — where a runner names its directories. */

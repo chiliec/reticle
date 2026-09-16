@@ -344,16 +344,6 @@ function visit(child: Element, depth: number, ctx: WalkCtx, inLive: boolean): vo
   // indistinguishable from an empty page, and the tool description recommends this mode as the
   // default — so the cheaper view told an agent there was nothing to drive.
   //
-  // A `data-testid` ONLY. It is a handle its author put there to be driven, and it marks one element
-  // rather than a subtree.
-  //
-  // `cursor: pointer` was tried here as a second signal — it is how an app tells a HUMAN that a
-  // thing is clickable — and measured on MarkText it was a disaster: interactive went from 0 nodes
-  // and 72 tokens to 180 nodes and 870, against a FULL snapshot of 47 nodes and 424. The pointer
-  // cursor is inherited, so every wrapper div inside a clickable row matched, and the lean mode
-  // became twice the size of the complete one while adding nothing but nameless `- generic` lines.
-  // The mode's whole claim is that it is smaller; a signal that cannot tell a control from its
-  // ancestors cannot be used to decide what a control is.
   // `data-testid` was tried here as a second signal, on the premise that it is a handle its author
   // put there to be driven. Measured against our own instrumented bench app, the premise is false:
   // the lean tree on its dashboard came to 16 nodes and 175 tokens, and EIGHT were display elements

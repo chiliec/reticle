@@ -139,7 +139,9 @@
                 "group": "Packages",
                 "pages": [
                   "packages",
+                  "packages/open-verification",
                   "packages/core",
+                  "packages/engine",
                   "packages/browser",
                   "packages/server",
                   "packages/react",

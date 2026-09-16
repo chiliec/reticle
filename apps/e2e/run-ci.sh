@@ -31,6 +31,19 @@ if [ ! -s "$TOKEN_FILE" ]; then
   chmod 600 "$TOKEN_FILE"
 fi
 
+# Build first, because the battery drives `dist` and nothing else here does.
+#
+# CI builds in the job before this script runs, so it was never wrong there. A developer typing
+# `pnpm test:e2e` got whatever `dist` happened to be on disk — which means a green battery can be
+# green about code that is not the code in the working tree, and a red one can be red about a bug
+# already fixed. Both happened while fixing the contract-skew defect: 22 of 39 specs failed against
+# a daemon compiled before the fix, and `core/dist` did not contain the new constant at all.
+#
+# Turbo makes this nearly free when nothing changed, and the alternative is a class of run that
+# cannot be trusted either way.
+echo "==> building (the battery runs against dist)"
+pnpm build > /dev/null || { echo "build failed — the battery would run against a stale dist"; exit 1; }
+
 # Wait for the ports to be FREE before binding them.
 #
 # The cleanup below kills the listeners, but a killed process does not release its port the instant
