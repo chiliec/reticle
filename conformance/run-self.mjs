@@ -37,6 +37,7 @@
 
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
+import { createConnection } from 'node:net';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { start, WebRealm, conformanceClient } from '@reticlehq/server';
@@ -45,10 +46,66 @@ import { WEB_HANDOFF } from './handoff.mjs';
 import { BENCH_APP_CHANNELS, BENCH_APP_SUBJECT, plantUrl } from './subjects/bench-app.mjs';
 import { Profile } from './scenarios/index.mjs';
 
-const PORT = 4400;
-const APP = 'http://localhost:4318';
-const API = 'http://localhost:8787';
+/*
+ * Overridable, because this repository gets worked on from more than one place at a time.
+ *
+ * The defaults are what CI uses and what the docs quote. The overrides exist for the case that
+ * actually happened: a parallel session held 4318, and with no way to move there was nothing to do
+ * but wait for somebody else's dev server to stop. The refusal below still applies to whatever
+ * ports are chosen, so moving the run cannot quietly reintroduce the collision it is avoiding.
+ */
+const PORT = Number(process.env['CONFORMANCE_BRIDGE_PORT'] ?? 4400);
+const APP_PORT = Number(process.env['CONFORMANCE_APP_PORT'] ?? 4318);
+const API_PORT = Number(process.env['CONFORMANCE_API_PORT'] ?? 8787);
+const APP = `http://localhost:${String(APP_PORT)}`;
+const API = `http://localhost:${String(API_PORT)}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Refuse to score against an app this runner did not start.
+ *
+ * ── THE INCIDENT ────────────────────────────────────────────────────────────────────────────────
+ * `bootApp` binds 4318 with `--strictPort`, so when another process already holds it the vite dies
+ * and the run carries on — driving whatever IS on 4318. That happened: a parallel session had
+ * `apps/vibe-builder-demo` on the port, the runner drove it, and the gate reported
+ *
+ *   conformance: 2 plantable scenario(s) answered wrongly:
+ *     claim-written-after-the-action, healthy-app-real-claim
+ *
+ * about an app it had never started, which was serving `?bug=mock-data` on purpose. A release was
+ * held on it. The reverse is the worse case and the reason this is a refusal rather than a warning:
+ * a stranger's app that happens to behave could score a PASS, and a green conformance run is the
+ * one number here that is supposed to mean something.
+ *
+ * `apps/e2e/run-ci.sh` already refuses on exactly this reasoning. The rule was written down in one
+ * place and not the other, twice now in this repository.
+ */
+function listening(port) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ port, host: '127.0.0.1' });
+    const done = (answer) => {
+      socket.destroy();
+      resolve(answer);
+    };
+    socket.once('connect', () => done(true));
+    socket.once('error', () => done(false));
+    setTimeout(() => done(false), 1000).unref?.();
+  });
+}
+
+async function refuseIfPortsAreTaken() {
+  for (const [port, what] of [
+    [APP_PORT, 'the bench app'],
+    [API_PORT, 'the demo API'],
+  ]) {
+    if (!(await listening(port))) continue;
+    console.error(
+      `conformance: port ${port} is already in use, and this run would score against whatever is ` +
+        `serving it rather than ${what} it starts itself. Free it and re-run.`,
+    );
+    process.exit(1);
+  }
+}
 
 /** The app under test. Its own dev server, so the run needs nothing already running. */
 /**
@@ -63,7 +120,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function bootApp() {
   return spawn(
     'pnpm',
-    ['--filter', '@reticlehq/bench-app', 'exec', 'vite', '--port', '4318', '--strictPort'],
+    [
+      '--filter',
+      '@reticlehq/bench-app',
+      'exec',
+      'vite',
+      '--port',
+      String(APP_PORT),
+      '--strictPort',
+    ],
     {
       stdio: 'ignore',
       detached: true,
@@ -84,7 +149,9 @@ function bootApi() {
   return spawn('node', ['server.mjs'], {
     cwd: new URL('../apps/api/', import.meta.url),
     stdio: 'ignore',
-    env: { ...process.env },
+    // `API_PORT` is what apps/api/server.mjs reads. Passed explicitly so moving the run moves the
+    // API with it: the refusal above would otherwise clear a port the API then does not use.
+    env: { ...process.env, API_PORT: String(API_PORT) },
   });
 }
 
@@ -147,6 +214,7 @@ async function main() {
   let browser;
   const report = { earned: undefined, failed: [], couldNotBePlanted: [], notes: {} };
   try {
+    await refuseIfPortsAreTaken();
     app = bootApp();
     api = bootApi();
     server = await start({ port: PORT, mcp: false });
