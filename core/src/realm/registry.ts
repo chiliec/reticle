@@ -201,6 +201,18 @@ const EXTENSION_PREFIX = 'x-';
  * Throws rather than returning a result. A realm that failed to register would answer `web` to
  * everything — the most plausible-looking wrong answer available — and the caller is a host at
  * startup, where a throw is read immediately and a silent miss is not read at all.
+ *
+ * WHAT THIS DOES NOT YET HAVE, stated here because the gap is invisible from the signature: there
+ * is no host seam in the daemon. `reticle serve` imports no user module, so nothing outside this
+ * repository has a moment in which to call this, and every realm Reticle itself ships is a row in
+ * `REALMS` rather than a registration. So this is a working, typed, tested extension point with
+ * zero external callers — a hypothesis about how a third party would add a realm, not a path anyone
+ * has walked. Adding a mobile or service realm today means a change to `@reticlehq/core`.
+ *
+ * It is left as-is deliberately. Building a plugin-loading flag for a user who has not asked for
+ * one would be inventing the requirement along with the feature, and the shape that eventually
+ * lands should be decided by whoever first needs it. What is not acceptable is letting the gap go
+ * unsaid, because an exported, documented function reads as a supported path.
  */
 export function registerRealm(runtime: string, traits: RealmTraits): void {
   if (!runtime.startsWith(EXTENSION_PREFIX)) {
