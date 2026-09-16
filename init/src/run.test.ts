@@ -940,7 +940,7 @@ describe('runInit — the /reticle command', () => {
     runInit(OPTS, io);
     const cmd = io.written['.claude/commands/reticle.md'] ?? '';
     expect(cmd).toContain('description:');
-    expect(cmd).toContain('reticle_snapshot');
+    expect(cmd).toContain('reticle_look { action: "page" }');
   });
 
   it('scopes the command to ONE flow — an existing app has many, and instrumenting all is the slow path', () => {
@@ -956,7 +956,7 @@ describe('runInit — the /reticle command', () => {
   it('writes the Cursor command when Cursor is the agent in play', () => {
     const io = memoryIo(VITE_FILES, { claudeAvailable: false, cursor: true });
     runInit(OPTS, io);
-    expect(io.written['.cursor/commands/reticle.md']).toContain('reticle_snapshot');
+    expect(io.written['.cursor/commands/reticle.md']).toContain('reticle_look { action: "page" }');
   });
 
   /**

@@ -30,6 +30,27 @@ All notable changes to the **`@reticlehq/*`** packages are documented here (each
 
 The release that made a verification something the agent no longer has to author. v3.0.0 split the protocol out and rearranged the repository around it; this one spends that structure on the half that was measurably not working — an engine that catches nearly every bug it structurally can, pointed at flows that declared almost nothing worth catching.
 
+### Breaking
+
+- **The default MCP surface is the merged nine, not the seventeen.** `reticle_act`, `reticle_act_and_wait`, `reticle_assert`, `reticle_look`, `reticle_navigate`, `reticle_observe`, `reticle_session`, `reticle_tools`, `reticle_verify`. Ten names that 2.14.0 advertised now sit behind an action on one of those:
+
+  | 2.14.0                 | 3.1.0                                    |
+  | ---------------------- | ---------------------------------------- |
+  | `reticle_snapshot`     | `reticle_look { action: "page" }`        |
+  | `reticle_query`        | `reticle_look { action: "find" }`        |
+  | `reticle_inspect`      | `reticle_look { action: "element" }`     |
+  | `reticle_state`        | `reticle_look { action: "state" }`       |
+  | `reticle_network`      | `reticle_observe { action: "network" }`  |
+  | `reticle_console`      | `reticle_observe { action: "console" }`  |
+  | `reticle_wait_for`     | `reticle_assert { action: "wait" }`      |
+  | `reticle_sessions`     | `reticle_session { action: "list" }`     |
+  | `reticle_feedback`     | `reticle_session { action: "feedback" }` |
+  | `reticle_act_sequence` | `reticle_act { steps: [...] }`           |
+
+  Calling an old name returns the new call rather than "not found", so an agent that guesses one is told where it went. **What a redirect cannot reach is a list that never makes the call**: an agent `allowedTools` allowlist, an MCP permission rule, or a prompt naming one of these refuses before Reticle is asked. Those need updating by hand. `reticle_tools` prints the live surface and every tombstone.
+
+- **`RETICLE_TOOL_PROFILE` is retired; the surface is selected with `RETICLE_ADVERTISE_ALL_TOOLS=1`**, which advertises the full table — including `reticle_screenshot`, `reticle_visual_diff`, `reticle_storage`, `reticle_network_mock` and `reticle_clock`, which the default surface does not carry and which no longer have a `reticle_run` hatch to reach them. If you drive any of those, set that variable on the daemon.
+
 ### Added
 
 - **`@reticlehq/server` — a drive is recorded whether or not anybody remembered to ask.** Recording used to be a mode an agent had to enter, which meant the flows that would have made the next run free were the ones nobody created. It is now a property of the session: what an agent drives is kept, compiled and replayable afterwards. The saved flow is the asset — the first run pays a model to discover the app, and every run after it replays deterministically with no model in the loop.

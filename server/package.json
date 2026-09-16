@@ -74,7 +74,10 @@
   ],
   "reticle": {
     "changelog": "An MCP server that stays up when the daemon dies, one tool surface instead of five profiles (`RETICLE_TOOL_PROFILE` retired for `RETICLE_ADVERTISE_ALL_TOOLS`), and tools that refuse instead of answering wrongly.",
-    "breakingChanges": []
+    "breakingChanges": [
+      "The default MCP surface is the merged nine. reticle_snapshot/query/inspect/state -> reticle_look { action }, reticle_network/console -> reticle_observe { action }, reticle_sessions/feedback -> reticle_session { action }, reticle_wait_for -> reticle_assert { action: \"wait\" }, reticle_act_sequence -> reticle_act { steps }. Old names redirect when CALLED, but an allowedTools allowlist or an MCP permission rule naming one refuses first — update those by hand.",
+      "RETICLE_TOOL_PROFILE is retired. Set RETICLE_ADVERTISE_ALL_TOOLS=1 on the daemon to advertise the full table, which is the only way to reach reticle_screenshot, reticle_visual_diff, reticle_storage, reticle_network_mock and reticle_clock."
+    ]
   },
   "publishConfig": {
     "access": "public"

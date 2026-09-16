@@ -64,7 +64,7 @@ curl https://docs.reticle.sh/troubleshooting.md     # nothing connected, click d
 Do not reconstruct it from memory. Three things decide whether it works, and all three get skipped:
 
 1. **The SDK must load in a RUNNING page.** Not wired in a config file: loaded, in a page a browser has open. This is the step the funnel dies on.
-2. **A session must appear** on that app's own url. `reticle_sessions` returning an empty list has four causes with four different fixes, and its `next_action` names which one this is.
+2. **A session must appear** on that app's own url. `reticle_session { action: "list" }` returning an empty list has four causes with four different fixes, and its `next_action` names which one this is.
 3. **A verdict must exist.** `reticle_act_and_wait` or `reticle_assert`, and nothing else. A drive that ends without one has no result however many tools it used.
 
 ## The dev server, whoever starts it
@@ -74,7 +74,7 @@ Do not reconstruct it from memory. Three things decide whether it works, and all
 So, in this order:
 
 1. **A dev server was already running?** Restart it, then hard-reload the tab. "Something is listening" does not mean the right bundle is served.
-2. **Nothing was running?** Start it in the BACKGROUND and say so in one line. `reticle_sessions` gives you this project's own dev command in `next_action`; use that, never compose one. Started after `init`, it needs no restart. **`reticle init` may start it for you, and stops it again if setup fails**: a command somebody ran is attributable and stoppable where a daemon is not.
+2. **Nothing was running?** Start it in the BACKGROUND and say so in one line. `reticle_session { action: "list" }` gives you this project's own dev command in `next_action`; use that, never compose one. Started after `init`, it needs no restart. **`reticle init` may start it for you, and stops it again if setup fails**: a command somebody ran is attributable and stoppable where a daemon is not.
 
 Stopping here to ask is how a setup turn ends with nothing verified.
 

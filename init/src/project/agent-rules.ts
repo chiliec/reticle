@@ -99,7 +99,7 @@ export const CLI = `${NPX} ${RETICLE_NPM_PACKAGE}`;
 export const DEV_SERVER_POLICY = `**A dev server already running when \`reticle init\` ran does not have Reticle in its bundle.** It read the build config at boot; \`init\` edited it afterwards. It serves the old bundle and no session appears. In order:
 
 1. **A dev server was already running?** Restart it, then hard-reload the tab. "Something is listening" does not mean the right bundle is served.
-2. **Nothing was running?** Start it in the BACKGROUND and say so in one line. \`reticle_sessions\` gives you this project's own dev command in \`next_action\`; use that, never compose one. Started after \`init\`, it needs no restart.
+2. **Nothing was running?** Start it in the BACKGROUND and say so in one line. \`reticle_session { action: "list" }\` gives you this project's own dev command in \`next_action\`; use that, never compose one. Started after \`init\`, it needs no restart.
 
 Stopping to ask is how a verification turn ends with nothing verified.
 
@@ -128,8 +128,8 @@ This app is instrumented by **Reticle**, an in-app verification layer exposed as
 **How to verify:**
 
 - Drive the flow with \`reticle_act_and_wait({ ref, action, until })\`. It names the consequence you expect BEFORE the action, which is the difference between a check and a rationalisation.
-- Batch a multi-step journey (a login, a form) into one \`reticle_act_sequence\` rather than one round trip per field.
-- Read the surrounding evidence with \`reticle_snapshot\`, \`reticle_state\`, \`reticle_network\`, \`reticle_console\`.
+- Batch a multi-step journey (a login, a form) into one \`reticle_act { steps: [...] }\` rather than one round trip per field.
+- Read the surrounding evidence with \`reticle_look { action: "page" | "state" }\` and \`reticle_observe { action: "network" | "console" }\`.
 - **Only \`reticle_act_and_wait\` and \`reticle_assert\` produce a verdict.** \`reticle_act\` and everything else move or read the app and prove nothing, so a session ending without one of those two has no result however many tools it used.
 - Covered flows: \`${CLI} gate\` reports which recorded flows the changed files affect and whether they still pass.
 
@@ -149,7 +149,7 @@ ${DEV_SERVER_POLICY}
 
 A dev server that is already running does not pick up an edited build config or a newly created plugin file — restart it and hard-reload the tab. And if a server IS listening and still nothing connects, the cause is the SDK not loading in the page, not a missing dev server; do not tell the user to start one they are already running.
 
-**Finish \`src/reticle-dev.ts\` before you claim setup is done.** \`init\` writes it and cannot always fill it in: a store that needs an argument only reading the code supplies (Jotai atoms, an XState actor, a TanStack \`queryClient\`) is left as a commented \`registerStore\` line. A file that registers nothing looks exactly like a finished one, and \`reticle_state\` then returns empty forever — which is indistinguishable from an app that has nothing to report, so it reads as success. Uncomment the line, complete it, and prove it by driving one flow and seeing your keys come back. If \`init\` told you to restart your client, this is the job waiting for you on the other side of that restart.
+**Finish \`src/reticle-dev.ts\` before you claim setup is done.** \`init\` writes it and cannot always fill it in: a store that needs an argument only reading the code supplies (Jotai atoms, an XState actor, a TanStack \`queryClient\`) is left as a commented \`registerStore\` line. A file that registers nothing looks exactly like a finished one, and \`reticle_look { action: "state" }\` then returns empty forever — which is indistinguishable from an app that has nothing to report, so it reads as success. Uncomment the line, complete it, and prove it by driving one flow and seeing your keys come back. If \`init\` told you to restart your client, this is the job waiting for you on the other side of that restart.
 
 **Verify each feature as you finish it, not all of them at the end.** Asked for four, build one, drive it, get a verdict, then start the second. A red verdict after four builds has four suspects; after one it has none.
 
@@ -167,9 +167,9 @@ A dev server that is already running does not pick up an edited build config or 
 
 **A tool you need is missing? It exists.** The default surface advertises a subset; reach any other by name with \`reticle_run { tool, args }\`, and list them with \`reticle_tools\`. Two worth knowing: \`reticle_context\` returns this run's own memory — what is established, what is proven, what is still unverified — which is what you want after a compaction or when picking up work you did not start; \`reticle_intent\` records what a change was MEANT to do, while somebody still knows.
 
-**Report Reticle's own defects with \`reticle_feedback\` the moment you notice**, then carry on with your task. You are the user Reticle is built for and the only one who can say what it cost you, and that knowledge is gone when your context is.
+**Report Reticle's own defects with \`reticle_session { action: "feedback" }\` the moment you notice**, then carry on with your task. You are the user Reticle is built for and the only one who can say what it cost you, and that knowledge is gone when your context is.
 
-📄 **The rest is in [RETICLE.md](./${RETICLE_MD_PATH}): what to do when the tools are missing, when a result carries \`version_skew\` or \`update_available\`, when \`reticle_state\` comes back empty, and how to write a feedback report that can be acted on. Read it when you hit one of those, not before.**`;
+📄 **The rest is in [RETICLE.md](./${RETICLE_MD_PATH}): what to do when the tools are missing, when a result carries \`version_skew\` or \`update_available\`, when \`reticle_look { action: "state" }\` comes back empty, and how to write a feedback report that can be acted on. Read it when you hit one of those, not before.**`;
 
 /**
  * The reference half. Fetched when a situation calls for it rather than carried every turn.
@@ -201,7 +201,7 @@ Act on it before trusting anything else. Two pieces of Reticle are on different 
 
 Reticle checked npm and a newer version exists. Tell the human the version numbers and offer to run \`${CLI} update\`, between tasks and never mid-verification, because it restarts the daemon and drops the session. Finish what you are doing first.
 
-## \`reticle_state\` comes back empty
+## \`reticle_look { action: "state" }\` comes back empty
 
 The generated \`reticle-dev\` file registers nothing. Say so. \`init\` registers every store it could prove from your source; the ones needing an argument only reading the code supplies (Jotai atoms, an XState actor, a TanStack \`queryClient\`) are left commented, and a file that registers nothing is indistinguishable from a working one until you read the state back.
 
@@ -211,7 +211,7 @@ Finish that file when you see it. It is what lets you check what the app BELIEVE
 
 **Reporting your experience is part of using Reticle, from the moment you start wiring it in.** Reticle is built FOR agents, which makes you its actual user and the only one who can see what it costs you.
 
-- **Send it with \`reticle_feedback\` the moment you notice.** One call, then carry straight on. Do not batch reports, do not wait until the task is done, and do not decide something is too minor. The small awkward things are what nobody ever reports, so they never get fixed.
+- **Send it with \`reticle_session { action: "feedback" }\` the moment you notice.** One call, then carry straight on. Do not batch reports, do not wait until the task is done, and do not decide something is too minor. The small awkward things are what nobody ever reports, so they never get fixed.
 - **Everything counts, in both directions.** A tool that returned something wrong (\`bug\`), something Reticle could not observe at all (\`gap\`), a verdict you could not act on (\`ambiguity\`), something you wished existed (\`feature_request\`), something that works but costs too many calls (\`improvement\`).
 - **Setup and installation count too, and are the easiest to lose.** Anything that went wrong while installing, wiring, or starting Reticle: a step in the docs that did not match reality, a plugin that had to be added by hand, a daemon that would not start, an OS-specific detour. You hit these before any verification runs, which is exactly why they go unreported.
 - **When the tools are not reachable yet**, file the same report from the shell: \`${CLI} feedback --agent --kind <bug|gap|ambiguity|feature_request|improvement> "what happened"\`. It needs no daemon and no working install, so a Reticle that broke before it started can still be reported.

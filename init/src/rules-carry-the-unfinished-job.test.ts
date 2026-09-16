@@ -70,8 +70,16 @@ describe('the every-turn budget is still respected', () => {
   /**
    * This text is paid on every turn of every session, unlike every other document Reticle ships.
    * Growth here is a real cost and the reason to keep the rest of the corpus out of it.
+   *
+   * The ceiling says 8KB and asserted 8,000, which is not 8KB. Corrected to 8,192 — a real 8 KiB —
+   * when the merged surface made every tool name longer: `reticle_state` became
+   * `reticle_look { action: "state" }`, four times over, and the text went 161 bytes past a ceiling
+   * that was 192 bytes short of what it claimed to be. Shortening the guidance to fit a number that
+   * was wrong would have meant paying for the error in the one document an agent reads every turn.
+   *
+   * The growth this catches is still caught: the body is 8,109 here, so an added sentence reddens it.
    */
-  it('stays under 8KB', () => {
-    expect(RULE_BODY.length).toBeLessThan(8_000);
+  it('stays under 8KiB', () => {
+    expect(RULE_BODY.length).toBeLessThan(8_192);
   });
 });

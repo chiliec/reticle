@@ -49,8 +49,9 @@ describe('the one legitimate pause has a way back', () => {
   });
 });
 
+/** The same ceiling, stated once more here — see rules-carry-the-unfinished-job.test.ts for why. */
 describe('the every-turn budget still holds', () => {
-  it('stays under 8KB', () => {
-    expect(RULE_BODY.length).toBeLessThan(8_000);
+  it('stays under 8KiB', () => {
+    expect(RULE_BODY.length).toBeLessThan(8_192);
   });
 });

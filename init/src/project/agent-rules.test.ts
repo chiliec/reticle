@@ -33,7 +33,9 @@ describe('agent verification rule — content', () => {
     const block = markedBlock();
     // The instruction itself stays in the always-loaded block: an agent that never opens the
     // reference must still know that reporting is part of the job.
-    expect(block).toContain('reticle_feedback');
+    // The advertised name, not the merged-away one: `reticle_feedback` is reachable by redirect
+    // but invisible to an agent's allowlist, which is what made the old spelling a trap.
+    expect(block).toContain('reticle_session { action: "feedback" }');
     const full = reticleMdFile();
     expect(full).toMatch(/feature_request/);
     expect(full).toMatch(/improvement/);
