@@ -77,7 +77,7 @@ describe('resolveProjectCloud — per-project cloud binding + sync policy', () =
     const withEnv = { RETICLE_CLOUD_URL: 'https://cloud.test', RETICLE_CLOUD_KEY: 'rk_live_env' };
     const cloud = await resolveProjectCloud(fs, reticleRoot, homeDir, withEnv);
     expect(cloud.config).toEqual({ url: 'https://cloud.test', apiKey: 'rk_live_env' });
-    expect(cloud.policy).toEqual({ runs: true, memory: true, flows: true });
+    expect(cloud.policy).toEqual({ runs: true, memory: true, flows: true, capsules: true });
     expect(cloud.projectId).toBeNull();
   });
 
@@ -105,7 +105,10 @@ describe('resolveProjectCloud — per-project cloud binding + sync policy', () =
     });
     await writeCreds({ shop: 'rk_live_shopkey' });
     const cloud = await resolveProjectCloud(fs, reticleRoot, homeDir, env);
-    expect(cloud.policy).toEqual({ runs: false, memory: false, flows: true });
+    // `capsules` defaults ON because this project's cloud.json never mentions it: a policy names
+    // what it changes, and a surface it is silent about keeps the default rather than inheriting a
+    // neighbour's opt-out.
+    expect(cloud.policy).toEqual({ runs: false, memory: false, flows: true, capsules: true });
     expect(cloud.config).not.toBeNull();
   });
 

@@ -71,6 +71,7 @@ function source(over: Partial<SyncSource> = {}): SyncSource {
   return {
     runs: () => [],
     flows: () => [],
+    capsules: () => [],
     derived: () => undefined,
     ...over,
   };
@@ -180,6 +181,7 @@ describe('an empty repo and an up-to-date repo do not say the same thing', () =>
       runsSent: 0,
       runsRejected: [],
       flowsSent: 0,
+      capsulesSent: 0,
       derivedSent: [],
       pulled: 0,
       morePending: false,
@@ -208,6 +210,7 @@ describe('when the server refuses what was pushed', () => {
       runsSent: 0,
       runsRejected: rejected,
       flowsSent: 0,
+      capsulesSent: 0,
       derivedSent: [],
       pulled: 0,
       morePending: false,
@@ -241,6 +244,7 @@ describe('when the server refuses what was pushed', () => {
       runsSent: 2,
       runsRejected: [{ index: 2, reason: 'missing runId' }],
       flowsSent: 0,
+      capsulesSent: 0,
       derivedSent: [],
       pulled: 0,
       morePending: false,
@@ -297,6 +301,66 @@ describe('it sends only the difference', () => {
       source({ flows: () => [{ name: 'sign-in' }] }),
     );
     expect(calls.some((c) => 'POST' === c.method)).toBe(false);
+  });
+
+  /*
+   * A bug capsule is the only artifact that lets somebody else make the defect happen again.
+   *
+   * A verdict count tells a dashboard THAT something broke. The capsule carries the minimal failing
+   * flow and its blast radius — the requests and store keys the action touched without declaring
+   * them — which is what turns a number on a dashboard into something a teammate can fix.
+   */
+  it('carries capsules once something else IS moving', async () => {
+    const { calls } = await cycle(
+      { status: {}, sync: { runs: { accepted: 1 } } },
+      source({
+        runs: () => [{ runId: 'r', payload: { runId: 'r' } }],
+        capsules: () => [{ id: 'c1', summary: 'submit did nothing' }],
+      }),
+    );
+    const post = calls.find((c) => 'POST' === c.method);
+    expect((post?.body as { capsules: unknown[] }).capsules).toEqual([
+      { id: 'c1', summary: 'submit did nothing' },
+    ]);
+  });
+
+  it('does not pay a round trip for capsules alone when nothing else moved', async () => {
+    const { calls } = await cycle(
+      { status: { knownRunIds: [] } },
+      source({ capsules: () => [{ id: 'c1' }] }),
+    );
+    expect(calls.some((c) => 'POST' === c.method)).toBe(false);
+  });
+
+  it('reports how many capsules the server accepted', async () => {
+    const { report } = await cycle(
+      { status: {}, sync: { runs: { accepted: 1 }, capsules: { accepted: 2 } } },
+      source({
+        runs: () => [{ runId: 'r', payload: { runId: 'r' } }],
+        capsules: () => [{ id: 'c1' }, { id: 'c2' }],
+      }),
+    );
+    expect(report.capsulesSent).toBe(2);
+  });
+
+  /*
+   * The compatibility case, and the reason it is asserted rather than assumed.
+   *
+   * A server that predates this field answers without a `capsules` key. That must read as "none
+   * accepted" and never as a failure: adding a field to the bundle cannot be allowed to break a sync
+   * that was otherwise fine, or the next added field will be shipped by somebody who has learned to
+   * be afraid of this one.
+   */
+  it('treats a server that says nothing about capsules as zero, not as an error', async () => {
+    const { report } = await cycle(
+      { status: {}, sync: { runs: { accepted: 1 } } },
+      source({
+        runs: () => [{ runId: 'r', payload: { runId: 'r' } }],
+        capsules: () => [{ id: 'c1' }],
+      }),
+    );
+    expect(report.ok).toBe(true);
+    expect(report.capsulesSent).toBe(0);
   });
 
   it('carries the flows once something else IS moving', async () => {

@@ -28,8 +28,21 @@ interface SyncPolicy {
   memory: boolean;
   /** Sync saved flow files (the shared regression suite). */
   flows: boolean;
+  /**
+   * Push bug capsules — the minimal failing flow for a defect, plus its evidence.
+   *
+   * Its OWN toggle rather than riding on `flows`, because it carries more than a flow does: a
+   * capsule's blast radius names the requests and store keys an action touched WITHOUT declaring
+   * them, which is app data and the reason the artifact is worth anything. Somebody who chose to
+   * share a regression suite has not thereby chosen to share that, and this interface already
+   * promises each surface is independently toggleable.
+   *
+   * Defaults ON, like the other three: the capsule is the only artifact that lets a teammate make
+   * the bug happen again, and a defect nobody else can reproduce is a defect nobody else can fix.
+   */
+  capsules: boolean;
 }
-const DEFAULT_SYNC_POLICY: SyncPolicy = { runs: true, memory: true, flows: true };
+const DEFAULT_SYNC_POLICY: SyncPolicy = { runs: true, memory: true, flows: true, capsules: true };
 
 /** Where a verification actually executes. Reserved for the hosted-runner path; default local. */
 export const VerifyMode = { LOCAL: 'local', SERVER: 'server' } as const;
@@ -81,6 +94,7 @@ function parseLink(raw: unknown): CloudLink | null {
       runs: asBool(sync.runs, DEFAULT_SYNC_POLICY.runs),
       memory: asBool(sync.memory, DEFAULT_SYNC_POLICY.memory),
       flows: asBool(sync.flows, DEFAULT_SYNC_POLICY.flows),
+      capsules: asBool(sync.capsules, DEFAULT_SYNC_POLICY.capsules),
     },
     verify: o.verify === VerifyMode.SERVER ? VerifyMode.SERVER : VerifyMode.LOCAL,
   };
@@ -178,6 +192,7 @@ export async function resolveProjectCloud(
     runs: link.sync.runs ?? DEFAULT_SYNC_POLICY.runs,
     memory: link.sync.memory ?? DEFAULT_SYNC_POLICY.memory,
     flows: link.sync.flows ?? DEFAULT_SYNC_POLICY.flows,
+    capsules: link.sync.capsules ?? DEFAULT_SYNC_POLICY.capsules,
   };
   const key = credentialFor(
     await readJson(fs, join(homeDir, ReticleDir.ROOT, CREDENTIALS_FILE)),

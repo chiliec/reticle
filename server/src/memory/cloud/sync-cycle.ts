@@ -58,6 +58,14 @@ export interface SyncSource {
   runs: () => ReadonlyArray<{ runId: string; payload: unknown }>;
   /** Every saved flow. Small, upserted by name, so they ride along whenever anything else does. */
   flows: () => readonly unknown[];
+  /**
+   * Every bug capsule on disk — the minimal failing flow that reproduces a defect, plus its evidence.
+   *
+   * Rides along with flows, and for the same reason: small, upserted by id, and worth nothing on the
+   * machine that found the bug. A verdict count tells a dashboard THAT something broke; the capsule
+   * is the only artifact that lets somebody else make it break again.
+   */
+  capsules: () => readonly unknown[];
   /** One derived record, or undefined when the file is absent. */
   derived: (kind: DerivedKind) => unknown;
 }
@@ -100,6 +108,8 @@ export interface SyncReport {
   /** Runs it refused, with the reason, so a bad artifact is visible rather than silently stuck. */
   runsRejected: Array<{ index: number; reason: string }>;
   flowsSent: number;
+  /** Capsules the server accepted. Zero when it reported none, which includes not knowing the field. */
+  capsulesSent: number;
   /** Which derived records had actually moved. Empty on a quiet cycle, which is the normal case. */
   derivedSent: DerivedKind[];
   /** Decisions collected from the dashboard. */
@@ -170,6 +180,7 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncReport> {
     runsSent: 0,
     runsRejected: [],
     flowsSent: 0,
+    capsulesSent: 0,
     derivedSent: [],
     pulled: 0,
     morePending: false,
@@ -233,12 +244,17 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncReport> {
     }
     // Flows are small and upserted by name, so they ride along whenever anything else does rather
     // than earning a round trip of their own.
-    const flows =
-      bundle['runs'] === undefined && 0 === derivedSent.length ? [] : deps.source.flows();
+    const ridesAlong = bundle['runs'] !== undefined || derivedSent.length > 0;
+    const flows = ridesAlong ? deps.source.flows() : [];
     if (flows.length > 0) bundle['flows'] = flows;
+    // Same gate as flows: only when something else is already going. A cycle that sent capsules and
+    // nothing else would wake the server on every tick of an idle machine.
+    const capsules = ridesAlong ? deps.source.capsules() : [];
+    if (capsules.length > 0) bundle['capsules'] = capsules;
 
     let runsSent = 0;
     let flowsSent = 0;
+    let capsulesSent = 0;
     let runsRejected: Array<{ index: number; reason: string }> = [];
     if (Object.keys(bundle).length > 0) {
       const pushed = await call(SYNC_PATH, { method: 'POST', body: JSON.stringify(bundle) });
@@ -250,8 +266,13 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncReport> {
       const body = isRecord(pushed.json) ? pushed.json : {};
       const runs = isRecord(body['runs']) ? body['runs'] : {};
       const flowsPart = isRecord(body['flows']) ? body['flows'] : {};
+      // Absent means the server said nothing about capsules — an older one that does not know the
+      // field. Read as zero accepted, never as an error: an added field must not break a sync that
+      // was otherwise fine, and the push's own status code is what reports a real refusal.
+      const capsulesPart = isRecord(body['capsules']) ? body['capsules'] : {};
       runsSent = 'number' === typeof runs['accepted'] ? runs['accepted'] : 0;
       flowsSent = 'number' === typeof flowsPart['accepted'] ? flowsPart['accepted'] : 0;
+      capsulesSent = 'number' === typeof capsulesPart['accepted'] ? capsulesPart['accepted'] : 0;
       runsRejected = Array.isArray(runs['rejected'])
         ? (runs['rejected'] as Array<{ index: number; reason: string }>)
         : [];
@@ -266,7 +287,16 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncReport> {
       // The push already landed; report it rather than throwing the whole cycle away.
       const error = `pull ${String(pull.status)}: ${pull.text.slice(0, 200)}`;
       deps.sink.writeState({ ...nextState, lastError: error });
-      return { ...empty, ok: false, runsSent, flowsSent, derivedSent, runsRejected, error };
+      return {
+        ...empty,
+        ok: false,
+        runsSent,
+        flowsSent,
+        capsulesSent,
+        derivedSent,
+        runsRejected,
+        error,
+      };
     }
     const pulled = isRecord(pull.json) ? (pull.json as PullResponse) : {};
     const decisions = pulled.triage ?? [];
@@ -295,6 +325,7 @@ export async function runSyncCycle(deps: SyncDeps): Promise<SyncReport> {
       runsSent,
       runsRejected,
       flowsSent,
+      capsulesSent,
       derivedSent,
       pulled: decisions.length,
       morePending: true === pulled.more,
@@ -348,6 +379,7 @@ export function describeSync(report: SyncReport): string {
   const sent: string[] = [];
   if (report.runsSent > 0) sent.push(`${String(report.runsSent)} run(s)`);
   if (report.flowsSent > 0) sent.push(`${String(report.flowsSent)} flow(s)`);
+  if (report.capsulesSent > 0) sent.push(`${String(report.capsulesSent)} capsule(s)`);
   if (report.derivedSent.length > 0) sent.push(report.derivedSent.join(', '));
   /*
    * "Nothing to send" is a statement about the QUEUE, and it is false the moment the queue was full

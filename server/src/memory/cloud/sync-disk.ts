@@ -168,6 +168,9 @@ export function diskSource(reticleRoot: string): SyncSource {
         // mean re-sending it every cycle forever. Dropped rather than uploaded repeatedly.
         .filter((r): r is { runId: string; payload: unknown } => r !== undefined),
     flows: () => readFlows(reticleRoot),
+    // Flat directory of `<id>.json`, which is exactly what readJsonDir walks — unlike flows, which
+    // sit one level deeper under the app's project id.
+    capsules: () => readJsonDir(join(reticleRoot, ReticleDir.CAPSULES_SUBDIR)),
     // Intent is the only derived record that is no longer one file. See readIntent.
     derived: (kind) =>
       'intent' === kind ? readIntent(reticleRoot) : readJson(join(reticleRoot, DERIVED_FILE[kind])),

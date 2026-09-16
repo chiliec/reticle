@@ -563,6 +563,7 @@ const cmdSync = async (argv: readonly string[]): Promise<number> => {
   const source = {
     runs: (): ReturnType<typeof full.runs> => (cloud.policy.runs ? full.runs() : []),
     flows: (): readonly unknown[] => (cloud.policy.flows ? full.flows() : []),
+    capsules: (): readonly unknown[] => (cloud.policy.capsules ? full.capsules() : []),
     // `memory` is the project's cross-run history and the derived records that summarise it.
     derived: (kind: Parameters<typeof full.derived>[0]): unknown =>
       cloud.policy.memory ? full.derived(kind) : undefined,

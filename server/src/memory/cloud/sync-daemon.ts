@@ -149,6 +149,7 @@ export function startSyncDaemon(deps: SyncDaemonDeps): SyncDaemon {
       source: {
         runs: () => (cloud.policy.runs ? full.runs() : []),
         flows: () => (cloud.policy.flows ? full.flows() : []),
+        capsules: () => (cloud.policy.capsules ? full.capsules() : []),
         derived: (kind) => (cloud.policy.memory ? full.derived(kind) : undefined),
       },
       sink: diskSink(root),
@@ -191,6 +192,7 @@ export function startSyncDaemon(deps: SyncDaemonDeps): SyncDaemon {
         const moved =
           report.runsSent > 0 ||
           report.flowsSent > 0 ||
+          report.capsulesSent > 0 ||
           report.derivedSent.length > 0 ||
           report.pulled > 0;
         // The root is NAMED here and not in the single-root log below, because with several repos
@@ -257,6 +259,7 @@ export function startSyncDaemon(deps: SyncDaemonDeps): SyncDaemon {
         const moved =
           report.runsSent > 0 ||
           report.flowsSent > 0 ||
+          report.capsulesSent > 0 ||
           report.derivedSent.length > 0 ||
           report.pulled > 0;
         if (moved) log('reticle_cloud_synced', { summary: describeSync(report) });

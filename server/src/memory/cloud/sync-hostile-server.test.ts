@@ -21,6 +21,7 @@ const NOW = 1_700_000_000_000;
 const source = (over: Partial<SyncSource> = {}): SyncSource => ({
   runs: () => [],
   flows: () => [],
+  capsules: () => [],
   derived: () => undefined,
   ...over,
 });

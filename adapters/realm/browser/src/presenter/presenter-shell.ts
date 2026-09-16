@@ -1,6 +1,7 @@
 import { PresenterReport, reportPanelHtml } from './presenter-report.js';
 import type { AccountState } from '@reticlehq/core';
 import { paintWorkspaceAccount } from './presenter-workspace.js';
+import { paintSettingsAccount } from './presenter-settings.js';
 import {
   CHAT_MIN_ATTR,
   CHAT_PILL_ATTR,
@@ -111,6 +112,9 @@ export class HudShell {
   paintAccount(account: AccountState | undefined, dashboardUrl: string | undefined): void {
     if (this.#root === undefined) return;
     paintWorkspaceAccount(this.#root, account, dashboardUrl);
+    // The settings panel asks the same question and answers it from the same push, so the two can
+    // never disagree about whether this machine is signed in.
+    paintSettingsAccount(this.#root, account, dashboardUrl);
   }
   constructor(callbacks: HudShellCallbacks = {}) {
     this.#callbacks = callbacks;
