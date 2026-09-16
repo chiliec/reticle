@@ -57,7 +57,17 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // 17 since the HUD's position primitives left `presenter-drag.ts` for their own leaf: the drag
   // gesture re-syncs the dock layout, and the dock layout reads the HUD's position, so the two files
   // needed each other over primitives that belong to neither.
-  'adapters/realm/dom/src/presenter': 17,
+  // 18 with `presenter-account.ts`: whether this machine is signed in, said the same way by every
+  // panel that shows it. One builder rather than the same rule copied into three panels — and the
+  // rule is load-bearing, because absent account state means UNKNOWN and a panel that read it as
+  // signed-out would ask a paying user to sign in every time they opened one.
+  'adapters/realm/dom/src/presenter': 18,
+  // Newly over the line at 11, with `presenter-safe-html.ts`. It crossed because two SECURITY
+  // helpers left `presenter-report.ts` when the account capsule became their second caller: HTML
+  // escaping, and the dashboard-url scheme check that exists because `javascript:` once produced a
+  // link running code inside the developer's own app. A security rule living in two files gets
+  // fixed in one of them, so the duplicate was not an option.
+  'adapters/realm/dom/src/presenter/chrome': 11,
   'core/src/verdict': 11,
   'core/src/wire': 15,
   // 15 since the shared step-effect builder. Recorded rather than grouped: the note above explains

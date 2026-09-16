@@ -38,6 +38,9 @@ const MAP = {
   help: 'question-mark-circle',
   'caret-right': 'chevron-right',
   annotate: 'pencil-square',
+  // The dashboard push. `arrow-path` is Heroicons' refresh mark — a cloud icon would promise that
+  // the cloud is the thing happening, when what the button does is make the next cycle happen now.
+  sync: 'arrow-path',
 };
 
 /** Outline key → solid body for toolbar toggle buttons (filled when active). */

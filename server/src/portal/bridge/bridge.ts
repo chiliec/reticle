@@ -150,6 +150,11 @@ function replayRequest(event: { type: string; data: Record<string, unknown> }): 
   return 'string' === typeof name && name.length > 0 ? name : undefined;
 }
 
+/** True when this event is the panel's "sync now" button. Pure boundary narrowing, like the above. */
+function isSyncRequest(event: { type: string; data: Record<string, unknown> }): boolean {
+  return event.type === EventType.HUMAN_CONTROL && event.data['kind'] === HumanControlKind.SYNC;
+}
+
 interface BridgeOptions {
   port: number;
   host?: string;
@@ -274,6 +279,8 @@ export class Bridge {
   readonly #onSessionCreate: Array<(session: Session) => void> = [];
   /** Fired when a session is removed — flushes its journal tail + persists what it learned. */
   #onSessionEnd: ((session: Session) => Promise<void>) | undefined;
+  /** Wired by the daemon: push to the dashboard now, because somebody asked in the panel. */
+  #onSyncRequest: (() => void) | undefined;
 
   constructor(options: BridgeOptions) {
     const host = options.host ?? LOOPBACK_HOST;
@@ -665,6 +672,10 @@ export class Bridge {
           // the daemon-wired handler instead of the in-session control path. Everything else is normal.
           const replay = replayRequest(parsed.event);
           if (replay !== undefined) this.#onReplay?.(session.id, replay);
+          // Same shape as ▶ replay, and routed the same way: what to push lives in the daemon's
+          // cloud wiring, which a Session cannot reach. Nothing is awaited — the panel is telling
+          // us to hurry, not asking for a result.
+          else if (isSyncRequest(parsed.event)) this.#onSyncRequest?.();
           // Pass the raw frame's byte length so the buffer doesn't re-serialize every event for accounting.
           else session.pushEvent(parsed.event, Buffer.byteLength(text, 'utf8'));
         } else if (parsed.kind === MessageKind.COMMAND_RESULT) {
@@ -788,6 +799,17 @@ export class Bridge {
    */
   attachSessionEnd(handler: (session: Session) => Promise<void>): void {
     this.#onSessionEnd = handler;
+  }
+
+  /**
+   * Register what to do when the panel's sync button is pressed.
+   *
+   * Optional, like every other panel-routed handler here: a bridge built without one simply ignores
+   * the request rather than refusing it, which is the right behaviour for a button whose whole job
+   * is to make something happen sooner than it already would.
+   */
+  attachSyncRequest(handler: () => void): void {
+    this.#onSyncRequest = handler;
   }
 
   /** Register a handler to run when a session connects. Additive — every handler runs. */

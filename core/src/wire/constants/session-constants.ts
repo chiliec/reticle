@@ -36,6 +36,14 @@ export const HumanControlKind = {
   MESSAGE: 'message',
   /** Human clicked ▶ on a saved flow in the panel — replay it (no agent). `text` carries the name. */
   REPLAY: 'replay',
+  /**
+   * Human asked the panel to push to the dashboard NOW, rather than waiting for the sync timer.
+   *
+   * The timer already keeps the dashboard current on its own, so this is not how sync happens — it
+   * is how somebody watching the panel stops wondering whether it is happening. Carries nothing:
+   * what to send is the daemon's question, and a panel that named artifacts could disagree with it.
+   */
+  SYNC: 'sync',
 } as const;
 export type HumanControlKind = (typeof HumanControlKind)[keyof typeof HumanControlKind];
 

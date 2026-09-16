@@ -689,6 +689,9 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
     cloudFor: (root) => resolveProjectCloud(fs, root, homedir(), process.env),
   });
   syncNudge.run = (): void => cloudSync.nudge();
+  // The panel's sync button. `syncNow`, not `nudge`: a nudge schedules a cycle soon, which is right
+  // for "a run landed" and wrong for a button somebody is watching. Never awaited.
+  bridge.attachSyncRequest(() => void cloudSync.syncNow());
   // Scope auto-selection to the active project (from .reticle.json) so a stray tab from another app is
   // never picked when the agent omits a sessionId. Explicit per-call scope/sessionId still overrides.
   // Scope + the no-session diagnosis: "no browser session connected" is the error that ends most

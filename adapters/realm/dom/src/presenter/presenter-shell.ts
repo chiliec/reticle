@@ -49,6 +49,8 @@ interface HudShellCallbacks {
   /** The user pressed the annotate toggle. `on` is the state they asked for. */
   onAnnotateToggle?: (on: boolean) => void;
   onCollapse?: () => void;
+  /** The report panel's sync button. The shell owns the socket; the panel only knows it was asked. */
+  onSyncNow?: () => void;
   settings?: SettingsHost;
 }
 /**
@@ -97,6 +99,9 @@ export class HudShell {
       this.#settings.close();
       this.closeChat();
     },
+    // Forwarded rather than handled here: the shell does not own the socket either. It is passed
+    // down from whoever constructed the HUD, which is the only layer that does.
+    onSyncNow: () => this.#callbacks.onSyncNow?.(),
   });
   #callbacks: HudShellCallbacks;
   constructor(callbacks: HudShellCallbacks = {}) {

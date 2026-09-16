@@ -1,5 +1,6 @@
 import {
   ActionType,
+  HumanControlKind,
   ReticleCommand,
   PresenterMode,
   SessionState,
@@ -162,6 +163,9 @@ export class Presenter {
       onExpand: () => this.#syncAnnotator(),
       onAnnotateToggle: () => this.#syncAnnotator(),
       onCollapse: () => this.#syncAnnotator(),
+      // The panel's sync button, onto the same browser→bridge channel the pause, resume and ▶
+      // replay controls already use. A new control on an existing channel, not a new channel.
+      onSyncNow: () => this.#onControl?.({ kind: HumanControlKind.SYNC }),
       settings: {
         onBeforeOpen: () => {
           if (this.#shell.isCollapsed()) this.#shell.expand();

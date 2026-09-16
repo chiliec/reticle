@@ -6,6 +6,14 @@ import {
 } from '@reticlehq/core';
 import { PresenterIcon, PRESENTER_ICON_SIZE, hiIconHtml } from './icons/presenter-icons.js';
 import { HUD_SURFACE_CLASS } from './chrome/presenter-hud-chrome.js';
+import { esc, isSafeDashboardUrl } from './chrome/presenter-safe-html.js';
+import {
+  ACCOUNT_SIGNIN_ATTR,
+  ACCOUNT_TEXT,
+  SYNC_BTN_ATTR,
+  accountCapsuleHtml,
+  syncButtonHtml,
+} from './presenter-account.js';
 import { REPORT_PANEL_ATTR, REPORT_ATTR, REPORT_CLOSE_ATTR } from './presenter-config.js';
 import {
   REPORT_LINKS,
@@ -92,17 +100,9 @@ function chart(scope: ImpactScope): string {
  * Escape text that came from the app under test.
  *
  * A defect title is an element's accessible name or a verdict's failure reason — both of which are
- * ultimately the CONTENT of somebody else's page, and this panel builds its DOM from an HTML string.
- * Everything else the report renders is a number or a date; this is the first app-derived text to
- * reach it, so the escaping arrives with it.
+ * ultimately the CONTENT of somebody else's page. Moved to `chrome/presenter-safe-html.ts` when the
+ * account capsule became a second caller — see there for the rule and why it is not copied.
  */
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 
 /**
  * The short list of what is currently broken.
@@ -116,23 +116,9 @@ function esc(value: string): string {
 /**
  * Whether a dashboard link is safe to render as a clickable href.
  *
- * The url arrives from `.reticle/cloud.json` — a file in somebody's repository, which means it is
- * INPUT. Escaping the quotes stops it breaking out of the attribute but does nothing about the
- * SCHEME, so `javascript:...` produced a link that ran code inside the developer's own application,
- * from a panel Reticle injected there. Only the two schemes a dashboard can actually live on are
- * allowed; anything else renders no link at all, which is the same state as an unlinked project and
- * therefore already a supported one.
+ * Moved to `chrome/presenter-safe-html.ts` with `esc`, for the same reason: the `javascript:` scheme
+ * incident is recorded there, and a security rule living in two files gets fixed in one of them.
  */
-function isSafeDashboardUrl(raw: string): boolean {
-  try {
-    const scheme = new URL(raw).protocol;
-    return 'https:' === scheme || 'http:' === scheme;
-  } catch {
-    // Not a url at all. A relative path cannot address a dashboard on another origin, so there is
-    // nothing to render and nothing lost by refusing it.
-    return false;
-  }
-}
 
 function defects(scope: ImpactScope, dashboardUrl: string | undefined): string {
   /*
@@ -212,7 +198,16 @@ export function reportBodyHtml(
       scope.savings.minutes.basis,
     ),
   ].join('');
-  return `${streak}${hero}${verdicts}<div class="reticle-report-grid">${cards}</div>${defects(scope, dashboardUrl)}${chart(scope)}${localOnly(scope, dashboardUrl, account)}`;
+  /*
+   * Who this record belongs to, and the way to push it now — at the TOP, above the numbers.
+   *
+   * The `localOnly` line at the foot answers the same question for somebody who has nothing set up
+   * yet, and it stays there: it is a sentence explaining a next step, which belongs after the thing
+   * it is about. This is a control, and a control somebody has to scroll a panel to find is one they
+   * will not find. The two never both render — `localOnly` is gated on there being NO dashboard.
+   */
+  const identity = `<div class="reticle-report-identity">${accountCapsuleHtml(account, dashboardUrl)}${syncButtonHtml(dashboardUrl)}</div>`;
+  return `${identity}${streak}${hero}${verdicts}<div class="reticle-report-grid">${cards}</div>${defects(scope, dashboardUrl)}${chart(scope)}${localOnly(scope, dashboardUrl, account)}`;
 }
 
 /**
@@ -248,7 +243,16 @@ function localOnly(
 interface ReportHost {
   /** Opened from the toolbar and from the chat, so the shell decides what else must close. */
   onBeforeOpen?: () => void;
+  /**
+   * The panel's sync button was pressed. The shell owns the socket, so it sends; this panel only
+   * knows that somebody asked.
+   */
+  onSyncNow?: () => void;
 }
+
+/** How long the sync control acknowledges a press. See the note at its click handler. */
+const SYNC_SPIN_MS = 1_200;
+const SYNCING_ATTR = 'data-syncing';
 
 /** The report panel controller: scope toggle, live repaint, share + referral actions. */
 export class PresenterReport {
@@ -297,6 +301,42 @@ export class PresenterReport {
     root.querySelector(`[${REFER_ATTR}]`)?.addEventListener('click', (e) => {
       e.stopPropagation();
       void this.#copy(buildReferralText(), e.currentTarget);
+    });
+    /*
+     * The identity controls are DELEGATED, unlike every binding above.
+     *
+     * They live in the panel BODY, which is replaced wholesale on every repaint — and a repaint
+     * happens on each snapshot push, which is roughly whenever anything interesting occurs. A
+     * listener bound to the element itself would work until the first push and then silently stop,
+     * which is the worst shape of broken: it demos perfectly.
+     */
+    root.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const signin = target.closest(`[${ACCOUNT_SIGNIN_ATTR}]`);
+      if (signin !== null) {
+        e.stopPropagation();
+        // The command, not a sign-in. A page cannot run a CLI, and a button that quietly does
+        // nothing is worse than a line of text because the person waits for it.
+        void this.#copy(ACCOUNT_TEXT.SIGNIN_COMMAND, signin);
+        return;
+      }
+      const sync = target.closest(`[${SYNC_BTN_ATTR}]`);
+      if (sync !== null) {
+        e.stopPropagation();
+        this.#host.onSyncNow?.();
+        /*
+         * The spinner says ASKED, not DONE, and stops on a timer rather than on a result.
+         *
+         * Nothing reports completion back to this page — the cycle happens in the daemon, and the
+         * only thing that returns is a fresh snapshot, which arrives whether or not anything was
+         * pushed. Spinning until "done" would therefore mean spinning until something unrelated
+         * happened, and a control that claims success it cannot observe is the false green this
+         * product refuses everywhere else. So it acknowledges the press and gets out of the way.
+         */
+        sync.setAttribute(SYNCING_ATTR, '1');
+        setTimeout(() => sync.removeAttribute(SYNCING_ATTR), SYNC_SPIN_MS);
+      }
     });
   }
 

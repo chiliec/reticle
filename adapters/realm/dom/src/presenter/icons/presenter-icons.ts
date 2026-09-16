@@ -26,6 +26,8 @@ export const PresenterIcon = {
   HELP: 'help',
   CARET_RIGHT: 'caret-right',
   ANNOTATE: 'annotate',
+  /** The dashboard push. Heroicons' arrow-path — the standard refresh mark, not a cloud. */
+  SYNC: 'sync',
 } as const;
 
 export type PresenterIconName = (typeof PresenterIcon)[keyof typeof PresenterIcon];
