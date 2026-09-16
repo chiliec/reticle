@@ -76,7 +76,7 @@ init          @reticlehq/init         — project scaffolder: `reticle init`'s c
 spec-runner   @reticlehq/test         — spec runner + matchers for CI (peer vitest)
 conformance   —                       — drives the protocol's own scenarios against an implementation (PRIVATE)
 
-adapters/realm/dom           @reticlehq/browser      — instrumentation SDK embedded in the app (DOM-side)
+adapters/realm/browser           @reticlehq/browser      — instrumentation SDK embedded in the app (DOM-side)
 adapters/realm/electron      @reticlehq/electron     — Electron main-process adapter (IPC observer, capture)
 adapters/realm/tauri         reticle-tauri           — Tauri capture backend (RUST — outside every JS gate)
 adapters/framework/react     @reticlehq/react        — React adapter: DOM ref -> component -> source file

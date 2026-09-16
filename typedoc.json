@@ -4,7 +4,7 @@
   "entryPointStrategy": "resolve",
   "entryPoints": [
     "core/src/index.ts",
-    "adapters/realm/dom/src/index.ts",
+    "adapters/realm/browser/src/index.ts",
     "adapters/framework/react/src/index.ts",
     "server/src/index.ts",
     "spec-runner/src/index.ts",

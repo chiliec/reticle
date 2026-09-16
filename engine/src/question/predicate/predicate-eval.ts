@@ -262,7 +262,7 @@ function nativeDownloadMiss(
 
 /**
  * Initiator types the browser SDK's resource-timing observer stamps onto document-initiated records
- * (adapters/realm/dom/src/observers/network.ts). The patched transports sign themselves `fetch`,
+ * (adapters/realm/browser/src/observers/network.ts). The patched transports sign themselves `fetch`,
  * `xhr` or `beacon`, so any NET_REQUEST carrying one of these came from a `resource` entry, and its
  * mere presence is proof the PerformanceObserver is alive on this page. Mirrors the wire; keep in
  * sync with the browser package.

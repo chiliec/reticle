@@ -9,7 +9,7 @@
   },
   "include": ["src/**/*", "vite.config.ts"],
   "references": [
-    { "path": "../../adapters/realm/dom" },
+    { "path": "../../adapters/realm/browser" },
     { "path": "../../adapters/framework/react" }
   ]
 }

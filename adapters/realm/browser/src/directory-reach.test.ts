@@ -29,7 +29,7 @@ const BROWSER = join(
     cwd: import.meta.dirname,
     encoding: 'utf8',
   }).trim(),
-  'adapters/realm/dom',
+  'adapters/realm/browser',
 );
 
 /**

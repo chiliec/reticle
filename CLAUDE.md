@@ -13,7 +13,7 @@ core          @reticlehq/core         — bottom-of-graph foundation: wire contr
 open-verification   open-verification  — the Open Verification Protocol: vocabulary, rules, `Realm`, `adjudicate()` (deps: zod)
 engine        @reticlehq/engine       — the rules that decide a verdict, with no browser, daemon or CLI attached
 conformance   —                       — drives the protocol's own scenarios against an implementation (PRIVATE, not published)
-adapters/realm/dom       @reticlehq/browser      — instrumentation SDK embedded in the app (DOM-side)
+adapters/realm/browser       @reticlehq/browser      — instrumentation SDK embedded in the app (DOM-side)
 server        @reticlehq/server       — bridge + MCP server, the `reticle` CLI (Node-side)
 init          @reticlehq/init         — project scaffolder: `reticle init`'s codemod, no runtime (Node-side)
 adapters/framework/react  @reticlehq/react        — React adapter: DOM ref -> component -> source file

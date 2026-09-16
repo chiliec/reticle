@@ -145,7 +145,7 @@ importers:
     dependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../realm/dom
+        version: link:../../realm/browser
       '@reticlehq/core':
         specifier: workspace:*
         version: link:../../../core
@@ -179,7 +179,7 @@ importers:
         specifier: ^8.67.0
         version: 8.67.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
 
-  adapters/realm/dom:
+  adapters/realm/browser:
     dependencies:
       '@reticlehq/core':
         specifier: workspace:*
@@ -260,7 +260,7 @@ importers:
     devDependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
       '@reticlehq/react':
         specifier: workspace:*
         version: link:../../adapters/framework/react
@@ -287,7 +287,7 @@ importers:
     dependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
       '@reticlehq/react':
         specifier: workspace:*
         version: link:../../adapters/framework/react
@@ -359,7 +359,7 @@ importers:
     devDependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
       '@reticlehq/electron':
         specifier: workspace:*
         version: link:../../adapters/realm/electron
@@ -417,7 +417,7 @@ importers:
         version: 2.0.0(@types/node@26.4.0)
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
       '@reticlehq/electron':
         specifier: workspace:*
         version: link:../../adapters/realm/electron
@@ -585,7 +585,7 @@ importers:
     dependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
     devDependencies:
       vite:
         specifier: ^8.2.1
@@ -605,7 +605,7 @@ importers:
     devDependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
       '@reticlehq/next':
         specifier: workspace:*
         version: link:../../adapters/build/next
@@ -642,7 +642,7 @@ importers:
     devDependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
       '@reticlehq/react':
         specifier: workspace:*
         version: link:../../adapters/framework/react
@@ -669,7 +669,7 @@ importers:
     dependencies:
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../../adapters/realm/dom
+        version: link:../../adapters/realm/browser
     devDependencies:
       '@reticlehq/server':
         specifier: workspace:*
@@ -733,7 +733,7 @@ importers:
         version: 1.30.0(zod@3.25.76)
       '@reticlehq/browser':
         specifier: workspace:*
-        version: link:../adapters/realm/dom
+        version: link:../adapters/realm/browser
       '@reticlehq/core':
         specifier: workspace:*
         version: link:../core

@@ -497,9 +497,9 @@ jobs:
           # Rust — the slowest job in this file — and it ran on every PR including docs-only ones.
           # Both adapters, both smoke apps, and the three browser/server files that are desktop-only
           # by definition: the IPC observer, desktop capture, and the setup/doctor pair that shape
-          # and diagnose a desktop install. Anything broader (all of adapters/realm/dom, say) would
+          # and diagnose a desktop install. Anything broader (all of adapters/realm/browser, say) would
           # route most PRs here and give the routing back for nothing.
-          if echo "$CHANGED" | grep -qE '^(adapters/realm/electron/|adapters/realm/tauri/|apps/(electron|tauri)-smoke/|adapters/realm/dom/src/observers/ipc\.ts|adapters/realm/dom/src/dom/desktop-capture\.ts|server/src/command/setup/desktop-shape\.ts|init/src/diagnose/desktop-doctor\.ts|\.github/workflows/ci\.yml)'; then
+          if echo "$CHANGED" | grep -qE '^(adapters/realm/electron/|adapters/realm/tauri/|apps/(electron|tauri)-smoke/|adapters/realm/browser/src/observers/ipc\.ts|adapters/realm/browser/src/dom/desktop-capture\.ts|server/src/command/setup/desktop-shape\.ts|init/src/diagnose/desktop-doctor\.ts|\.github/workflows/ci\.yml)'; then
             echo "desktop=true" >> "$GITHUB_OUTPUT"
           else
             echo "desktop=false" >> "$GITHUB_OUTPUT"
@@ -521,7 +521,7 @@ jobs:
           # The observation payloads (snapshot, query, the verdict reasons) sit in browser and events.
           # bench-app is the fixture the numbers are measured against, so changing it moves the
           # baseline whether or not any product code changed.
-          if echo "$CHANGED" | grep -qE '^(core/src/|adapters/realm/dom/src/|server/src/(surface/tools|portal/session)/|engine/src/(question|disagreement|window|evidence)/|apps/bench-app/|bench/|\.github/workflows/ci\.yml)'; then
+          if echo "$CHANGED" | grep -qE '^(core/src/|adapters/realm/browser/src/|server/src/(surface/tools|portal/session)/|engine/src/(question|disagreement|window|evidence)/|apps/bench-app/|bench/|\.github/workflows/ci\.yml)'; then
             echo "bench=true" >> "$GITHUB_OUTPUT"
           else
             echo "bench=false" >> "$GITHUB_OUTPUT"

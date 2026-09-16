@@ -217,7 +217,7 @@ const MAX_FIRST_LOAD_BYTES = 238_100;
  * 231,715,
  * attributed from the same metafile rather than guessed at:
  *
- *   adapters/realm/dom   126,941 -> 127,400   +459   the previous release's SDK work
+ *   adapters/realm/browser   126,941 -> 127,400   +459   the previous release's SDK work
  *   core                  31,745 ->  32,508   +763   see below
  *   open-verification 8,352 ->   8,658   +306   the `measure` predicate's schema
  *   zod                   59,536 unchanged

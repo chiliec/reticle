@@ -5,7 +5,7 @@
     { "path": "core" },
     { "path": "engine" },
     { "path": "init" },
-    { "path": "adapters/realm/dom" },
+    { "path": "adapters/realm/browser" },
     { "path": "server" },
     { "path": "spec-runner" },
     { "path": "adapters/framework/react" },

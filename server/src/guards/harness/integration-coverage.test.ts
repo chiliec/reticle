@@ -131,7 +131,7 @@ describe('every shipped integration is covered by an app AND a gate', () => {
       'core',
       'open-verification',
       'engine',
-      'dom',
+      'browser',
       'server',
       'spec-runner',
       // The suite that scores an implementation of the specification. It teaches Reticle nothing

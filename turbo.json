@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [
-    "adapters/realm/dom/src/**/*.ts",
+    "adapters/realm/browser/src/**/*.ts",
     "tsconfig.base.json",
     "eslint.config.mjs"
   ],

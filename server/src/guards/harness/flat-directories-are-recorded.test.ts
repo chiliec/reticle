@@ -52,8 +52,8 @@ const FLAT_FILE_LIMIT = 10;
  */
 const OVER_THE_LINE: Readonly<Record<string, number>> = {
   'adapters/build/vite/src': 11,
-  'adapters/realm/dom/src/dom': 12,
-  'adapters/realm/dom/src/observers': 23,
+  'adapters/realm/browser/src/dom': 12,
+  'adapters/realm/browser/src/observers': 23,
   // 17 since the HUD's position primitives left `presenter-drag.ts` for their own leaf: the drag
   // gesture re-syncs the dock layout, and the dock layout reads the HUD's position, so the two files
   // needed each other over primitives that belong to neither.
@@ -61,13 +61,13 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // panel that shows it. One builder rather than the same rule copied into three panels — and the
   // rule is load-bearing, because absent account state means UNKNOWN and a panel that read it as
   // signed-out would ask a paying user to sign in every time they opened one.
-  'adapters/realm/dom/src/presenter': 18,
+  'adapters/realm/browser/src/presenter': 18,
   // Newly over the line at 11, with `presenter-safe-html.ts`. It crossed because two SECURITY
   // helpers left `presenter-report.ts` when the account capsule became their second caller: HTML
   // escaping, and the dashboard-url scheme check that exists because `javascript:` once produced a
   // link running code inside the developer's own app. A security rule living in two files gets
   // fixed in one of them, so the duplicate was not an option.
-  'adapters/realm/dom/src/presenter/chrome': 11,
+  'adapters/realm/browser/src/presenter/chrome': 11,
   'core/src/verdict': 11,
   'core/src/wire': 15,
   // 15 since the shared step-effect builder. Recorded rather than grouped: the note above explains
