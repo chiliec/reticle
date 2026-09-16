@@ -32,11 +32,21 @@ const chk = (label, ok, detail = '') => {
   ok ? (pass += 1) : (fail += 1);
 };
 
-// DELIBERATELY no RETICLE_ADVERTISE_ALL_TOOLS: the point is the surface a user actually gets.
+/*
+ * The DEFAULT surface, on a side port, and it drives nothing.
+ *
+ * Every question asked of this client is `tools/list` — what does a user actually get handed — and
+ * a surface listing needs no app. It gets the side port precisely BECAUSE it needs no session: the
+ * app under test is built to dial the bridge on RETICLE_PORT, so only a daemon holding that port
+ * can ever receive one, and that daemon has to be the one the envelope calls go to.
+ *
+ * DELIBERATELY no RETICLE_ADVERTISE_ALL_TOOLS: the point is the surface a user actually gets.
+ */
+const LEAN_PORT = String(Number(PORT) + 2);
 const client = new McpStdioClient(
   'node',
-  ['server/dist/command/cli.js', 'mcp', '--port', PORT, '--drive', APP],
-  { RETICLE_PORT: PORT, RETICLE_TELEMETRY: '0' },
+  ['server/dist/command/cli.js', 'mcp', '--port', LEAN_PORT],
+  { RETICLE_PORT: LEAN_PORT, RETICLE_TELEMETRY: '0' },
 );
 
 /**
@@ -50,6 +60,19 @@ const client = new McpStdioClient(
  * SKILL.md was already right about this: its `reticle_run` examples sit under a heading that says
  * "Extended surface only". So each half is now checked against the surface the skill assigns it,
  * which is what keeps this spec measuring the instructions rather than a past release.
+ */
+/*
+ * Its own DAEMON, and it holds the real port. Neither half of that is a detail.
+ *
+ * The surface is read once at daemon startup, not per proxy — dynamic-tools.ts says so in the note
+ * it attaches to every catalogue. Pointed at a port another daemon already owns, this inherited
+ * that daemon's surface and every `reticle_run` call below answered "Tool reticle_run not found",
+ * which `rejected()` did not recognise, so five checks passed having called nothing at all.
+ *
+ * And it is THIS one that gets RETICLE_PORT, because the app under test connects to whatever
+ * daemon holds that port. Given the side port instead, it drove a browser that dialled somebody
+ * else, so it owned no session and every envelope answered "no connected session" — accepted
+ * arguments, no answer, and only the one check that reads an ANSWER caught it.
  */
 const extended = new McpStdioClient(
   'node',
@@ -93,10 +116,18 @@ async function viaRun(tool, args) {
   }
 }
 
-/** An answer that means "this tool does not exist" or "these arguments are wrong". */
-const rejected = (answer) =>
-  typeof answer?.error === 'string' &&
-  /unknown tool|does not accept|unknown parameter|required/i.test(answer.error);
+/**
+ * An answer that means "this tool does not exist" or "these arguments are wrong".
+ *
+ * `raw` is checked as well as `error`, and that is what this missed: a transport-level refusal
+ * comes back as unparsed text (`MCP error -32602: Tool reticle_run not found`) with no `error`
+ * field, so five checks read it as acceptance and went green against a tool that was not there.
+ */
+const rejected = (answer) => {
+  const text =
+    typeof answer?.error === 'string' ? answer.error : typeof answer?.raw === 'string' ? answer.raw : '';
+  return /unknown tool|not found|does not accept|unknown parameter|required|-32602/i.test(text);
+};
 
 process.on('exit', () => {
   client.stop?.();
@@ -125,18 +156,46 @@ for (const tool of ['reticle_flow_replay', 'reticle_record', 'reticle_flow_save'
 chk('reticle_run is NOT advertised: the default nine are a CLOSED surface', !names.has('reticle_run'));
 chk('reticle_verify IS advertised, so the skill teaches it directly', names.has('reticle_verify'));
 
+// Proving the SECOND surface is actually extended. Without this the envelope section below can run
+// entirely against a merged daemon and report success for calls that never happened.
+const extendedNames = new Set((await extended.listTools()).map((t) => t.name));
+chk(
+  'the extended surface really does advertise reticle_run, or the section below proves nothing',
+  extendedNames.has('reticle_run'),
+  `${extendedNames.size} tools`,
+);
+
 // A real driven session first, or every answer below is "no browser session connected" — which the
 // envelope check would still pass (the arguments were accepted) while proving nothing about what the
 // tools actually answer. The skill's claims are about the answers.
+//
+// Asked of `extended`, NOT `client`, and that is the whole point: these are two daemons on two
+// ports, each driving its own copy of the app, and a session id is only meaningful to the daemon
+// that owns it. Taken from `client` it named a session `extended` had never seen, so every envelope
+// below answered "no connected session with id …" — which `rejected()` does not treat as a refusal,
+// because the arguments really were accepted. The calls went green and the one check that reads an
+// ANSWER rather than an acceptance was the only one that noticed.
 const [driven] = await waitForSession(
   async () => {
-    const r = await client.request('tools/call', { name: 'reticle_session', arguments: { action: 'list' } }, 30_000);
-    const text = (r?.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n');
-    try {
-      return JSON.parse(text)?.sessions ?? [];
-    } catch {
-      return [];
+    // `reticle_sessions` first, and that ordering is the point: the MERGED `reticle_session
+    // { action: "list" }` is a DEFAULT-surface shape, and this daemon runs the extended one, where
+    // the unmerged tool is what is advertised. Asking for the merged name here returned a protocol
+    // error, which this poll swallowed as "no sessions yet" and then spent sixty seconds proving.
+    // Both names are tried so the poll survives whichever surface it is pointed at.
+    for (const call of [
+      { name: 'reticle_sessions', arguments: {} },
+      { name: 'reticle_session', arguments: { action: 'list' } },
+    ]) {
+      const r = await extended.request('tools/call', call, 30_000).catch(() => undefined);
+      const text = (r?.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n');
+      try {
+        const sessions = JSON.parse(text)?.sessions;
+        if (Array.isArray(sessions)) return sessions;
+      } catch {
+        /* the other spelling, or genuinely nothing yet */
+      }
     }
+    return [];
   },
   (s) => String(s?.url ?? '').startsWith(APP),
   { what: `the driven app on ${APP}` },
