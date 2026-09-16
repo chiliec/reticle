@@ -426,3 +426,37 @@ describe('applySnapshotDelta surfaces the growth note (#787)', () => {
     expect(out.growthWarning).toBeUndefined();
   });
 });
+
+/**
+ * A baseline belongs to the CLIENT it was sent to, not to the daemon.
+ *
+ * `diff: true` answers "what changed since the tree I last sent you", and the key carries only
+ * session, scope and mode — nothing about who asked. One daemon serves every agent on the machine,
+ * so while the cache sat at module scope two agents looking at one session shared a baseline: the
+ * second was answered `unchanged` about a page it had never been sent, which is a confident
+ * description of something it has not seen and cannot detect. The fix is ownership, not a longer
+ * key — `createMcpServer` runs once per attach and now hands each one its own store.
+ *
+ * The first case is the bug, kept as the thing being ruled out; the second is the repair.
+ */
+describe('snapshot baselines belong to one client', () => {
+  const page = { tree: 'a\nb\nc', status: { route: '/' } };
+  const opts = { sessionId: 's', scope: '', mode: 'full', diff: true } as const;
+
+  it('ONE shared cache hands the second caller a diff against a tree it never received', () => {
+    const shared = new SnapshotCache();
+    applySnapshotDelta(page, opts, shared);
+    const second = applySnapshotDelta(page, opts, shared) as { mode?: string };
+    // Not a defect in the cache — it is the reason a daemon-wide one cannot be correct.
+    expect(second.mode).toBe(SnapshotDeltaMode.UNCHANGED);
+  });
+
+  it('a cache per client answers each of them in full the first time', () => {
+    const agentA = new SnapshotCache();
+    const agentB = new SnapshotCache();
+    applySnapshotDelta(page, opts, agentA);
+    const forB = applySnapshotDelta(page, opts, agentB) as { mode?: string; reason?: string };
+    expect(forB.mode).toBe(SnapshotDeltaMode.FULL);
+    expect(forB.reason).toBe('first snapshot for this route');
+  });
+});

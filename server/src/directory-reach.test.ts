@@ -634,6 +634,11 @@ const REACHES_FOR: Record<string, readonly string[]> = {
     'project',
     'read',
     'recording',
+    // `reticle_reconcile` consults the reference `Witness` — the observer OUTSIDE the app, which is
+    // a realm-level thing and belongs there. The tool used to inline its own `fetch` instead, so the
+    // class bound to the protocol's SPI had no production caller and could drift from the behaviour
+    // that actually ships. One edge is the price of there being one implementation.
+    'realm',
     'resolve',
     'runs',
     'session',

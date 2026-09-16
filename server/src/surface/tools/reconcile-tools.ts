@@ -17,6 +17,7 @@ import { withControl } from '../../portal/session/control-envelope.js';
 import { asNumber, asString } from '@reticlehq/core';
 import { type ToolDef, sessionIdShape, commandOrThrow } from './tool-kit.js';
 import { readCompleteTree } from './read/complete-snapshot.js';
+import { HttpWitness } from '../../portal/realm/http-witness.js';
 
 /**
  * Does the screen agree with the data the app was given?
@@ -157,19 +158,39 @@ export const RECONCILE_TOOLS: ToolDef[] = [
       if (witnessArg !== null && 'object' === typeof witnessArg) {
         const { url, expect: needle } = witnessArg as { url: string; expect?: string };
         const appClaims = withBody > 0 && 0 === mismatches.length;
-        let saw: boolean | undefined;
-        let unreachable: string | undefined;
-        try {
-          const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(WITNESS_MS) });
-          if (!res.ok) {
-            unreachable = `the observer answered ${String(res.status)}`;
-          } else {
-            const text = await res.text();
-            saw = needle === undefined ? text.trim().length > 0 : text.includes(needle);
-          }
-        } catch (e) {
-          unreachable = e instanceof Error ? e.message : String(e);
-        }
+        /*
+         * Through `HttpWitness`, not a bare `fetch` — this used to be its own inline request, so the
+         * protocol's reference witness had no production caller and the class that IS bound to the
+         * `Witness` SPI could drift from the behaviour that actually ships without anything going
+         * red. Two implementations of "look from outside and say what you saw" is one more than the
+         * evidence is worth.
+         *
+         * A non-2xx answer is raised here rather than inside the witness, because a witness that
+         * could not look must report a blind spot and not an observation: `witnessDisagreement`
+         * reads "observed nothing, nothing hidden" as the world contradicting the app, which would
+         * turn a 404 on the observer's own endpoint into an accusation against somebody else's code.
+         */
+        const observer = new HttpWitness({
+          url,
+          fetch: async (target) => {
+            const res = await fetch(target, {
+              method: 'GET',
+              signal: AbortSignal.timeout(WITNESS_MS),
+            });
+            if (!res.ok) throw new Error(`the observer answered ${String(res.status)}`);
+            return res;
+          },
+          now: () => Date.now(),
+        });
+        const witnessWindow = observer.openWindow(WITNESS_MS);
+        const seen = await observer.observe(witnessWindow);
+        const unreachable = (await observer.coverage(witnessWindow)).blindSpots[0]?.detail;
+        const saw =
+          unreachable !== undefined
+            ? undefined
+            : needle === undefined
+              ? seen.length > 0
+              : seen.some((o) => String(o.value).includes(needle));
         witness = witnessDisagreement({
           appClaims,
           witnessSaw: saw,

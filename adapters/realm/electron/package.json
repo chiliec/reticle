@@ -8,7 +8,11 @@
   "type": "module",
   "exports": {
     "./preload": "./preload.cjs",
-    "./main": "./main.cjs"
+    "./main": {
+      "types": "./main.d.cts",
+      "default": "./main.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "dependencies": {
     "@reticlehq/core": "workspace:*"
@@ -31,6 +35,7 @@
   "files": [
     "preload.cjs",
     "main.cjs",
+    "main.d.cts",
     "README.md",
     "NOTICE"
   ],

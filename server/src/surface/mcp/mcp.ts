@@ -15,7 +15,7 @@ import { ReticleTool } from '@reticlehq/core';
 import { SHARED_PARAM_SHORT } from './shared-params.js';
 import { buildDynamicTools } from '../tools/dynamic-tools.js';
 import { runTool, SESSION_BOUND_TOOLS } from '../tools/invoke-tool.js';
-import { sessionEnvelopeShape } from '../tools/tool-kit.js';
+import { sessionEnvelopeShape, newSnapshotCache } from '../tools/tool-kit.js';
 import { buildErrorPayload } from '../tools/error-recovery.js';
 import { takeVersionSkewOnto } from '../../command/version/version-nudge.js';
 import { resultIsError } from './faults/mcp-is-error.js';
@@ -523,7 +523,7 @@ function toolNameOf(request: unknown): string | undefined {
 const FIRST_PARTY_TOOL_NAMES: ReadonlySet<string> = new Set(Object.values(ReticleTool));
 
 export function createMcpServer(
-  deps: ToolDeps,
+  rawDeps: ToolDeps,
   profile: ToolSurface = TOOL_SURFACE.DEFAULT,
   /**
    * Has an app ever connected for this project? Decides what the instructions LEAD with.
@@ -544,6 +544,17 @@ export function createMcpServer(
    */
   tools: readonly ToolDef[] = tableForSurface(profile),
 ): McpServer {
+  /*
+   * One snapshot baseline store per ATTACH, not one per daemon.
+   *
+   * A `diff: true` snapshot answers "what changed since the tree I last sent you", and one daemon
+   * serves every agent on the machine. Held at module scope the store was keyed on session, scope
+   * and mode with nothing about who asked, so two agents looking at one session shared a baseline
+   * and the second was told `unchanged` about a page it had never been sent. This function already
+   * runs once per client connection, which makes it the right owner; a caller that supplies its own
+   * store keeps it.
+   */
+  const deps = { snapshots: newSnapshotCache(), ...rawDeps };
   const encoding = (process.env[ENCODING_ENV] ?? '').toLowerCase();
   // Which surface this daemon advertises. The 18-tool default and the 48-tool full surface are
   // different products from inside an agent's context, so outcomes are only comparable when the

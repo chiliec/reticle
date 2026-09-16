@@ -59,7 +59,7 @@ import { FEEDBACK_TOOLS } from './feedback-tools.js';
 // Re-exported so tool modules that import these from './tools.js' keep working after the kit move.
 export type { ToolDef, ToolDeps } from './tool-kit.js';
 
-/** Per-server last-snapshot cache backing reticle_snapshot's diff:true delta mode (route-invalidated). */
+/** FALLBACK for `diff: true`; the real one is per MCP client on `deps.snapshots`, which says why. */
 const SNAPSHOT_CACHE = new SnapshotCache();
 
 /** Every handler, including tools retired from the advertised MCP surface. */
@@ -312,7 +312,7 @@ export const RAW_TOOLS: ToolDef[] = [
                     mode,
                     diff: true === args['diff'],
                   },
-                  SNAPSHOT_CACHE,
+                  deps.snapshots ?? SNAPSHOT_CACHE,
                 ),
                 mode,
               ),

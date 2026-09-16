@@ -16,6 +16,7 @@ import type { ArtifactRoot } from '../../memory/project/artifact-root.js';
 import type { FlowStore } from '../../language/flows/flows.js';
 import type { ProjectStore } from '../../memory/project/project-store.js';
 import type { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
+import { SnapshotCache } from './read/snapshot-delta.js';
 import type { BrowserPool } from '../../portal/pool/browser-pool.js';
 import type { ChromiumProbe } from '../../command/cli/doctor/browser/chromium-hint.js';
 
@@ -36,6 +37,15 @@ export interface ToolDeps<Ext = unknown> {
   flows: FlowStore;
   /** structured annotations accumulating for the live recording. */
   annotations: AnnotationStore;
+  /**
+   * This CLIENT's snapshot baselines, backing `diff: true`.
+   *
+   * Per MCP attach, never per daemon: the baseline is "the tree we last sent YOU", and one daemon
+   * serves every agent on the machine. Shared, the second agent to look at a session was answered
+   * `unchanged` against a page it had never been sent. Absent ⇒ the module-level fallback in
+   * `tools.ts`, which keeps every existing `ToolDeps` construction working unchanged.
+   */
+  snapshots?: SnapshotCache;
   /** cross-run outcome memory (.reticle/project.json). */
   project: ProjectStore;
   /** optional native-input provider. undefined ⇒ everything stays synthetic. */
@@ -273,3 +283,12 @@ export async function snapshotTree(
   const snap = (result.result ?? {}) as SnapshotResult;
   return { lines: normalizeLines(snap.tree ?? ''), route: snap.status?.route ?? '' };
 }
+
+/**
+ * One client's snapshot baselines.
+ *
+ * Lives here rather than in the `tools.ts` barrel, which sits at the file-size cap, and rather than
+ * having the MCP layer reach into `read/` for the class — this kit is what the surface already
+ * imports. See `ToolDeps.snapshots` for why a daemon-wide store cannot be correct.
+ */
+export const newSnapshotCache = (): SnapshotCache => new SnapshotCache();
