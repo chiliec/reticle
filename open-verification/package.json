@@ -53,7 +53,7 @@
     "build": "tsc -b && node scripts/gen-schema.mjs",
     "prepack": "node ../scripts/prepare-dist.mjs --clean dist && tsc -b --force && node scripts/gen-schema.mjs && node ../scripts/prepare-dist.mjs dist",
     "test:unit": "vitest run --passWithNoTests",
-    "test:guards": "vitest run --passWithNoTests"
+    "test:guards": "node ../scripts/guard-tests.mjs guards"
   },
   "dependencies": {
     "zod": "^3.23.8"

@@ -24,14 +24,20 @@ describe('nothing under apps/ can reach a registry', () => {
   it('every app is private', () => {
     const appsDir = join(REPO, 'apps');
     const leaked: string[] = [];
+    let checked = 0;
     for (const entry of readdirSync(appsDir)) {
       const manifest = join(appsDir, entry, 'package.json');
       if (!existsSync(manifest)) continue;
+      checked += 1;
       const pkg: unknown = JSON.parse(readFileSync(manifest, 'utf8'));
       const isPrivate =
         'object' === typeof pkg && null !== pkg && true === (pkg as { private?: unknown }).private;
       if (!isPrivate) leaked.push(entry);
     }
+    // The denominator. `continue` on a missing manifest means a layout that nests apps one level
+    // deeper reports "every app is private" having read none — and the failure this guards is a 403
+    // mid-publish, after eleven packages are already live.
+    expect(checked, 'no app manifest was read').toBeGreaterThan(5);
     // `pnpm -r publish` skips private packages and offers everything else to npm. An app that is not
     // private is a fixture published under a name nobody here owns.
     expect(leaked).toEqual([]);

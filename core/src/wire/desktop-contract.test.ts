@@ -85,32 +85,43 @@ describe('desktop contract generation', () => {
  */
 describe('desktop contract — the Rust capture helper', () => {
   const CRATE = join(CRATE_SRC, 'capture.rs');
+  const LIB = join(CRATE_SRC, 'lib.rs');
+
+  /**
+   * Read a crate file, or FAIL naming it.
+   *
+   * Every check below used to open with `if (!existsSync(x)) return;`, which turned "the file moved"
+   * into "nothing to check" — five tests passing on an empty room. That is not hypothetical: the
+   * crate moved to `adapters/realm/tauri` and the whole describe went quiet until `CRATE_SRC` was
+   * re-derived. These files are tracked, so a clone always has them and an absence is a defect in
+   * this guard's idea of where they live — which is exactly what it must say out loud.
+   */
+  const crateSource = (path: string): string => {
+    expect(existsSync(path), `${path} is missing — the crate moved and CRATE_SRC did not`).toBe(
+      true,
+    );
+    return readFileSync(path, 'utf8');
+  };
 
   it('spells the capture prefix exactly as the daemon requires', () => {
-    if (!existsSync(CRATE)) return; // the crate is not part of the TypeScript build
-    const source = readFileSync(CRATE, 'utf8');
+    const source = crateSource(CRATE);
     expect(source).toContain(`{CAPTURE_FILE_PREFIX}`);
   });
 
   it('defines that prefix as the value the daemon checks for', () => {
-    const lib = join(CRATE_SRC, 'lib.rs');
-    if (!existsSync(lib)) return;
-    expect(readFileSync(lib, 'utf8')).toContain(
+    expect(crateSource(LIB)).toContain(
       `const CAPTURE_FILE_PREFIX: &str = "${DESKTOP_CONTRACT.RETICLE_CAPTURE_FILE_PREFIX}";`,
     );
   });
 
   it('spells the full-page refusal exactly as the daemon reads it', () => {
-    const lib = join(CRATE_SRC, 'lib.rs');
-    if (!existsSync(lib)) return;
-    expect(readFileSync(lib, 'utf8')).toContain(
+    expect(crateSource(LIB)).toContain(
       `pub const FULL_PAGE_UNSUPPORTED: &str = "${DESKTOP_CONTRACT.RETICLE_FULL_PAGE_UNSUPPORTED}";`,
     );
   });
 
   it('registers the command name the SDK invokes', () => {
-    const capture = existsSync(CRATE) ? readFileSync(CRATE, 'utf8') : '';
-    if ('' === capture) return;
+    const capture = crateSource(CRATE);
     expect(capture).toContain(`pub async fn ${DESKTOP_CONTRACT.RETICLE_TAURI_CAPTURE_COMMAND}(`);
   });
 
@@ -120,9 +131,7 @@ describe('desktop contract — the Rust capture helper', () => {
    * that `hide()` is dead on every machine.
    */
   it('parks the macOS headless window off-screen rather than calling hide()', () => {
-    const lib = join(CRATE_SRC, 'lib.rs');
-    if (!existsSync(lib)) return;
-    const source = readFileSync(lib, 'utf8');
+    const source = crateSource(LIB);
     expect(source).toContain('OFFSCREEN_PX');
     const fn = source.split('pub fn on_page_load')[1];
     expect(fn, 'on_page_load missing from lib.rs').toBeDefined();

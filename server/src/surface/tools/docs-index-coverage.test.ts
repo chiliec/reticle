@@ -288,8 +288,9 @@ describe('docs/docs.json publishes every doc', () => {
     );
 
     const problems: string[] = [];
+    let checked = 0;
     for (const file of markdownPages()) {
-      if (!file.startsWith('tools-') || !file.endsWith('.mdx')) continue;
+      if (!file.startsWith('tools/') || !file.endsWith('.mdx')) continue;
       const text = readFileSync(join(DOCS, file), 'utf8');
 
       // The tool this page documents, taken from its frontmatter title.
@@ -309,6 +310,7 @@ describe('docs/docs.json publishes every doc', () => {
       }
       if (null === parsed || 'object' !== typeof parsed || Array.isArray(parsed)) continue;
 
+      checked += 1;
       for (const key of Object.keys(parsed)) {
         if (!names.has(key)) {
           problems.push(
@@ -318,6 +320,16 @@ describe('docs/docs.json publishes every doc', () => {
         }
       }
     }
+
+    // The denominator, and this guard is the reason to insist on one. The filter above read
+    // `tools-` until the tool pages moved into `docs/tools/`, after which it matched no file at
+    // all: `problems` was empty because nothing was examined, and an empty list of problems is
+    // indistinguishable from a clean one. Counting what was actually validated is the only part
+    // that can tell those two apart.
+    expect(
+      checked,
+      'no tool page was validated — the page layout moved and this filter did not',
+    ).toBeGreaterThan(10);
 
     expect(
       problems,

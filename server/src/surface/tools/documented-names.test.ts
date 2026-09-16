@@ -13,7 +13,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ReticleTool, FlowStepTool } from '@reticlehq/core';
 import { REPO_ROOT } from '../../machine/repo-root.js';
@@ -92,6 +92,22 @@ function shippedNames(): Set<string> {
 
 describe('agent-facing docs name only things that exist', () => {
   const shipped = shippedNames();
+
+  /**
+   * The denominator for every check below.
+   *
+   * Each of them opens a doc in a `try` and returns on failure, so a renamed or moved file turns
+   * thirty-six assertions about the text an agent is handed into thirty-six silent passes. Asserting
+   * the list resolves first means the `catch` can only ever swallow a genuinely unreadable file, and
+   * that case reddens here instead.
+   */
+  it('every documented path resolves, so the checks below are about real text', () => {
+    for (const doc of AGENT_DOCS) {
+      expect(existsSync(join(REPO, doc)), `${doc} is listed here but not on disk`).toBe(true);
+    }
+    expect(AGENT_DOCS.length, 'no agent-facing doc is listed').toBeGreaterThan(0);
+  });
+
   for (const doc of AGENT_DOCS) {
     it(`${doc} has no ghost reticle_* names`, () => {
       let text: string;

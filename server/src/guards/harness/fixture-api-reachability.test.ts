@@ -55,7 +55,13 @@ function sourceFiles(dir: string): string[] {
 
 describe('bench-app requests reach the API', () => {
   it('no source fetches a relative /api/ path — there is no dev-server proxy', () => {
-    const offenders = sourceFiles(SRC)
+    const files = sourceFiles(SRC);
+    // The denominator. Moving the fixture's components out of `src/` leaves the directory present
+    // and empty of `.tsx`, and an empty offender list then means "nothing was read", not "nothing
+    // is wrong". The defect behind this guard is a relative `/api/` fetch resolving to a 200 SPA
+    // fallback — a benchmark false green, which is the expensive kind to not notice.
+    expect(files.length, `no source file under ${relative(REPO, SRC)}`).toBeGreaterThan(0);
+    const offenders = files
       .filter((file) => RELATIVE_API_FETCH.test(readFileSync(file, 'utf8')))
       .map((file) => relative(REPO, file));
     expect(offenders).toEqual([]);

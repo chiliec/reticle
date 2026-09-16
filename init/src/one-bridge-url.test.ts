@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bridgeWsUrl, RETICLE_CLIENT_HOST } from '@reticlehq/core';
@@ -26,6 +26,14 @@ const GENERATOR_DIR = fileURLToPath(new URL('.', import.meta.url));
 
 /** Files that legitimately name both hosts: CSP advice must allow whatever the USER wrote. */
 const ALLOWED = new Set(['csp-check.ts', 'desktop-doctor.ts', 'one-bridge-url.test.ts']);
+
+/** Every source file under `dir`, as paths relative to it. Generators live a directory down. */
+const walk = (dir: string, prefix = ''): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory()
+      ? walk(join(dir, entry.name), `${prefix}${entry.name}/`)
+      : [`${prefix}${entry.name}`],
+  );
 
 describe('every generated connect URL comes from bridgeWsUrl', () => {
   it('emits one host across every stack', () => {
@@ -57,16 +65,24 @@ describe('every generated connect URL comes from bridgeWsUrl', () => {
     // say so as a failure, not as somebody else's timeout.
     let files: string[] = [];
     expect(() => {
-      files = readdirSync(GENERATOR_DIR);
+      files = walk(GENERATOR_DIR);
     }, `could not read ${GENERATOR_DIR}`).not.toThrow();
     for (const file of files) {
-      if (!file.endsWith('.ts') || file.endsWith('.test.ts') || ALLOWED.has(file)) continue;
-      const path = join(GENERATOR_DIR, file);
-      if (!statSync(path).isFile()) continue;
-      const source = readFileSync(path, 'utf8');
+      const base = file.split(/[\\/]/).pop() ?? '';
+      if (!file.endsWith('.ts') || file.endsWith('.test.ts') || ALLOWED.has(base)) continue;
+      const source = readFileSync(join(GENERATOR_DIR, file), 'utf8');
       // A literal host between `ws://` and `:` — an interpolated `${…}` is the constant doing its job.
       if (/ws:\/\/[a-z0-9.]+:/i.test(source)) offenders.push(file);
     }
+
+    // The denominator. This scan was flat, and every generator lives in `patch/` — so it read only
+    // the top level, found no generator at all, and reported an empty offender list forever. The
+    // `ALLOWED` set above is the tell: both files it excuses sit in `diagnose/`, a directory the
+    // scan could never reach. An empty result has to mean "looked and found nothing".
+    expect(
+      files.filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts')).length,
+      'no generator source was scanned',
+    ).toBeGreaterThan(10);
     expect(offenders).toEqual([]);
   });
 });

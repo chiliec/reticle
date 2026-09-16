@@ -4,13 +4,67 @@ All notable changes to the **`@reticlehq/*`** packages are documented here (each
 
 ## [Unreleased]
 
+## [3.1.0] — 2026-09-16
+
+The release that made a verification something the agent no longer has to author. v3.0.0 split the protocol out and rearranged the repository around it; this one spends that structure on the half that was measurably not working — an engine that catches nearly every bug it structurally can, pointed at flows that declared almost nothing worth catching.
+
 ### Added
+
+- **`@reticlehq/server` — a drive is recorded whether or not anybody remembered to ask.** Recording used to be a mode an agent had to enter, which meant the flows that would have made the next run free were the ones nobody created. It is now a property of the session: what an agent drives is kept, compiled and replayable afterwards. The saved flow is the asset — the first run pays a model to discover the app, and every run after it replays deterministically with no model in the loop.
+
+- **`@reticlehq/server` — a flow gets stricter every time it runs, without anybody writing an assertion.** The consequence of an action is already in the effect record — the state diffs, the network, the signals, the route. Promoting it naively would be a tautology and a false-green generator: asserting what was observed always passes. So a finding is promoted to a guard only when it STOPS appearing, which is a fact about a fix rather than a hope about a run, and one quiet run is explicitly not enough. A flow therefore earns its oracles from evidence instead of being handed them by an agent that, measurably, would not write them.
+
+- **`@reticlehq/server` — a recorded step remembers whose code it touched**, so a re-verify can be scoped to the files a change actually affects rather than replaying everything.
+
+- **`@reticlehq/server` — composites: record, save and replay a flow that invokes another flow.** A journey is graded on the journey it runs, not on the step it happens to contain, and the replayer follows an invocation or refuses the ones it cannot — never silently flattening one into the other.
+
+- **`open-verification` — grammar v2: a document can invoke another, and say what it needs.** With it, the stitch check: a composite whose steps cannot line up is REFUSED rather than run into a meaningless verdict, and a failure now says WHERE it broke rather than only which number came back wrong.
+
+- **`@reticlehq/engine` — a predicate can assert a PROPERTY, not just equality.** An app whose output is a model's output is different every run and correct every time, and exact equality cannot express that. `nonEmpty`, `oneOf`, `withinTolerance`, `matchesPattern` and `type` can. Every one of them stays DETERMINISTIC on purpose: "ask a model whether it looks right" would make the verdict unfalsifiable, which is the exact failure `no-fault` exists to prevent.
+
+- **`@reticlehq/core` — a domain can register its own realm.** Mobile, game and service realms stop being aspirations in a document and become a shape the contract can carry.
+
+- **`@reticlehq/server` — `reticle_reconcile`: the observer outside the app becomes reachable, and disagrees out loud.** "The UI said saved and the witness saw no write" is not an inference — it is two independent observers contradicting each other, and it is the highest-grade evidence the protocol can produce.
+
+- **`@reticlehq/server` — the onboarding tour**, shown at the install and over the app itself, plus a one-line install and a funnel that says where people stop rather than leaving a drop-off to be guessed at.
+
+- **`@reticlehq/browser` — the gestures a web app actually receives.** Drag, scroll and pointer sequences as the page sees them, with a recorder that keeps what a drive proved.
+
+- **`@reticlehq/server` — `reticle_act` can name an element that does not exist yet**, so batching a sequence works across a step that creates its own target instead of failing on the ref that was not there when the batch was written.
+
+- **`@reticlehq/server` — `reticle_inspect` reports both scroll axes**, so clipped text is a number instead of a screenshot somebody has to look at. The regression that motivated it was caught without a pixel.
+
+- **`@reticlehq/engine` — a pass that proved something nobody named now says so**, and a route assertion survives being recorded — found on a real app, not in a test.
 
 - **`@reticlehq/engine` — three new published entry points, all of them shapes moving DOWN rather than new behaviour.** `disagreement/contradiction-types.js` (what a contradiction is, separated from the rules that find one), `question/predicate/predicate-eval-kit.js` (what an evaluation answers, and the four comparisons every oracle is written in) and `question/predicate/predicate-session.js` (the subset of a session the predicate engine needs, so a fake can be written without loading the evaluator). Each existed because a module that is CALLED by another had to import back out of its caller to declare its own signature. Adding a file under these directories is an import path somebody outside this repository may write, which is why it is recorded here and not only in the pinned list. Nothing moved out of an existing entry point: every previous import path still resolves to the same thing.
 
 ### Changed
 
+- **`@reticlehq/server` — the network observer stops billing the agent for the bundler's own traffic**, and returns a body when that body could decide a verdict. The saving is never silent: a truncated or withheld body says so, because a quiet omission is indistinguishable from evidence that did not exist.
+
 - **Every package in this repository is now free of import cycles except one, which is named and explained where it lives.** Nothing about what any package DOES changed — the fix in every case was to move a type or a small helper below the two modules that were reaching across each other for it. The one that stays is `reticle_verify { action: "explore" }`: a tool that drives the whole tool surface is reached from the registry that lists it, and the alternatives are a mutable registry holder (a load-order trap that would let the toolset's own test pass against an empty list) or a partial surface, which would contradict the rule that a harness run must drive exactly what an agent drives.
+
+### Performance
+
+- **18% off every verdict, all of it route.** Identical evidence, fewer bytes — measured on a real drive rather than on a synthetic payload.
+
+### Fixed
+
+- **Windows was not a supported platform and nothing said so.** An install there registered one agent in thirteen and reported the rest as manual; the installer could not see Claude Code, so nobody was ever shown the tour; every install printed a security warning at the user. Alongside them, nine guards and four gates that could never have passed on Windows — including a licence-boundary guard that was unchecked there and passing, and a first-load guard that looked for a bundler Windows cannot run.
+
+- **The onboarding tour was swallowing the agent's clicks**, dimming the thing its spotlight pointed at, and claiming five things its own screen did not support.
+
+- **Five defects a real drive found in the flow path, and none of them were in the replay engine** — a testid anchor whose source was on disk the whole time and nobody read it among them.
+
+- **A dev server nobody opened is no longer reported as an app that will never connect**, and a page refused on its token is no longer reported as a tab somebody closed. Both said the wrong thing about a state that was fine.
+
+- **A laptop publish shipped enterprise enforcement OFF and announced it on the wrong stream.**
+
+- **A documented call an agent could not actually make**, and the guard that was supposed to read the skills and never did.
+
+- **Field measurements about users were shipping in source comments**, and the guard meant to stop them read lines instead of sentences.
+
+- Three CodeQL findings that were real; three CI failures, two of which no local gate could have seen; and three harnesses that blamed the product for their own stale path.
 
 ## [3.0.0] — 2026-09-13
 
@@ -2020,10 +2074,30 @@ First public release. Reticle is the **proof layer for AI agents** — it verifi
 - **Dev-only and localhost-only by default**; observers are additive and reversible, and the SDK is tree-shaken out of production. No telemetry.
 - **Token efficiency** — a full verify loop is ~100 tokens vs ~7,300 for a full-tree snapshot (~73× on the common loop; ~1.8× full-tree-vs-full-tree). See [`docs/token-efficiency.md`](docs/token-efficiency.md) for the methodology and honest caveats.
 
+[3.1.0]: https://github.com/reticlehq/reticle/releases/tag/v3.1.0
+[3.0.0]: https://github.com/reticlehq/reticle/releases/tag/v3.0.0
+[2.14.0]: https://github.com/reticlehq/reticle/releases/tag/v2.14.0
+[2.13.1]: https://github.com/reticlehq/reticle/releases/tag/v2.13.1
+[2.13.0]: https://github.com/reticlehq/reticle/releases/tag/v2.13.0
+[2.12.0]: https://github.com/reticlehq/reticle/releases/tag/v2.12.0
+[2.11.0]: https://github.com/reticlehq/reticle/releases/tag/v2.11.0
+[2.10.0]: https://github.com/reticlehq/reticle/releases/tag/v2.10.0
+[2.9.0]: https://github.com/reticlehq/reticle/releases/tag/v2.9.0
+[2.8.0]: https://github.com/reticlehq/reticle/releases/tag/v2.8.0
+[2.7.0]: https://github.com/reticlehq/reticle/releases/tag/v2.7.0
+[2.6.0]: https://github.com/reticlehq/reticle/releases/tag/v2.6.0
+[2.5.0]: https://github.com/reticlehq/reticle/releases/tag/v2.5.0
+[2.4.0]: https://github.com/reticlehq/reticle/releases/tag/v2.4.0
+[2.3.0]: https://github.com/reticlehq/reticle/releases/tag/v2.3.0
+[2.2.1]: https://github.com/reticlehq/reticle/releases/tag/v2.2.1
+[2.2.0]: https://github.com/reticlehq/reticle/releases/tag/v2.2.0
+[2.1.0]: https://github.com/reticlehq/reticle/releases/tag/v2.1.0
+[2.0.1]: https://github.com/reticlehq/reticle/releases/tag/v2.0.1
+[2.0.0]: https://github.com/reticlehq/reticle/releases/tag/v2.0.0
+[1.3.1]: https://github.com/reticlehq/reticle/releases/tag/v1.3.1
+[1.2.0]: https://github.com/reticlehq/reticle/releases/tag/v1.2.0
 [1.0.0]: https://github.com/reticlehq/reticle/releases/tag/v1.0.0
-[0.9.0]: https://github.com/reticlehq/reticle/releases/tag/v0.9.0
 [0.8.0]: https://github.com/reticlehq/reticle/releases/tag/v0.8.0
-[0.7.0]: https://github.com/reticlehq/reticle/releases/tag/v0.7.0
 [0.6.10]: https://github.com/reticlehq/reticle/releases/tag/v0.6.10
 [0.5.0]: https://github.com/reticlehq/reticle/releases/tag/v0.5.0
 [0.4.0]: https://github.com/reticlehq/reticle/releases/tag/v0.4.0

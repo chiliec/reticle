@@ -24,6 +24,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { REPO_ROOT } from '../../machine/repo-root.js';
 
 const REPO = REPO_ROOT;
@@ -44,11 +46,38 @@ const NOTES = ['CHANGELOG.md', '.changes'];
  * Source of the packages we publish. Everything else — apps, bench harnesses, docs, CI — is either a
  * fixture or already its own document, and none of it belongs in release notes.
  *
- * Note the trailing `/*`: a git pathspec with a wildcard is matched against the WHOLE path, so
- * `packages/<pkg>/src` matches no file at all and quietly reports zero drift forever. That is the exact
- * failure this file exists to prevent, one level down.
+ * DERIVED, not written down, and that is the whole point. This constant used to read
+ * `packages/*&#47;src/*`, and its own comment warned that a pathspec matching nothing "quietly reports
+ * zero drift forever. That is the exact failure this file exists to prevent, one level down." The
+ * restructure that dissolved `packages/` then made it true one level UP: the guard reported zero
+ * undocumented commits from that day onward, while an entire release's worth of user-facing changes
+ * landed unlogged. A list of paths in a release guard outlives the layout it describes, so
+ * this reads the layout instead — every non-private package that has a `src`, found the same way
+ * `pnpm` finds them.
  */
-const SHIPPED_SOURCE = 'packages/*/src/*';
+const shippedSource = (): string[] => {
+  const manifests = git('ls-files', '*/package.json', 'package.json')?.split('\n') ?? [];
+  const roots = manifests
+    .filter((m) => m.length > 0 && !m.startsWith('apps/'))
+    .map((m) => dirname(join(REPO, m)))
+    .filter((dir) => {
+      if (!existsSync(join(dir, 'src'))) return false;
+      try {
+        return (
+          true !== (JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Manifest).private
+        );
+      } catch {
+        return false;
+      }
+    })
+    .map((dir) => `${relative(REPO, dir)}/src`);
+  return [...new Set(roots)].sort();
+};
+
+/** Only the fields this guard reads. */
+interface Manifest {
+  readonly private?: boolean;
+}
 
 /** Conventional-commit types whose commits have nothing a user would read in release notes. */
 const NOT_USER_FACING = /^(chore|test|ci|build|refactor|docs|style)(\(|!|:)/;
@@ -90,7 +119,14 @@ function undocumented(): string[] | null {
   if (changelogBeingWrittenNow()) return [];
   const last = git('log', '-1', '--format=%H', '--', ...NOTES);
   if (null === last || 0 === last.length) return null;
-  const subjects = git('log', '--no-merges', '--format=%s', `${last}..HEAD`, '--', SHIPPED_SOURCE);
+  const subjects = git(
+    'log',
+    '--no-merges',
+    '--format=%s',
+    `${last}..HEAD`,
+    '--',
+    ...shippedSource(),
+  );
   if (null === subjects) return null;
   return subjects
     .split('\n')
@@ -104,6 +140,28 @@ describe('the changelog is not far behind the code', () => {
     expect(git('log', '-1', '--format=%H', '--', ...NOTES)).toMatch(/^[0-9a-f]{7,40}$/);
   });
 
+  /**
+   * The denominator. A pathspec that matches nothing reports zero drift and passes forever, which is
+   * how this guard slept through a whole release — so "how many commits are undocumented" is only a
+   * real question once we know the paths we counted over are real. Every root must exist on disk and
+   * be one git itself can see; a restructure that moves them reddens HERE, naming the paths, instead
+   * of going quiet somewhere harmless.
+   */
+  it('the packages it counts over are real, so a zero means nothing changed and not nothing looked', ({
+    skip,
+  }) => {
+    if (null === git('rev-parse', '--git-dir')) skip();
+    const roots = shippedSource();
+    expect(roots.length, 'no publishable package with a src/ was found').toBeGreaterThan(5);
+    for (const root of roots) {
+      expect(existsSync(join(REPO, root)), `${root} does not exist`).toBe(true);
+      expect(
+        git('ls-files', root)?.length ?? 0,
+        `git tracks no file under ${root}`,
+      ).toBeGreaterThan(0);
+    }
+  });
+
   it(`at most ${String(MAX_UNDOCUMENTED_COMMITS)} user-facing commits since the changelog was last touched`, ({
     skip,
   }) => {
@@ -111,7 +169,7 @@ describe('the changelog is not far behind the code', () => {
     if (null === behind) skip();
     expect(
       behind?.length ?? 0,
-      `${String(behind?.length ?? 0)} user-facing commits have landed in ${SHIPPED_SOURCE} since ` +
+      `${String(behind?.length ?? 0)} user-facing commits have landed in ${shippedSource().join(', ')} since ` +
         `anyone touched ${NOTES.join(' or ')}. Add an entry file under .changes/ — batching is ` +
         `fine, forgetting is what this catches:\n${(behind ?? []).slice(0, 20).join('\n')}`,
     ).toBeLessThanOrEqual(MAX_UNDOCUMENTED_COMMITS);
