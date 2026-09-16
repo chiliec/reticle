@@ -2,9 +2,17 @@
  * Selectors for Reticle's own presenter overlay (cursor, HUD, glow) + the annotator's
  * UI (`data-reticle-mark`) - never observed/snapshotted. The annotator mounts by DEFAULT with the
  * presenter, so omitting its selector here leaked annotation chrome into every snapshot.
+ *
+ * `data-reticle-tour` is here for the same reason, and it was missing. The first-run tour declines
+ * only for a page Reticle itself opened, so a page opened by any OTHER automation — Playwright, a CI
+ * harness, a developer's own tab — gets it. Driving bench-app through the MCP surface on such a page:
+ * `reticle_look { action: "page" }` listed `dialog "Reticle tour"` with its Skip and Next buttons and
+ * named it in `visibleDialogs`, and every act came back `occluded: true` against a 1440x900 div at
+ * 0,0 that resolved to the tour's own scrim. The occlusion detector was right; the thing in the way
+ * was us, described to the agent as part of the app it was sent to verify.
  */
 export const RETICLE_OVERLAY: string =
-  '[data-reticle-overlay],[data-reticle-cursor],[data-reticle-hud],[data-reticle-glow],[data-reticle-mark],[data-reticle-blocker]';
+  '[data-reticle-overlay],[data-reticle-cursor],[data-reticle-hud],[data-reticle-glow],[data-reticle-mark],[data-reticle-blocker],[data-reticle-tour]';
 
 /** Known third-party dev overlays to keep out of snapshots (Agentation, Next dev UI). */
 const DEV_OVERLAYS =

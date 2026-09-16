@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { isReticleOverlay, isIgnored, isReticleUi } from './dom-ignore.js';
+import { isReticleOverlay, isIgnored, isReticleUi, RETICLE_OVERLAY } from './dom-ignore.js';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -132,5 +132,50 @@ describe('a source-stamped app element is page content, not Reticle UI', () => {
     } finally {
       host.remove();
     }
+  });
+});
+
+/**
+ * The first-run tour is Reticle's own chrome, and it was the one piece not on the list.
+ *
+ * `RETICLE_OVERLAY` names the overlay, cursor, HUD, glow, annotator marks and blockers. The tour
+ * mounts `[data-reticle-tour]` — a fixed, full-viewport root with a scrim over the app — and was
+ * never added, so it counted as PAGE CONTENT.
+ *
+ * MEASURED while driving bench-app through the MCP surface, on a page opened by Playwright (the tour
+ * declines only for pages Reticle itself opened, so any other automation gets it):
+ *
+ *   - `reticle_look { action: "page" }` listed `dialog "Reticle tour"` with its Skip and Next
+ *     buttons, and reported it in `visibleDialogs` — Reticle's own UI presented to the agent as the
+ *     app's, in a tool whose entire job is to describe the app;
+ *   - every act came back `occluded: true, occludedBy: "e8"`, and `e8` resolved to a 1440x900 div at
+ *     0,0 "rendered outside instrumented code" — the tour's own scrim, correctly detected, so the
+ *     occlusion warning was true and pointed at us;
+ *   - its slide changes are DOM mutations in the app's event stream.
+ *
+ * The blanket "any ancestor carries a data-reticle* attribute" rule is deliberately NOT what this
+ * file does, for the reasons below, so the tour joins the explicit list.
+ */
+describe('the first-run tour is Reticle UI, not the app', () => {
+  it('treats the tour root as Reticle overlay', () => {
+    const root = document.createElement('div');
+    root.setAttribute('data-reticle-tour', '');
+    document.body.appendChild(root);
+    expect(isReticleUi(root)).toBe(true);
+    expect(isIgnored(root)).toBe(true);
+  });
+
+  it('treats what the tour renders inside it as Reticle overlay too', () => {
+    const root = document.createElement('div');
+    root.setAttribute('data-reticle-tour', '');
+    root.innerHTML = '<div class="reticle-tour-card"><button>Next</button></div>';
+    document.body.appendChild(root);
+    const button = root.querySelector('button');
+    expect(button).not.toBeNull();
+    expect(isReticleUi(button as Element)).toBe(true);
+  });
+
+  it('is named in the shared overlay selector, so every consumer of it agrees', () => {
+    expect(RETICLE_OVERLAY).toContain('data-reticle-tour');
   });
 });
