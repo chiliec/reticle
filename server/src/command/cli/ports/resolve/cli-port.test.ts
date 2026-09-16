@@ -441,3 +441,26 @@ describe('finding the project config from a nested working directory', () => {
     expect(readProjectPort(nested)).toBe(4460);
   });
 });
+
+/**
+ * The scan states ABSENCE as a fact, so every port missing from it is a confident lie.
+ *
+ * `no-session-diagnosis` prints "No listener found that I can attribute to this project: the scan
+ * covers …" and derives that list from this set. Run against this repository's own bench-app, which
+ * serves on 4310, it reported nothing listening while the app was plainly up — the exact failure the
+ * set's own comment says the additions before these were made to prevent.
+ */
+describe('the scanned dev-server ports cover what people actually run', () => {
+  it('knows the defaults that were missing when the scan lied about an app that was running', () => {
+    // 4310 is this repo's bench-app — the fixture its own agents drive, and the one that caught this.
+    for (const p of [1234, 4000, 4310, 6006, 19006]) {
+      expect(isLikelyDevServerPort(p), `port ${String(p)} is not scanned`).toBe(true);
+    }
+  });
+
+  // The set does double duty: it also decides whether a `.reticle.json` BRIDGE port looks like a dev
+  // server. Widening it must not start warning about the multi-app bridge range people are told to use.
+  it('still leaves the bridge range alone after widening', () => {
+    for (const p of [4400, 4460, 4461, 4477]) expect(isLikelyDevServerPort(p)).toBe(false);
+  });
+});

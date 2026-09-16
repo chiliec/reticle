@@ -16,6 +16,8 @@ All notable changes to the **`@reticlehq/*`** packages are documented here (each
 
 - **`@reticlehq/server` — a one-shot verdict no longer disagrees with itself.** `verify --expect` read the verdict from `structuredContent` only, so a daemon answering with it as text printed `verified: unknown` on the headline while the JSON underneath said `"verified":"no"`. The exit code was right either way; the line a reader acts on was not.
 
+- **`@reticlehq/init` — the port scan behind "nothing is listening" covers five more defaults.** That sentence states absence as a fact, so a port missing from the set is not a gap in the answer, it is a wrong answer delivered confidently — which is what the set's own comment says the previous additions were for. Run against Reticle's own bench-app it reported nothing listening while the app was serving. Added Parcel (1234), the common Node/GraphQL default (4000), bench-app's own port (4310), Storybook (6006) and Expo web (19006). The set also decides whether a `.reticle.json` bridge port looks like a dev-server port, and the multi-app bridge range people are told to use is untouched.
+
 - **`@reticlehq/browser` — the HUD says what it is looking for again.** Every lookup rendered `Finding [testid=]`, with nothing in the brackets. `str()` takes a `fallback = ''` and so never returns `undefined`, which made every `??` after it dead and every `!== undefined` after it always true: the testid branch always won, and the role/name/text fallbacks under it were unreachable. The same mistake printed `Inspecting ` with a trailing space and `Reading state: ` with nothing after the colon.
 
 ## [3.1.0] — 2026-09-16

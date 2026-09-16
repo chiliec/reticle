@@ -35,6 +35,14 @@ export const DEV_SERVER_PORTS: ReadonlySet<number> = new Set([
   5175, // Vite, third instance
   7860, // Gradio
   8501, // Streamlit
+  // The same lesson again, from a run against Reticle's own bench-app: the scan reported "nothing is
+  // listening" while the app was serving on 4310. Absence is stated here as a fact, so a port left
+  // out is not a gap in the answer, it is a wrong answer delivered confidently.
+  1234, // Parcel
+  4000, // the common Node/GraphQL dev default
+  4310, // Reticle's own bench-app, the fixture its agents drive
+  6006, // Storybook
+  19006, // Expo web
 ]);
 
 export function isLikelyDevServerPort(port: number): boolean {
