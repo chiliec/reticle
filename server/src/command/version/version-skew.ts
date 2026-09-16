@@ -131,10 +131,24 @@ export function describeSkew(peer: PeerIdentity, self: SelfIdentity): string | u
       `a bare -32000 with nothing naming a version. ${peer.fix}`
     );
   }
+  /*
+   * A fingerprint alone cannot tell an ADDITION from a RENAME, so this sentence must not claim it can.
+   *
+   * It used to end "so this is a real mismatch, not a harmless patch difference. Tools will behave in
+   * ways neither side reports." Both halves are assertions the evidence does not support: the hash is
+   * a hash. `CONTRACT_PARTS` exists so the branch above can say something stronger when the peer is
+   * new enough to list what it speaks — and a peer that reaches HERE is, by definition, one that
+   * predates that list.
+   *
+   * Which is exactly the 2.x page meeting a 3.x daemon. This release added `scroll`, `tap` and `zoom`
+   * to the actions, and nothing else the page needs; every upgrading user with a pinned SDK would
+   * have been told their tools were misbehaving, about a change that breaks nothing.
+   */
   return (
-    `version skew: ${versionPhrase(peer, self)}, and they speak DIFFERENT wire contracts ` +
-    `(${peer.contract} vs ${self.contract}) — so this is a real mismatch, not a harmless patch ` +
-    `difference. Tools will behave in ways neither side reports. ${peer.fix}`
+    `version skew: ${versionPhrase(peer, self)}, and they were built against different wire ` +
+    `contracts (${peer.contract} vs ${self.contract}). ${peer.what} is too old to say WHICH names ` +
+    `it speaks, so this cannot tell an added name — which breaks nothing — from a renamed one, ` +
+    `which breaks the call that uses it. Update it and the question goes away. ${peer.fix}`
   );
 }
 

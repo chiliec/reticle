@@ -23,6 +23,7 @@ import {
   RATE_CAP_HIGH_VALUE_RESERVE_RATIO,
   type HelloMessage,
   CONTRACT_FINGERPRINT,
+  CONTRACT_PARTS,
 } from '@reticlehq/core';
 import { Session } from '@/portal/session/session.js';
 import { SessionManager } from '@/portal/session/session-manager.js';
@@ -617,9 +618,19 @@ export class Bridge {
               what: 'the page',
               version: parsed.sdkVersion,
               contract: parsed.contract,
+              // What the page SPEAKS, when it is new enough to say. Forwarded so `describeSkew` can
+              // compare names instead of hashes — the branch that was written for this and had no
+              // producer until the SDK started sending it.
+              ...(parsed.contractParts === undefined
+                ? {}
+                : { contractParts: parsed.contractParts }),
               fix: this.#sdkFix(),
             },
-            { version: SERVER_VERSION, contract: CONTRACT_FINGERPRINT },
+            {
+              version: SERVER_VERSION,
+              contract: CONTRACT_FINGERPRINT,
+              contractParts: CONTRACT_PARTS,
+            },
           );
           // Kept so a remedy can check whether it applies to THIS page — see body-capture-remedy.
           session.sdkVersion = parsed.sdkVersion;

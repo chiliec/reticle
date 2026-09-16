@@ -227,6 +227,21 @@ export const TRANSPORT_LIMITS = {
   MAX_URL_LENGTH: 4096,
   MAX_TITLE_LENGTH: 512,
   MAX_ADAPTERS: 32,
+  /*
+   * The cap on ONE vocabulary in `contractParts` — the commands, events or actions a peer says it
+   * speaks.
+   *
+   * Its own number, and the reason is an outage this nearly shipped. `contractParts` reused
+   * `MAX_ADAPTERS` (32), and this implementation's own event vocabulary is larger than that. The
+   * field had never had a producer, so nothing had ever tried: the first build to actually send it
+   * had every HELLO rejected by the schema and NO SESSION COULD CONNECT AT ALL. The unit gate is
+   * blind to it — the schema accepts the shape in isolation, and only a real page talking to a real
+   * daemon fails — so the e2e battery is what caught it.
+   *
+   * 128 leaves the vocabularies room to roughly triple. A cap here is still worth having: this
+   * arrives on an unauthenticated HELLO, so it is an untrusted list whose size we choose.
+   */
+  MAX_CONTRACT_NAMES: 128,
   MAX_ADAPTER_NAME_LENGTH: 128,
   MAX_TOKEN_LENGTH: 512,
   MAX_COMMAND_ID_LENGTH: 128,

@@ -58,3 +58,32 @@ export const CONTRACT_FINGERPRINT = fingerprintOf({
   actions: Object.values(ActionType),
   events: Object.values(EventType),
 });
+
+/**
+ * The same vocabulary, by NAME rather than by hash — what a peer announces so skew can be decided
+ * structurally.
+ *
+ * ── WHY IT EXISTS AND WHY NOTHING SENT IT ───────────────────────────────────────────────────────
+ * `contractParts` was added to the HELLO schema and read by `describeSkew`, and NOTHING EVER
+ * PRODUCED IT. The comparison written to prevent a false alarm was therefore dead on the only peer
+ * that matters, and every page fell through to the hash branch: "they speak DIFFERENT wire
+ * contracts — tools will behave in ways neither side reports".
+ *
+ * A hash answers "same" or "different" and nothing else, so it cannot tell an ADDITIVE change from
+ * a breaking one. This release added `scroll`, `tap` and `zoom` to `ActionType` — three names an
+ * older page never needs to know — and that alone moves the hash. Every user upgrading from 2.14.0
+ * with a pinned SDK would have met that sentence on their first session, about a change that breaks
+ * nothing.
+ *
+ * `messageKinds` is deliberately absent: it frames the envelope rather than naming a capability, so
+ * a peer that did not know a message kind could not have parsed the message carrying this list.
+ */
+export const CONTRACT_PARTS: {
+  readonly commands: readonly string[];
+  readonly events: readonly string[];
+  readonly actions: readonly string[];
+} = {
+  commands: Object.values(ReticleCommand),
+  events: Object.values(EventType),
+  actions: Object.values(ActionType),
+};

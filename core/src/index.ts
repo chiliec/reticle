@@ -90,6 +90,11 @@ export * from './telemetry-license.js'; // LicenseActivation — shared by the l
 export * from './telemetry-feedback.js'; // the two things a PERSON writes: feedback + a self-declared identity // anonymous adoption telemetry wire contract (DAU/WAU/MAU/installs)
 export * from './artifacts/impact.js'; // the user's own record of what Reticle has done for them (local only)
 export * from './artifacts/impact-savings.js'; // the savings model - one file, so every claim is derivable there
-export { CONTRACT_FINGERPRINT, fnv1a, fingerprintOf } from './identity/contract-fingerprint.js';
+export {
+  CONTRACT_FINGERPRINT,
+  CONTRACT_PARTS,
+  fnv1a,
+  fingerprintOf,
+} from './identity/contract-fingerprint.js';
 export { fingerprintFinding, type FindingIdentity } from './verdict/finding-fingerprint.js';
 export * from './words/unreachable-notice.js'; // the page's unreachable warning, as a contract the daemon parses

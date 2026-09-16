@@ -18,6 +18,7 @@ import {
   RETICLE_ROOT_GLOBAL,
   RETICLE_SDK_VERSION_GLOBAL,
   CONTRACT_FINGERPRINT,
+  CONTRACT_PARTS,
   newDocumentId,
   NO_EDITS_OBSERVED,
   PresenterMode,
@@ -675,6 +676,14 @@ export class Reticle {
       // Always present: derived from THIS build's core, so it needs no build plugin to supply it.
       // It is the half of the skew check that works on a hand-wired connect.
       contract: CONTRACT_FINGERPRINT,
+      // The same vocabulary by NAME, so the daemon can compare what each side SPEAKS instead of
+      // whether two hashes match. A hash cannot tell an added action from a renamed one, and an
+      // addition the page never needs to know about is not skew.
+      contractParts: {
+        commands: [...CONTRACT_PARTS.commands],
+        events: [...CONTRACT_PARTS.events],
+        actions: [...CONTRACT_PARTS.actions],
+      },
       ...(0 === this.#redactKeys.length ? {} : { redactKeys: this.#redactKeys }),
     };
   }

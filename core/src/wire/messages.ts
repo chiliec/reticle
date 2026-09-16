@@ -177,9 +177,9 @@ export const HelloMessageSchema = z.object({
    */
   contractParts: z
     .object({
-      commands: z.array(z.string()).max(TRANSPORT_LIMITS.MAX_ADAPTERS),
-      events: z.array(z.string()).max(TRANSPORT_LIMITS.MAX_ADAPTERS),
-      actions: z.array(z.string()).max(TRANSPORT_LIMITS.MAX_ADAPTERS),
+      commands: z.array(z.string()).max(TRANSPORT_LIMITS.MAX_CONTRACT_NAMES),
+      events: z.array(z.string()).max(TRANSPORT_LIMITS.MAX_CONTRACT_NAMES),
+      actions: z.array(z.string()).max(TRANSPORT_LIMITS.MAX_CONTRACT_NAMES),
     })
     .optional(),
   /** Whether the app has advertised a capability registry (reticle.describe). */
