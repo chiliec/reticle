@@ -34,6 +34,13 @@ export interface CrawlSession {
    *  for the same reason `currentDocumentId` is. */
   readonly url?: string | undefined;
   /**
+   * Is the page BACKGROUNDED? A hidden tab has its rAF clamped and the DOM observer flushes on rAF,
+   * so real renders emit nothing and every absence-derived contradiction reads that silence as a
+   * fault. Measured: a crawl of bench-app in a hidden tab reported state-vs-render on controls whose
+   * clicks demonstrably mounted DOM. Optional for the same reason `currentDocumentId` is.
+   */
+  throttled?(): boolean | undefined;
+  /**
    * Attribution window around each click. Optional so a caller can supply a minimal session, but a real
    * session MUST provide it: without a window the click's own effects carry no actionId, and an
    * unattributed ref-bearing event is learned as ambient background churn. A crawl clicks up to 25
@@ -455,6 +462,9 @@ export async function crawl(
       currentDocumentId: session.currentDocumentId,
       currentEditEpoch: session.currentEditEpoch,
       appOrigin: session.url,
+      // A hidden tab cannot be observed, so its silence is not evidence. Stated from the session
+      // rather than left to a heartbeat landing inside a 300ms window.
+      pageHidden: session.throttled?.(),
       // The crawl's window IS one control's click, so it can name the floor the consequence rules
       // need — without it a crawl would report nothing about the UI moving, which is most of what a
       // crawl is for.

@@ -946,3 +946,97 @@ describe('the store moved and the screen did not', () => {
  * is not the action's transition, and accusing every app with a loading indicator is how a detector
  * earns itself a mute.
  */
+
+/**
+ * A hidden tab cannot be observed, so its silence is not evidence.
+ *
+ * MEASURED against bench-app. `reticle_verify { action: "crawl" }` reported `state-vs-render` twice,
+ * every run, on controls that demonstrably worked: clicking ⌘K committed `paletteOpen: true` AND
+ * mounted the palette inside `#root` — confirmed in the live DOM. The window Reticle recorded for
+ * that click held the store change, the app's own `palette:opened` signal, and NO DOM event at all.
+ *
+ * The cause is in the window, not the app. Both `page.health` heartbeats in it carry `hidden: true`:
+ * the tab was backgrounded, where the browser throttles the rAF the DOM observer flushes on, so real
+ * mutations were never emitted. Every absence-derived rule then reads that silence as a fault and
+ * reports one confidently.
+ *
+ * Reticle already knows this everywhere else — the session carries `throttled: true`, the tools
+ * attach "tab throttled; timer/rAF/pointer gestures may silently no-op", and `reticle_assert` answers
+ * `unknown` with "a miss here is not evidence the UI is absent". The contradiction rules were the one
+ * place that had not been told.
+ */
+describe('absence proves nothing while the page is hidden', () => {
+  const hidden = (): ReticleEvent =>
+    ev(EventType.PAGE_HEALTH, { hidden: true, focused: false, reason: 'heartbeat' });
+  const visible = (): ReticleEvent =>
+    ev(EventType.PAGE_HEALTH, { hidden: false, focused: true, reason: 'heartbeat' });
+
+  it('does NOT report state-vs-render when the window says the tab was hidden', () => {
+    expect(causedKinds([stateChanged(), hidden()])).not.toContain(
+      ContradictionKind.STATE_VS_RENDER,
+    );
+  });
+
+  // The negative control: the same window on a VISIBLE page is the real finding and must survive.
+  it('still reports it when the page was visible throughout', () => {
+    expect(causedKinds([stateChanged(), visible()])).toContain(ContradictionKind.STATE_VS_RENDER);
+    expect(causedKinds([stateChanged()])).toContain(ContradictionKind.STATE_VS_RENDER);
+  });
+
+  // One hidden heartbeat anywhere in the window is enough: the flush it suppressed may be any of
+  // them, and a window that was hidden for part of its life cannot say which part lost events.
+  it('suppresses it when the tab was hidden for only part of the window', () => {
+    expect(causedKinds([visible(), stateChanged(), hidden()])).not.toContain(
+      ContradictionKind.STATE_VS_RENDER,
+    );
+  });
+
+  /*
+   * A fault the app POSITIVELY declared is still a fault.
+   *
+   * Hiding suppresses observation, so it can only manufacture absence. A failed request in the window
+   * is something that was seen, not something that was missed, and must keep reporting.
+   */
+  it('leaves evidence-derived findings alone — hiding cannot fake a failed call', () => {
+    expect(causedKinds([failedCall(), domChanged(), hidden()]).length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The session knows the tab is hidden; a 300ms window usually does not.
+ *
+ * `page.health` is a HEARTBEAT, roughly every six seconds, and a crawl's per-control window is about
+ * three hundred milliseconds. So whether the window carries the `hidden: true` marker is very nearly
+ * luck: re-running the crawl that started this, two of the three findings were suppressed and the
+ * third survived because no heartbeat happened to land inside it. A guard that works two times in
+ * three is not a guard.
+ *
+ * The fact is not in the window, it is in the SESSION — the daemon already carries `throttled` and
+ * puts it on every tool response. So the caller states it, and the engine stays pure.
+ */
+describe('a caller can state that the page was hidden', () => {
+  const hiddenOpts = { actionSince: 0, pageHidden: true };
+
+  it('suppresses an absence-derived finding with no heartbeat in the window at all', () => {
+    const found = findContradictions([stateChanged()], hiddenOpts).map((c) => c.kind);
+    expect(found).not.toContain(ContradictionKind.STATE_VS_RENDER);
+  });
+
+  it('reports it when the caller says the page was visible', () => {
+    const found = findContradictions([stateChanged()], {
+      actionSince: 0,
+      pageHidden: false,
+    }).map((c) => c.kind);
+    expect(found).toContain(ContradictionKind.STATE_VS_RENDER);
+  });
+
+  // Saying nothing must keep the old behaviour: a caller that cannot answer is not asserting silence.
+  it('still reports when the caller says nothing either way', () => {
+    expect(causedKinds([stateChanged()])).toContain(ContradictionKind.STATE_VS_RENDER);
+  });
+
+  it('leaves evidence-derived findings reporting even when hidden', () => {
+    const found = findContradictions([failedCall(), domChanged()], hiddenOpts);
+    expect(found.length).toBeGreaterThan(0);
+  });
+});

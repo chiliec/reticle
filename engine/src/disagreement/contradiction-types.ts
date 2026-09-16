@@ -33,6 +33,20 @@ export interface ContradictionOptions {
   /** The action that opened this window, when one did. Enables the no-effect check. */
   action?: string | undefined;
   /**
+   * Was the page HIDDEN while this window was recorded? Stated by the caller, which knows.
+   *
+   * A backgrounded tab has its rAF clamped, and the DOM observer flushes on rAF, so real mutations
+   * are never emitted and the window looks silent when the app in fact rendered. Every
+   * absence-derived rule then reads that silence as a fault.
+   *
+   * It has to be STATED rather than inferred from the window: `page.health` is a heartbeat every few
+   * seconds and a crawl's per-control window is a few hundred milliseconds, so whether the marker
+   * lands inside it is luck. The daemon already tracks this per session and reports it as
+   * `throttled` on every tool response. Undefined means the caller cannot answer, and the guard stays
+   * inert rather than silencing findings on a page that was fine.
+   */
+  pageHidden?: boolean | undefined;
+  /**
    * Events from BEFORE the window, used only to LEARN — never reported on. Some disagreements are
    * with something the API stated earlier in the session, which an action-scoped window cannot
    * contain. See `findUnitMismatches` for the measured case this exists for.
