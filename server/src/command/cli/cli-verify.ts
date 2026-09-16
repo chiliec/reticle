@@ -541,6 +541,7 @@ export function handleVerify(parsed: {
           port,
           ...(parsed.url !== undefined && '' !== parsed.url ? { url: parsed.url } : {}),
           predicate: parsed.expect,
+          ...(parsed.sessionId === undefined ? {} : { sessionId: parsed.sessionId }),
           ...((t: string | undefined) => (t === undefined || 0 === t.length ? {} : { token: t }))(
             readOrCreatePairingTokenSync(defaultPairingTokenDir()),
           ),

@@ -108,3 +108,79 @@ describe('when the daemon cannot be reached', () => {
     expect(close, 'a leaked SSE connection holds an agent slot on the daemon').toHaveBeenCalled();
   });
 });
+
+/**
+ * `--session-id` was parsed, printed in the help, and dropped on the floor.
+ *
+ * `parseVerifySuffix` reads it and `cli-verify.ts` never passed it on, so with more than one tab
+ * connected the command failed with "multiple sessions connected — pass sessionId to target one":
+ * advice whose own remedy could not be followed through this path. Measured on a machine with three
+ * live sessions, where it also silently graded against the wrong one.
+ */
+describe('the session a one-shot verdict targets', () => {
+  it('pins both the navigate and the assert to the session it was given', async () => {
+    const { calls } = await run({ verified: 'yes' }, { sessionId: 's-42' });
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      expect((call.args as { sessionId?: string }).sessionId).toBe('s-42');
+    }
+  });
+
+  // Omitted means "whatever is connected", which is the single-session case and must stay untouched.
+  it('sends no sessionId when none was asked for', async () => {
+    const { calls } = await run({ verified: 'yes' });
+    for (const call of calls) {
+      expect((call.args as { sessionId?: string }).sessionId).toBeUndefined();
+    }
+  });
+});
+
+/**
+ * The headline line disagreed with the body underneath it.
+ *
+ * `verdictOf` read `structuredContent` only. A daemon answering with the verdict as TEXT content
+ * left it undefined, so the first line printed `verified: unknown` while the JSON below it said
+ * `"verified":"no"` — two different answers to the one question, in one response. Observed against a
+ * live daemon. The exit code was right either way, so this is legibility, not a false green.
+ */
+describe('a verdict carried as text, not structured content', () => {
+  const textCaller = (payload: unknown): ToolCaller => ({
+    call: () => Promise.resolve({ content: [{ type: 'text', text: JSON.stringify(payload) }] }),
+    close: () => Promise.resolve(),
+  });
+
+  it('reads the verdict out of the text and agrees with itself', async () => {
+    const result = await runAdhocVerdict({
+      port: 4400,
+      predicate: { kind: 'text', contains: 'x' },
+      connect: () => Promise.resolve(textCaller({ verified: 'no', failureReason: 'it did not' })),
+    });
+    expect(result.lines[0]).toBe('verified: no');
+    expect(result.code).toBe(1);
+  });
+
+  it('still exits 0 on a proved verdict that arrived as text', async () => {
+    const result = await runAdhocVerdict({
+      port: 4400,
+      predicate: { kind: 'text', contains: 'x' },
+      connect: () => Promise.resolve(textCaller({ verified: 'yes' })),
+    });
+    expect(result.lines[0]).toBe('verified: yes');
+    expect(result.code).toBe(0);
+  });
+
+  // Text that is not a verdict at all must stay `unknown` rather than being read as one.
+  it('leaves unparseable text as unknown', async () => {
+    const result = await runAdhocVerdict({
+      port: 4400,
+      predicate: { kind: 'text', contains: 'x' },
+      connect: () =>
+        Promise.resolve({
+          call: () => Promise.resolve({ content: [{ type: 'text', text: 'not json' }] }),
+          close: () => Promise.resolve(),
+        }),
+    });
+    expect(result.lines[0]).toBe('verified: unknown');
+    expect(result.code).toBe(1);
+  });
+});

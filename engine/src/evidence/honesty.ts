@@ -27,6 +27,20 @@ const GRADE_RANK: Record<HonestyGrade, number> = {
   [HonestyGrade.NONE]: 0,
 };
 
+/**
+ * Compare two grades on the one ladder, so nothing outside this file re-derives the order.
+ *
+ * Both directions are needed, and which one is correct is a fact about the claim rather than a
+ * preference: an AND greens only when every branch held, so the STRONGEST branch is honestly
+ * claimable; an OR greens on a single branch and nothing records which, so only the WEAKEST is.
+ * Callers that picked for themselves are how a combinator ends up graded by its first child.
+ */
+export const strongerGrade = (a: HonestyGrade, b: HonestyGrade): HonestyGrade =>
+  GRADE_RANK[a] >= GRADE_RANK[b] ? a : b;
+
+export const weakerGrade = (a: HonestyGrade, b: HonestyGrade): HonestyGrade =>
+  GRADE_RANK[a] <= GRADE_RANK[b] ? a : b;
+
 /** Below this envelope sample count a deviation verdict is noise, not judgment. */
 const MIN_ENVELOPE_SAMPLES = 3;
 

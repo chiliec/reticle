@@ -12,7 +12,7 @@
  */
 
 import { isConsequenceKind, isPresenceKind, PredicateKind } from '@reticlehq/core';
-import { HonestyGrade } from '@reticlehq/engine/evidence/honesty.js';
+import { HonestyGrade, strongerGrade, weakerGrade } from '@reticlehq/engine/evidence/honesty.js';
 import type { Predicate } from '@reticlehq/engine/question/predicate/predicate.js';
 
 export const PRESENCE_ONLY_ADVICE =
@@ -118,7 +118,27 @@ export function gradeOfPredicate(predicate: Predicate): HonestyGrade {
       return HonestyGrade.NET;
     case PredicateKind.STATE:
       return HonestyGrade.STATE;
+    // An AND greens only when EVERY branch held, so the strongest branch is honestly claimable.
+    case PredicateKind.ALL_OF:
+      return combine(predicate.predicates, strongerGrade);
+    // An OR greens on ONE branch and nothing here records which. Claiming the strongest would let a
+    // verdict that proved only presence report `signal`, and a `minGrade: net` gate would trust it.
+    case PredicateKind.ANY_OF:
+      return combine(predicate.predicates, weakerGrade);
+    // Everything else, `not` included: an absence claim is satisfied trivially by a locator that
+    // never matched anything, which is the argument `walk` already makes about negation.
     default:
       return HonestyGrade.PRESENCE;
   }
+}
+
+/** Fold a combinator's branches on the ladder. No branches proves nothing, so it stays at the floor. */
+function combine(
+  branches: readonly Predicate[],
+  pick: (a: HonestyGrade, b: HonestyGrade) => HonestyGrade,
+): HonestyGrade {
+  const grades = branches.map(gradeOfPredicate);
+  const first = grades[0];
+  if (first === undefined) return HonestyGrade.PRESENCE;
+  return grades.reduce(pick, first);
 }

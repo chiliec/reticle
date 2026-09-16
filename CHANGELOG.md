@@ -4,6 +4,20 @@ All notable changes to the **`@reticlehq/*`** packages are documented here (each
 
 ## [Unreleased]
 
+### Added
+
+- **`@reticlehq/engine` — `strongerGrade` and `weakerGrade` on `evidence/honesty.js`.** The grade ladder was already there and its ranking was private, so anything comparing two grades re-derived the order for itself. Both directions are exported because which one is correct is a fact about the claim rather than a preference: an AND greens only when every branch held, so the strongest branch is claimable; an OR greens on one branch and nothing records which, so only the weakest is.
+
+### Fixed
+
+- **`@reticlehq/server` — a predicate wrapped in `allOf` is no longer graded as if it proved nothing.** `gradeOfPredicate` switched on the top-level kind, so every combinator fell through to `presence`, the weakest rung, however strong its branches were. The same state predicate reported `state` grade bare and `presence` grade inside a single-child `allOf`. That understated the shape [predicates](https://docs.reticle.sh/predicates) calls the workhorse, and `meetsHonestyBar`'s `minGrade` would have rejected a genuine `allOf[signal, net]` verdict — a false negative sitting inside the field whose job is to qualify a green. An `anyOf` is graded by its weakest branch, for the reason above.
+
+- **`@reticlehq/server` — `reticle verify --expect` honours `--session-id`.** The flag was parsed and printed in the help and never passed on, so with more than one tab connected the command failed with "multiple sessions connected — pass sessionId to target one": advice whose own remedy could not be followed through this path. With several tabs it also graded against whichever one the daemon picked.
+
+- **`@reticlehq/server` — a one-shot verdict no longer disagrees with itself.** `verify --expect` read the verdict from `structuredContent` only, so a daemon answering with it as text printed `verified: unknown` on the headline while the JSON underneath said `"verified":"no"`. The exit code was right either way; the line a reader acts on was not.
+
+- **`@reticlehq/browser` — the HUD says what it is looking for again.** Every lookup rendered `Finding [testid=]`, with nothing in the brackets. `str()` takes a `fallback = ''` and so never returns `undefined`, which made every `??` after it dead and every `!== undefined` after it always true: the testid branch always won, and the role/name/text fallbacks under it were unreachable. The same mistake printed `Inspecting ` with a trailing space and `Reading state: ` with nothing after the colon.
+
 ## [3.1.0] — 2026-09-16
 
 The release that made a verification something the agent no longer has to author. v3.0.0 split the protocol out and rearranged the repository around it; this one spends that structure on the half that was measurably not working — an engine that catches nearly every bug it structurally can, pointed at flows that declared almost nothing worth catching.

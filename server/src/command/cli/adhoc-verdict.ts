@@ -47,6 +47,15 @@ export interface AdhocVerdictOptions {
   url?: string;
   /** The predicate, already parsed from the caller's JSON. */
   predicate: unknown;
+  /**
+   * Which connected tab to drive and grade. Omitted means "whatever is connected".
+   *
+   * It was parsed by `parseVerifySuffix` and never passed on, so with more than one tab open the
+   * call failed with "multiple sessions connected — pass sessionId to target one" and there was no
+   * way to follow that advice from here. Worse than a dead end: with several tabs it also graded
+   * against whichever one the daemon picked.
+   */
+  sessionId?: string;
   token?: string;
   /** Injected so a test does not need a live daemon. */
   connect?: (endpoint: URL) => Promise<ToolCaller>;
@@ -83,6 +92,30 @@ function verdictOf(result: unknown): Record<string, unknown> | undefined {
   const structured = (result as { structuredContent?: unknown } | undefined)?.structuredContent;
   if ('object' === typeof structured && null !== structured) {
     return structured as Record<string, unknown>;
+  }
+  // A daemon that answers with the verdict as TEXT left this undefined, so the headline read
+  // `verified: unknown` while the JSON printed underneath it said `"verified":"no"` — one response
+  // giving two answers to the same question. The text is the same object, so read it.
+  return verdictFromText(result);
+}
+
+/** The verdict object inside an MCP text part, when the result carried it there instead. */
+function verdictFromText(result: unknown): Record<string, unknown> | undefined {
+  const content = (result as { content?: unknown } | undefined)?.content;
+  if (!Array.isArray(content)) return undefined;
+  for (const part of content) {
+    const text = (part as { text?: unknown }).text;
+    if ('string' !== typeof text) continue;
+    try {
+      const parsed: unknown = JSON.parse(text);
+      // Only a shape that actually carries a verdict — anything else stays `unknown`, which is the
+      // honest answer for a result this function could not read.
+      if ('object' === typeof parsed && null !== parsed && 'verified' in parsed) {
+        return parsed;
+      }
+    } catch {
+      /* Not JSON; the next part may still be. */
+    }
   }
   return undefined;
 }
@@ -136,10 +169,13 @@ export async function runAdhocVerdict(options: AdhocVerdictOptions): Promise<Adh
     };
   }
   try {
+    // Spread rather than set: an explicit `sessionId: undefined` is a key the tools reject as an
+    // unknown parameter, which would turn "no tab named" into a refusal.
+    const pin = options.sessionId === undefined ? {} : { sessionId: options.sessionId };
     if (options.url !== undefined && options.url.length > 0) {
-      await caller.call(ReticleTool.NAVIGATE, { url: options.url });
+      await caller.call(ReticleTool.NAVIGATE, { url: options.url, ...pin });
     }
-    const result = await caller.call(ReticleTool.ASSERT, { predicate: options.predicate });
+    const result = await caller.call(ReticleTool.ASSERT, { predicate: options.predicate, ...pin });
     const refusal = refusalText(result);
     if (refusal !== undefined) {
       return { code: 1, lines: [`verified: unknown`, refusal] };
