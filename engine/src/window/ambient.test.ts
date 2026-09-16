@@ -6,6 +6,8 @@ import {
   isAmbient,
   ambientKeyOf,
   DEFAULT_AMBIENT_THRESHOLD,
+  isStableAmbientKey,
+  onlyStableAmbient,
 } from './ambient.js';
 
 function evt(ref: string | undefined, actionId?: string): ReticleEvent {
@@ -79,5 +81,44 @@ describe('ambientKeyOf — a churning FEED must converge (the ref-keying flaw)',
       ]);
     }
     expect(isAmbient(counts, 'hostile-feed')).toBe(true);
+  });
+});
+
+/**
+ * A ref means nothing in the next session, so it must never be learned ACROSS one.
+ *
+ * MEASURED on bench-app. `regionKeyOf` prefers the nearest `data-testid` and falls back to the
+ * element's ref when there is none — and a ref is a per-session sequence number, so `e404` addresses
+ * one element today and a different one tomorrow. The map is persisted and re-seeded into every new
+ * session, so a fresh session inherited suppression aimed at elements it had never seen.
+ *
+ * What that cost: real, action-caused DOM events vanished from the window. A crawl then reported
+ * `state-vs-render` on a ⌘K button whose click demonstrably mounted the palette — the store moved,
+ * React committed, and the DOM events were filtered out before anything could see them. Deleting
+ * `.reticle/ambient.json` and re-driving the identical click took `domChanged` from 0 to 7.
+ *
+ * In-session learning by ref is untouched: within one session a ref IS an identity, and a churning
+ * region with no testid is exactly what it was built for. Only the crossing is wrong.
+ */
+describe('only a stable key survives between sessions', () => {
+  it('treats a bare element ref as unstable', () => {
+    for (const ref of ['e1', 'e404', 'e1310']) expect(isStableAmbientKey(ref)).toBe(false);
+  });
+
+  it('treats a testid as stable, including ones that merely look ref-ish', () => {
+    for (const id of ['activity-feed', 'e2e-panel', 'eel', 'e12x', 'row-3700']) {
+      expect(isStableAmbientKey(id), id).toBe(true);
+    }
+  });
+
+  it('keeps only the stable counts when a map crosses a session boundary', () => {
+    expect(onlyStableAmbient({ e404: 39, 'activity-feed': 25, e1: 2, ticker: 30 })).toEqual({
+      'activity-feed': 25,
+      ticker: 30,
+    });
+  });
+
+  it('is empty rather than wrong when everything learned was ref-keyed', () => {
+    expect(onlyStableAmbient({ e404: 39, e405: 43 })).toEqual({});
   });
 });

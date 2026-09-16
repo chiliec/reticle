@@ -1,6 +1,7 @@
 import {
   ContradictionKind,
   EventType,
+  isAbsenceDerived,
   isSameDocument,
   isSameEditEpoch,
   type ReticleEvent,
@@ -160,12 +161,47 @@ function didNothing(
   );
 }
 
+/**
+ * Was the page HIDDEN at any point in this window?
+ *
+ * A backgrounded tab has its rAF and timers clamped by the browser, and the DOM observer flushes on
+ * rAF — so real mutations are never emitted. The window then looks silent when the app in fact
+ * rendered, and every absence-derived rule reads that silence as a fault.
+ *
+ * MEASURED, not theorised: a crawl over bench-app reported `state-vs-render` on a ⌘K button whose
+ * click both committed `paletteOpen: true` and mounted the palette inside `#root`. The recorded
+ * window held the store change, the app's own `palette:opened` signal, no DOM event whatsoever, and
+ * two `page.health` heartbeats reading `hidden: true`.
+ *
+ * ANY hidden heartbeat disqualifies the whole window rather than the part after it: the flush that
+ * was suppressed could be any of them, and a window that was hidden for part of its life cannot say
+ * which part lost events.
+ */
+function pageWasHidden(events: readonly ReticleEvent[], options: ContradictionOptions): boolean {
+  // The caller states it when it knows. A heartbeat landing inside the window is the fallback, not
+  // the mechanism — see the option doc for why the window alone cannot be trusted to carry one.
+  if (options.pageHidden !== undefined) return options.pageHidden;
+  return events.some(
+    (e) =>
+      e.type === EventType.PAGE_HEALTH &&
+      true === (e.data as { hidden?: unknown } | undefined)?.hidden,
+  );
+}
+
 /** Net-shaped events — the only ones that carry a URL a dev-tooling channel could occupy. */
+
 export function findContradictions(
   allEvents: readonly ReticleEvent[],
   options: ContradictionOptions = {},
 ): Contradiction[] {
-  const found = findWindowContradictions(allEvents, options);
+  const all = findWindowContradictions(allEvents, options);
+  // Filtered here rather than inside each rule, so a rule added later inherits the guard by being
+  // classified absence-derived — the one place that already knows which findings rest on silence.
+  // Hiding can only manufacture ABSENCE: a failed request or a contradicting channel is something
+  // that WAS seen, so evidence-derived findings are untouched and still report.
+  const found = pageWasHidden(allEvents, options)
+    ? all.filter((c) => !isAbsenceDerived(c.kind))
+    : all;
   const predates =
     allEvents.length > 0 &&
     allEvents.every((e) => !isSameEditEpoch(e.editEpoch, options.currentEditEpoch));

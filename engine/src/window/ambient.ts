@@ -37,6 +37,43 @@ export function ambientKeyOf(event: {
 /** A ref must churn ambiently at least this many times before it is treated as ambient. */
 export const DEFAULT_AMBIENT_THRESHOLD = 20;
 
+/**
+ * An element ref: the letter `e` and a sequence number, minted per session by the SDK's ref table.
+ *
+ * It is an address within ONE session's numbering, not an identity. `e404` is whatever that session
+ * happened to hand out 404th.
+ */
+const REF_SHAPED = /^e\d+$/;
+
+/**
+ * Is this ambient key meaningful in a DIFFERENT session?
+ *
+ * `regionKeyOf` prefers the nearest `data-testid` — a name the app chose, stable across every run —
+ * and falls back to the element's ref when the region has none. Within a session that fallback is
+ * correct and useful. Across one it is not merely useless, it is WRONG: the next session hands `e404`
+ * to some other element, and the learned suppression lands on whatever that turns out to be.
+ *
+ * WHAT IT ACTUALLY AFFECTS. This map is read in exactly one place — the `settled` predicate drops
+ * events on learned-ambient regions before deciding the page went quiet. So a poisoned map makes
+ * `{kind: "settled"}` ignore regions that were never the churning ones, which is a false-green risk
+ * in the settle oracle. It does NOT filter the windows that summaries or contradictions are computed
+ * from; those read the buffer raw.
+ *
+ * That scope is narrower than this rule was first written as. The measurement offered for the wider
+ * claim — DOM events reappearing once the file was cleared — was taken across a daemon restart and a
+ * new session, so it did not isolate the file, and it is withdrawn. What stands without it: all 43
+ * keys in the persisted map were ref-shaped, and a ref cannot mean anything in a session that did
+ * not mint it.
+ */
+export function isStableAmbientKey(key: string): boolean {
+  return !REF_SHAPED.test(key);
+}
+
+/** The counts worth carrying between sessions — the stable keys, and nothing else. */
+export function onlyStableAmbient(counts: AmbientCounts): AmbientCounts {
+  return Object.fromEntries(Object.entries(counts).filter(([key]) => isStableAmbientKey(key)));
+}
+
 /** Fold a batch of events into the running ambient counts. Only unattributed, ref-bearing events count. */
 export function accumulateAmbient(
   counts: AmbientCounts,
