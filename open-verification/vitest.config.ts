@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { sharedTestOptions } from '../vitest.shared.js';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 /*
@@ -13,4 +14,6 @@ import tsconfigPaths from 'vite-tsconfig-paths';
  */
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  // Every package shares one bound; see vitest.shared.ts for the gate this kept red.
+  test: { ...sharedTestOptions },
 });
