@@ -34,6 +34,9 @@ import { REPO_ROOT } from './machine/repo-root.js';
  */
 const LOOSE_SCRIPT_DIRECTORIES = ['scripts', 'install', 'break', 'bench', 'apps/e2e'];
 
+/** Pages that describe every script by obligation, so a mention in one proves nothing. */
+const INDEX_PAGES = new Set(['scripts/README.md']);
+
 /** Loose scripts that sit at the repo root rather than in one of the directories above. */
 const ROOT_LEVEL_SCRIPTS = ['pre-commit.sh', 'prepare-commit-msg.sh'];
 
@@ -108,6 +111,21 @@ describe('every loose script is reachable from somewhere', () => {
   const scripts = looseScripts();
   const haystack = trackedFiles()
     .filter((file) => !NOT_TEXT.test(file))
+    /*
+     * The INDEX pages do not count as reachability.
+     *
+     * `scripts-documented.test.ts` REQUIRES every script to have a row in `scripts/README.md`, and
+     * this test counts any mention anywhere. So a row was simultaneously mandatory and sufficient:
+     * every script in `scripts/` passed this check on its own index page, and the question "does
+     * anything actually use this" was never asked. A guard satisfied by the documentation of the
+     * thing it is checking is the same defect as a guard that passes on a comment, which this
+     * repository has already paid for once.
+     *
+     * The generous matching above STAYS — its own note records an audit that nearly deleted four
+     * live scripts by insisting on the file extension. The fix is to drop the one source that is
+     * guaranteed to mention everything, not to get stricter about the rest.
+     */
+    .filter((file) => !INDEX_PAGES.has(file))
     .map((file) => {
       try {
         return [file, readFileSync(join(REPO_ROOT, file), 'utf8')] as const;

@@ -11,10 +11,15 @@ import { fileURLToPath } from 'node:url';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export class McpStdioClient {
-  constructor(command, args, env = {}) {
+  constructor(command, args, env = {}, options = {}) {
     this.command = command;
     this.args = args;
     this.env = env;
+    // Optional, and defaulted to the current process's directory so all 36 existing callers keep
+    // spawning exactly where they did. Added when `mcp-line-client.mjs` became an adapter over this
+    // class: it took a `cwd` and this did not, which was the only real gap between two clients that
+    // otherwise spoke the same wire.
+    this.cwd = options.cwd;
     this.proc = null;
     this.buf = '';
     this.nextId = 1;
@@ -24,6 +29,7 @@ export class McpStdioClient {
 
   async start() {
     this.proc = spawn(this.command, this.args, {
+      ...(this.cwd === undefined ? {} : { cwd: this.cwd }),
       env: { ...process.env, ...this.env },
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: this.command !== 'node' && 'win32' === process.platform,

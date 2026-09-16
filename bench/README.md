@@ -21,7 +21,7 @@ The rows are kept as a record of what was run. They are not a baseline. **Record
 
 ## What in here is live — every script, executed 2026-08-11
 
-`harness/` holds 39 files and only twelve are driven by a suite. The rest are **kept one-off studies**: each produced a number in a published scorecard, and deleting one would leave that claim with no reproduction. That is deliberate, and the cost is that "a file exists in `harness/`" told you nothing about whether it still ran.
+`harness/` is the largest directory here and only a minority are driven by a suite. The rest are **kept one-off studies**: each produced a number in a published scorecard, and deleting one would leave that claim with no reproduction. That is deliberate, and the cost is that "a file exists in `harness/`" told you nothing about whether it still ran.
 
 So they were all run. **Every script below passes.** The two defects that surfaced are fixed:
 

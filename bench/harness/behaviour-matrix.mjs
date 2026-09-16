@@ -130,7 +130,10 @@ async function main() {
     throw new Error(`no session: ${leaseText.slice(0, 300)}`);
 
   const sessions = JSON.parse(
-    String((await client.call('reticle_sessions', {})).result?.content?.[0]?.text ?? '{}'),
+    // Merged name: the default nine are a closed surface, so `reticle_sessions` is unreachable.
+    String(
+      (await client.call('reticle_session', { action: 'list' })).result?.content?.[0]?.text ?? '{}',
+    ),
   );
   const sid = (sessions.sessions ?? [])[0]?.sessionId;
   if (sid === undefined) throw new Error('lease reported ready and no session was listed');

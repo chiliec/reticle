@@ -1,6 +1,6 @@
 # What each script here is for
 
-Sixteen files, and none of them is dead. This page says what each one does, who runs it, and when, so nobody has to open a script to find out whether it still matters.
+Every file here is reachable from something that runs, and none of them is dead. This page says what each one does, who runs it, and when, so nobody has to open a script to find out whether it still matters.
 
 They are grouped by **who runs them**, because that is the question people actually have. A script you never type is a very different thing from one you type during a release.
 
@@ -45,4 +45,4 @@ Rarely, and deliberately.
 
 ## Adding a script
 
-Add a row above, in the group that matches who will run it. `scripts-documented.test.ts` fails until you do — not to be strict, but because sixteen undocumented scripts is how somebody ends up asking whether any of them are still needed, which is the question this page exists to answer.
+Add a row above, in the group that matches who will run it. `scripts-documented.test.ts` fails until you do — not to be strict, but because a directory of undocumented scripts is how somebody ends up asking whether any of them are still needed, which is the question this page exists to answer.
