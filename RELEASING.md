@@ -68,6 +68,24 @@ pnpm install --lockfile-only                   #    …then reconcile the lockfi
 
 `set-version.mjs` replaced three manual steps, one of which addressed `Cargo.toml` **by line number** (`sed '3s/…'`): adding a comment above `version` would have silently rewritten the wrong line, in the one file whose drift has already shipped. Every rule in the script is anchored on the key instead, it refuses to write a file that does not already hold the current version, and `--dry-run` prints the list first. The four version guards are unchanged and are now the script's negative control: run it, run the gate, and a missed site is named by a test rather than found by a user.
 
+### A package npm has never seen is the one step that cannot be retried
+
+`pnpm -r publish` walks the workspace in dependency order and skips versions already on npm, so a partial run is safe to re-trigger — with one exception, and it is unforgiving.
+
+**A package being published for the FIRST time can be refused**, by a name that is taken, a name npm judges too similar to an existing one, or an org policy. Everything that depends on it has already been rewritten to an EXACT version by the time it is packed (`"open-verification": "3.1.0"`, not `workspace:*`), and npm publishes are immutable. So a refusal in the middle of the run leaves the packages that went out BEFORE it permanently uninstallable, and the fix is a new patch version of every one of them.
+
+`open-verification` was exactly this at 3.1.0: an unscoped name npm had never seen, hard-depended on by `core`, `server` and `engine`.
+
+So, before cutting a release that adds a package:
+
+```bash
+npm view <name>                                 # 404 = nobody owns it. Anything else, STOP.
+cd <package> && npm publish --access public     # publish it ALONE, first
+npm view <name> version                         # it is really there
+```
+
+Then cut the release as normal; `pnpm -r publish` finds that version present and skips it. Ordering inside the run is handled for you — the risk is not the order, it is that the first publish of a new name is the only step in the release with no way back.
+
 ### What the gates already prove about the docs, and what they do not
 
 `pnpm test:unit` carries the shipped-guidance guards, so a release cannot go out with docs that contradict the code. They cover **README.md, SKILL.md, every page under `docs/`, every published skill, and every package README**:
