@@ -44,15 +44,64 @@ export function carriesAnAssertion(steps: readonly TapeStep[]): boolean {
   return steps.some((step) => step.expect !== undefined);
 }
 
+/** Squeeze any string into one safe, lower-case filename segment. */
+const segment = (value: string, max: number): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, max)
+    .replace(/-$/, '');
+
 /**
- * A stable name for what this session drove.
+ * What this flow PROVED, in a few words, from the first step that claims anything.
  *
- * Derived from the session id rather than a counter or a clock, for the reason `driveRunId` is:
- * teardown fires on every socket close and a reconnecting tab keeps its id, so a random name would
- * leave one journey scattered across several files, each a partial copy of the others.
+ * Ordered by the evidence ladder the rest of the product uses: a signal is the app saying the thing
+ * happened in its own words, a request is the next best, a store read is one step removed, and the
+ * DOM-shaped claims are the weakest. Naming a flow after the strongest thing it proves is the same
+ * judgement the honesty grade makes, reused where a human reads it.
+ *
+ * Returns '' when a step claims nothing nameable, and the caller keeps the old session-only name.
  */
-export function driveFlowName(sessionId: string, route?: string): FlowName {
+function provedSlug(steps: readonly TapeStep[]): string {
+  for (const step of steps) {
+    const expect = step.expect;
+    if (expect === undefined) continue;
+    if (expect.signal !== undefined) return segment(expect.signal, 32);
+    if (expect.net !== undefined) {
+      const method = segment(expect.net.method ?? '', 6);
+      const where = segment(expect.net.urlContains ?? '', 24);
+      const joined = [method, where].filter((part) => '' !== part).join('-');
+      if ('' !== joined) return joined;
+    }
+    if (expect.state !== undefined) return segment(expect.state.path, 32);
+    if (expect.route?.pathname !== undefined) return segment(expect.route.pathname, 24);
+    if (expect.text?.contains !== undefined) return segment(expect.text.contains, 24);
+  }
+  return '';
+}
+
+/**
+ * A stable name for what this session drove — led by what it proved.
+ *
+ * Two properties, and the name used to have only the second. It has to be STABLE: teardown fires on
+ * every socket close and a reconnecting tab keeps its id, so a name that moves leaves one journey
+ * scattered across several files, each a partial copy of the others. And it has to be READABLE,
+ * because `presenter-controls.ts` renders it straight into the replay button's `textContent` — so
+ * the label a person actually sees was `drive-sdc991872-6d66-4adf-8780-f931c62905f9`, twice, for two
+ * different journeys. A session id is a fact about the socket, not about the feature.
+ *
+ * So the claim leads, the route follows, and a SHORT session discriminator trails: two sessions that
+ * prove the same thing on the same route stay separate files rather than overwriting each other,
+ * which is the one thing the full id was buying that the claim cannot.
+ */
+export function driveFlowName(
+  sessionId: string,
+  route?: string,
+  steps: readonly TapeStep[] = [],
+): FlowName {
   const safe = sessionId.replace(/[^a-zA-Z0-9-]/g, '-').slice(0, 40);
+  const proved = provedSlug(steps);
   // The route is part of the name, so two journeys in one session do not overwrite each other —
   // and so a re-drive of the same journey rewrites its own flow rather than adding a near-duplicate.
   const leg = (route ?? '')
@@ -64,7 +113,14 @@ export function driveFlowName(sessionId: string, route?: string): FlowName {
   // replacements above — so this IS the validated boundary the brand is meant to be created at.
   // Returning `string` pushed a cast onto each caller, which is the hole `flowPath`'s parameter
   // type was added to close.
-  return asFlowName(0 === leg.length ? `drive-${safe}` : `drive-${safe}-${leg}`);
+  // Nothing nameable was proved, so keep the name this function has always produced.
+  if ('' === proved) {
+    return asFlowName(0 === leg.length ? `drive-${safe}` : `drive-${safe}-${leg}`);
+  }
+  // Enough of the session to keep two of them apart, and little enough to read past.
+  const discriminator = safe.replace(/-/g, '').slice(0, 8);
+  const parts = ['drive', proved, ...(0 === leg.length ? [] : [leg]), discriminator];
+  return asFlowName(parts.join('-'));
 }
 
 export interface DriveFlowOutcome {
@@ -132,7 +188,7 @@ export function driveFlowsFrom(
     }
     const startPath = segment.route ?? tape.startPath;
     programs.push({
-      name: driveFlowName(sessionId, startPath),
+      name: driveFlowName(sessionId, startPath, segment.steps),
       version: REPLAY_PROGRAM_VERSION,
       // The route is recorder-internal and has no business on disk — `startPath` is where the
       // on-disk flow says the same thing, in the field replay actually reads.

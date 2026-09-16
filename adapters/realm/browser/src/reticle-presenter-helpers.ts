@@ -7,6 +7,20 @@ export function str(value: unknown, fallback = ''): string {
   return 'string' === typeof value ? value : fallback;
 }
 
+/**
+ * A non-empty string, or nothing — the shape `??` and `!== undefined` actually need.
+ *
+ * `str()` defaults to `''`, so it can never say "absent". Every `str(x) ?? y` below it was therefore
+ * dead code and every `str(x) !== undefined` was always true, which is how the HUD came to print
+ * `Finding [testid=]` for every lookup that named anything other than a literal testid — and
+ * `Inspecting ` with a trailing space when there was no ref at all. One missing distinction, five
+ * wrong lines.
+ */
+function text(value: unknown): string | undefined {
+  const asString = str(value);
+  return '' === asString ? undefined : asString;
+}
+
 /** A short human label for a ref ("button \"Save\"") for the presenter HUD. */
 export function refLabel(refId: string): string {
   const el = refs.resolve(refId);
@@ -55,13 +69,13 @@ export function presentStatus(commandName: string, args: Record<string, unknown>
       return target !== undefined ? `Finding ${target}` : 'Finding an element';
     }
     case ReticleCommand.INSPECT: {
-      const ref = str(args['ref']);
+      const ref = text(args['ref']);
       return ref !== undefined ? `Inspecting ${refLabel(ref)}` : 'Inspecting an element';
     }
     case ReticleCommand.ANIMATIONS:
       return 'Reading animations';
     case ReticleCommand.STATE_READ: {
-      const store = str(args['store']);
+      const store = text(args['store']);
       return store !== undefined ? `Reading state: ${store}` : 'Reading state';
     }
     case ReticleCommand.CAPABILITIES:
@@ -74,10 +88,10 @@ export function presentStatus(commandName: string, args: Record<string, unknown>
 /** Compact "what we're looking for" from a query's args (testid/value/name/role/text/label). */
 function queryTarget(q: Record<string, unknown>): string | undefined {
   const testid =
-    str(q['testid']) ?? (QueryBy.TESTID === str(q['by']) ? str(q['value']) : undefined);
+    text(q['testid']) ?? (QueryBy.TESTID === str(q['by']) ? text(q['value']) : undefined);
   if (testid !== undefined) return `[testid=${testid}]`;
-  const name = str(q['name']);
-  const value = str(q['value']) ?? str(q['text']) ?? str(q['label']) ?? str(q['role']);
+  const name = text(q['name']);
+  const value = text(q['value']) ?? text(q['text']) ?? text(q['label']) ?? text(q['role']);
   if (value !== undefined) return name !== undefined ? `"${value}" (${name})` : `"${value}"`;
   return name !== undefined ? `"${name}"` : undefined;
 }

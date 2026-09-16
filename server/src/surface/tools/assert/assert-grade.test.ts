@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { isPresenceOnlyAssertion, assertsDerivedIpcStatus } from './assert-grade.js';
+import {
+  isPresenceOnlyAssertion,
+  assertsDerivedIpcStatus,
+  gradeOfPredicate,
+} from './assert-grade.js';
+import { HonestyGrade } from '@reticlehq/engine/evidence/honesty.js';
 import type { Predicate } from '@reticlehq/engine/question/predicate/predicate.js';
 
 describe('isPresenceOnlyAssertion', () => {
@@ -137,5 +142,82 @@ describe('derived-status advice — steering off a number Reticle invented', () 
         ],
       }),
     ).toBe(true);
+  });
+});
+
+/**
+ * The grade has to look INSIDE a combinator.
+ *
+ * `gradeOfPredicate` switched on the top-level kind, so every `allOf`/`anyOf` fell to `default` and
+ * was graded `presence` — the weakest rung — however strong its children were. Measured against a
+ * running app: the same state predicate reported "assertion held at state grade" bare and
+ * "assertion held at presence grade" wrapped in a single-child `allOf`.
+ *
+ * It is not cosmetic. `docs/predicates.mdx` calls `allOf` "the workhorse", and `meetsHonestyBar`
+ * is a published engine API whose `minGrade` bar would reject a genuine `allOf[signal, net]`
+ * verdict. The recursive `walk` this file already uses for `isPresenceOnlyAssertion` proves the
+ * descent was always intended.
+ */
+describe('gradeOfPredicate descends into combinators', () => {
+  const signal: Predicate = { kind: 'signal', name: 'order:placed' };
+  const net: Predicate = { kind: 'net', method: 'POST', urlContains: '/api/order' };
+  const state: Predicate = { kind: 'state', path: 'cart.total' };
+  const element: Predicate = { kind: 'element', query: { role: 'button' } };
+
+  it('grades a leaf by its own kind, as it always did', () => {
+    expect(gradeOfPredicate(signal)).toBe(HonestyGrade.SIGNAL);
+    expect(gradeOfPredicate(net)).toBe(HonestyGrade.NET);
+    expect(gradeOfPredicate(state)).toBe(HonestyGrade.STATE);
+    expect(gradeOfPredicate(element)).toBe(HonestyGrade.PRESENCE);
+  });
+
+  // Wrapping a predicate in allOf changes nothing about what it proves.
+  it('does not weaken a predicate by wrapping it in allOf', () => {
+    expect(gradeOfPredicate({ kind: 'allOf', predicates: [state] })).toBe(HonestyGrade.STATE);
+    expect(gradeOfPredicate({ kind: 'allOf', predicates: [signal] })).toBe(HonestyGrade.SIGNAL);
+  });
+
+  // allOf greens only when EVERY branch held, so the strongest branch is honestly claimable.
+  it('takes the strongest branch of an allOf, because all of them held', () => {
+    expect(gradeOfPredicate({ kind: 'allOf', predicates: [element, net, signal] })).toBe(
+      HonestyGrade.SIGNAL,
+    );
+    expect(gradeOfPredicate({ kind: 'allOf', predicates: [element, state] })).toBe(
+      HonestyGrade.STATE,
+    );
+  });
+
+  /*
+   * anyOf greens on ONE branch, and nothing in the predicate says which.
+   *
+   * Claiming the strongest branch would let a verdict that only proved presence report `signal`,
+   * and a `minGrade: net` gate would then trust it. That is the exact false green the grade exists
+   * to prevent, so an OR is graded by its WEAKEST branch.
+   */
+  it('takes the weakest branch of an anyOf, because only one of them held', () => {
+    expect(gradeOfPredicate({ kind: 'anyOf', predicates: [signal, element] })).toBe(
+      HonestyGrade.PRESENCE,
+    );
+    expect(gradeOfPredicate({ kind: 'anyOf', predicates: [signal, net] })).toBe(HonestyGrade.NET);
+  });
+
+  it('descends through nesting rather than stopping at the first level', () => {
+    expect(
+      gradeOfPredicate({
+        kind: 'allOf',
+        predicates: [element, { kind: 'allOf', predicates: [state, signal] }],
+      }),
+    ).toBe(HonestyGrade.SIGNAL);
+  });
+
+  // An absence claim stays at presence: "the error is gone" is satisfied trivially by a locator
+  // that never matched anything, which is the same argument `walk` already makes about negation.
+  it('keeps a negation at presence', () => {
+    expect(gradeOfPredicate({ kind: 'not', predicate: signal })).toBe(HonestyGrade.PRESENCE);
+  });
+
+  it('grades a combinator with no branches at presence rather than crashing', () => {
+    expect(gradeOfPredicate({ kind: 'allOf', predicates: [] })).toBe(HonestyGrade.PRESENCE);
+    expect(gradeOfPredicate({ kind: 'anyOf', predicates: [] })).toBe(HonestyGrade.PRESENCE);
   });
 });

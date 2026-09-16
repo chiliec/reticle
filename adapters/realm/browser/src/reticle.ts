@@ -513,7 +513,21 @@ export class Reticle {
             // this yet at mount — the presenter is IDLE until the agent's first command — so the
             // tour used to mount over a leased page and its scrim swallowed the drive.
             search: window.location.search,
-            copy: (text) => void navigator.clipboard?.writeText(text).catch(() => undefined),
+            // Reports whether it landed, so the button can say so. `clipboard` is absent outright
+            // on an insecure origin, and `writeText` still rejects on a page without permission.
+            copy: (text) =>
+              navigator.clipboard?.writeText(text).then(
+                () => true,
+                () => false,
+              ) ?? false,
+            select: (element) => {
+              const selection = window.getSelection();
+              if (null === selection) return;
+              const range = document.createRange();
+              range.selectNodeContents(element);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            },
           });
         });
         // The glow and panel wake on bridge connect, so if the bridge got there first, say so now.

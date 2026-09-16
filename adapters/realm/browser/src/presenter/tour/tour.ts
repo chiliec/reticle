@@ -16,9 +16,17 @@
  */
 
 import {
+  COPIED_LABEL,
+  COPY_FLASH_MS,
+  COPY_LABEL,
+  COPY_MANUAL_LABEL,
   TOUR_ATTR,
   TOUR_CSS,
+  TOUR_PROMPT_ATTR,
   TOUR_TARGET_ATTR,
+  holeRects,
+  isInteractive,
+  type TourRect,
   isLastSlide,
   nextIndex,
   slideHtml,
@@ -41,16 +49,78 @@ export const TOUR_SEEN_KEY_PREFIX = 'reticle.tour.seen.';
 const APP_SELECTORS = ['main', '#root', '#app'] as const;
 
 /**
+ * Everything the first slide means when it says "that panel".
+ *
+ * `[data-reticle-hud]` alone is the toolbar strip. The chat panel — the thing a reader actually
+ * looks at when they read the word panel — is a SIBLING of it, so ringing only the toolbar sent
+ * somebody to a row of icons while the sentence beside it talked about something else.
+ *
+ * Unioned rather than swapped, because either one can be the whole of what is on screen: the chat
+ * panel is `display:none` while it is collapsed, and the toolbar is always there. Taking the union
+ * of whichever are VISIBLE is the only version that is right in both states.
+ */
+const HUD_PARTS = ['[data-reticle-hud]', '[data-reticle-chat-panel]'] as const;
+
+/**
+ * The smallest box containing every one of these that is actually on screen, or nothing.
+ *
+ * A zero box means `display:none` — measured on the live panel, not assumed — and including one
+ * would drag a corner of the ring to 0,0 and point it at empty page. So an element that reports no
+ * area is not part of the union rather than being a union with the origin.
+ */
+function unionOfVisible(doc: Document, selectors: readonly string[]): TourRect | undefined {
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const selector of selectors) {
+    const box = doc.querySelector(selector)?.getBoundingClientRect();
+    if (undefined === box || box.width <= 0 || box.height <= 0) continue;
+    left = Math.min(left, box.left);
+    top = Math.min(top, box.top);
+    right = Math.max(right, box.left + box.width);
+    bottom = Math.max(bottom, box.top + box.height);
+  }
+  if (right === Number.NEGATIVE_INFINITY) return undefined;
+  return { left, top, width: right - left, height: bottom - top };
+}
+
+/**
+ * The HUD control each anchor points at.
+ *
+ * Reticle's own toolbar, so these are attributes this repository writes rather than markup we are
+ * guessing at — the same licence that lets a slide ring the panel at all. Kept as a map rather than
+ * a switch so the set of pointable controls is one readable list; a slide naming an anchor that is
+ * not here rings nothing, which is the same refusal as a HUD that is switched off.
+ */
+const HUD_CONTROL_SELECTORS: Readonly<Partial<Record<TourAnchor, string>>> = {
+  [TourAnchor.HUD_CHAT]: '[data-reticle-chat-toggle]',
+  [TourAnchor.HUD_ANNOTATE]: '[data-reticle-annotate-btn]',
+  [TourAnchor.HUD_IMPACT]: '[data-reticle-report-btn]',
+  [TourAnchor.HUD_SETTINGS]: '[data-reticle-settings-btn]',
+};
+
+/**
  * The box to ring for a slide's anchor, or undefined when there is nothing honest to ring.
  *
- * Both anchors decline the same way and for the same reason: the HUD is genuinely absent when the
- * panel is disabled, and an app with none of the selectors above is an app whose content region we
- * would be guessing at. A tour that guesses points somebody at the wrong thing with full confidence.
+ * Every anchor declines the same way and for the same reason: the HUD is genuinely absent when the
+ * panel is disabled, a control is absent when its toolbar is not rendered, and an app with none of
+ * the selectors above is an app whose content region we would be guessing at. A tour that guesses
+ * points somebody at the wrong thing with full confidence.
  */
-function anchorBox(doc: Document, anchor: TourAnchor): DOMRect | undefined {
-  if (TourAnchor.HUD === anchor) {
-    return doc.querySelector('[data-reticle-hud]')?.getBoundingClientRect();
+function anchorBox(doc: Document, anchor: TourAnchor): TourRect | undefined {
+  if (TourAnchor.HUD === anchor) return unionOfVisible(doc, HUD_PARTS);
+  const control = HUD_CONTROL_SELECTORS[anchor];
+  if (undefined !== control) {
+    const box = doc.querySelector(control)?.getBoundingClientRect();
+    return undefined === box ? undefined : box;
   }
+  // NOT REACHED by the current carousel. "Look, without pixels" was the only APP-anchored slide and
+  // the six-card tour does not draw it, so nothing asks for a content region today. Kept rather than
+  // deleted because the shared step still declares the anchor and the rule this encodes was learned
+  // the hard way: a region is OUTLINED, never spotlit, because cutting a hole the size of the app
+  // removes the dimming entirely. Re-add a slide with this anchor and it works again; delete this
+  // and that lesson has to be relearned by looking at it.
   if (TourAnchor.APP !== anchor) return undefined;
   for (const selector of APP_SELECTORS) {
     const found = doc.querySelector(selector);
@@ -84,8 +154,17 @@ export interface TourDeps {
    * behaviour rather than a crash.
    */
   readonly search?: string;
-  /** Copying is a capability, not a guarantee — an insecure origin has no clipboard. */
-  readonly copy?: (text: string) => void;
+  /**
+   * Copying is a capability, not a guarantee — an insecure origin has no clipboard.
+   *
+   * It reports whether the text actually landed, which is the part that used to be thrown away. The
+   * call was `void`, so a page with a working clipboard and a page with none were the same event as
+   * far as this file could tell, and the button said the same thing about both by saying nothing.
+   * `false` is what lets the tour fall back to selecting the text so it can still be copied by hand.
+   */
+  readonly copy?: (text: string) => Promise<boolean> | boolean;
+  /** Selecting the prompt is the fallback when there is no clipboard. Injected for the same reason. */
+  readonly select?: (element: Element) => void;
 }
 
 export interface TourHandle {
@@ -169,9 +248,15 @@ export function mountTour(deps: TourDeps): TourHandle | undefined {
   let index = 0;
   let open = true;
 
+  // Set once the key listener exists. Closing must detach it however it was closed — via Escape,
+  // Skip, Done or `destroy` — and a tour that is gone from the page while still eating arrow keys
+  // is worse than one that never listened.
+  let detachKeys: () => void = () => undefined;
+
   const close = (): void => {
     if (!open) return;
     open = false;
+    detachKeys();
     markSeen(deps.storage, deps.projectId);
     root.remove();
     style.remove();
@@ -206,16 +291,93 @@ export function mountTour(deps: TourDeps): TourHandle | undefined {
         // dimmed like everything else — and the page takes the wash twice. Only for a spotlight: an
         // outlined region keeps its dimming, which is the entire difference between the two.
         if (!region) root.querySelector('.reticle-tour-scrim')?.classList.add('is-clear');
+        // An invitation to press it needs the press to actually arrive. The scrim keeps its
+        // `pointer-events:auto` even when cleared, so on an interactive slide it is replaced with
+        // four rects around the control: everything stays blocked except the one thing being
+        // offered. The ring pulses so the page agrees with the sentence in the card.
+        if (isInteractive(slide)) {
+          ring.classList.add('is-live');
+          root.querySelector('.reticle-tour-scrim')?.remove();
+          const view = doc.defaultView;
+          for (const rect of holeRects(
+            {
+              left: box.left - pad,
+              top: box.top - pad,
+              width: box.width + pad * 2,
+              height: box.height + pad * 2,
+            },
+            view?.innerWidth ?? doc.documentElement.clientWidth,
+            view?.innerHeight ?? doc.documentElement.clientHeight,
+          )) {
+            const blocker = doc.createElement('div');
+            blocker.className = 'reticle-tour-blocker';
+            blocker.style.left = `${String(Math.round(rect.left))}px`;
+            blocker.style.top = `${String(Math.round(rect.top))}px`;
+            blocker.style.width = `${String(Math.round(rect.width))}px`;
+            blocker.style.height = `${String(Math.round(rect.height))}px`;
+            root.appendChild(blocker);
+          }
+        }
       }
     }
+  };
+
+  /**
+   * Copy one prompt, and SAY what happened.
+   *
+   * The button reports the outcome on itself rather than somewhere else on the card, because that
+   * is where the person is looking: they just pressed it. Three outcomes, three labels — copied,
+   * could-not-copy-so-the-text-is-selected, and back to normal once the flash expires.
+   */
+  const copyPrompt = (button: Element): void => {
+    const slide = slides[index];
+    const which = Number(button.getAttribute(TOUR_PROMPT_ATTR));
+    const prompt = slide?.prompts?.[which];
+    if (undefined === prompt) return;
+
+    const flash = (label: string, mark: string): void => {
+      button.textContent = label;
+      button.classList.add(mark);
+      doc.defaultView?.setTimeout(() => {
+        button.textContent = COPY_LABEL;
+        button.classList.remove(mark);
+      }, COPY_FLASH_MS);
+    };
+    const settle = (copied: boolean): void => {
+      if (copied) {
+        flash(COPIED_LABEL, 'is-done');
+        return;
+      }
+      // No clipboard. Selecting the text turns a dead end into one keystroke, and the label says
+      // which keystroke rather than leaving somebody to work out why nothing was pasted.
+      const text = root.querySelector(
+        `.reticle-tour-prompt[${TOUR_PROMPT_ATTR}="${String(which)}"] .reticle-tour-prompt-text`,
+      );
+      if (null !== text) deps.select?.(text);
+      flash(COPY_MANUAL_LABEL, 'is-manual');
+    };
+
+    const result = deps.copy?.(prompt.text);
+    if (undefined === result) {
+      settle(false);
+      return;
+    }
+    if ('boolean' === typeof result) {
+      settle(result);
+      return;
+    }
+    void result.then(settle).catch(() => {
+      settle(false);
+    });
   };
 
   root.addEventListener('click', (event: Event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
     const hit = target.closest(`[${TOUR_TARGET_ATTR}]`);
-    const what = hit?.getAttribute(TOUR_TARGET_ATTR);
-    if (undefined === what || null === what) return;
+    if (null === hit) return;
+    const what = hit.getAttribute(TOUR_TARGET_ATTR);
+    if (null === what) return;
     event.preventDefault();
     event.stopPropagation();
     if ('skip' === what || 'done' === what) {
@@ -223,8 +385,7 @@ export function mountTour(deps: TourDeps): TourHandle | undefined {
       return;
     }
     if ('copy' === what) {
-      const slide = slides[index];
-      if (undefined !== slide?.prompt) deps.copy?.(slide.prompt);
+      copyPrompt(hit);
       return;
     }
     const moved = nextIndex(index, 'back' === what ? -1 : 1);
@@ -232,6 +393,34 @@ export function mountTour(deps: TourDeps): TourHandle | undefined {
     index = moved;
     draw();
   });
+
+  /**
+   * Arrow keys move, Escape leaves.
+   *
+   * On the document rather than the overlay, because the overlay never holds focus — on an
+   * interactive slide focus belongs to the HUD control being offered, and a listener bound to the
+   * card would go deaf at exactly the moment the tour is most in the way. Escape is the one every
+   * reader already tries on something covering their screen, and it did nothing.
+   */
+  const onKey = (event: KeyboardEvent): void => {
+    if (!open) return;
+    const step = 'ArrowRight' === event.key ? 1 : 'ArrowLeft' === event.key ? -1 : 0;
+    if ('Escape' === event.key) {
+      event.preventDefault();
+      close();
+      return;
+    }
+    if (0 === step) return;
+    const moved = nextIndex(index, step);
+    if (moved === index) return;
+    event.preventDefault();
+    index = moved;
+    draw();
+  };
+  doc.addEventListener('keydown', onKey);
+  detachKeys = () => {
+    doc.removeEventListener('keydown', onKey);
+  };
 
   draw();
   doc.body.appendChild(root);
