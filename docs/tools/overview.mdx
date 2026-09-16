@@ -57,9 +57,9 @@ Each one earned its slot, and a couple are there because of measured mistakes.
 
 `reticle_inspect` maps a DOM node to `src/components/Sidebar.tsx:41`. Finding a bug is half the job. Knowing which file to open is the half that makes an agent useful.
 
-It used to sit in the cold tail, which meant an agent had to already know it existed to use it. So essentially nobody did.
+It used to be reachable only through `reticle_run`, which meant an agent had to already know it existed to use it.
 
-`reticle_act_sequence` batches a multi-step interaction into one round trip. It was also in the cold tail, and the consequence showed up in the data: agents drove login forms one call at a time, over and over.
+`reticle_act_sequence` batches a multi-step interaction into one round trip. It was also reachable only through `reticle_run`, and the consequence is a login form driven one call at a time, over and over.
 
 Those repeats were not retries. The calls succeeded and got repeated, because the batching tool was invisible. A tool an agent must already know about is a tool that never gets called.
 

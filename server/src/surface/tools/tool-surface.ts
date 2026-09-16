@@ -197,17 +197,13 @@ export const CORE_TOOL_NAMES: ReadonlySet<string> = new Set([
   ReticleTool.QUERY,
   ReticleTool.ACT,
   ReticleTool.ACT_AND_WAIT,
-  // ACT_SEQUENCE is here because its absence was measurably CAUSING the biggest loop in the data.
+  // ACT_SEQUENCE is here because its absence leaves the loop it exists to collapse: a login form
+  // driven one round trip at a time, a click and a fill per call, which is exactly the antipattern
+  // SKILL.md warns about.
   //
-  // In the field `reticle_act` is called overwhelmingly more often than `reticle_act_sequence`, and
-  // `act` leads the repeat table by a wide margin — inside those sessions the repeated calls are
-  // clicks and fills, a login form driven one round trip at a time, which is exactly the antipattern
-  // SKILL.md warns about and exactly what this tool exists to collapse.
-  //
-  // The repeats are NOT retries: looping sessions have a LOWER error rate than non-looping ones. The
-  // calls succeed and get repeated, because the batching tool was reachable only through
-  // `reticle_run` — so an agent had to already know it existed to use it, and essentially nobody
-  // did. A tool an agent must already know about is a tool that never gets called; the same argument
+  // Those repeats are not retries — the calls succeed and get repeated, because the batching tool
+  // was reachable only through `reticle_run`, so an agent had to already know it existed to use it.
+  // A tool an agent must already know about is a tool that never gets called; the same argument
   // that put INSPECT and FEEDBACK here.
   ReticleTool.ACT_SEQUENCE,
   ReticleTool.OBSERVE,

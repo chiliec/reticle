@@ -167,8 +167,8 @@ export const TelemetryEventKind = {
    *
    * Deliberately capped at TWO per proxy process: once on the first outage of a session, and once if
    * the retry budget is spent (the severe case, where it stopped retrying and went dormant). The
-   * per-call `tool` event was already removed here for cost, and one measured afternoon produced 547
-   * proxy reconnects — an event per reconnect would bill for the pathology instead of measuring it.
+   * per-call `tool` event was already removed here for cost, and a single dormant proxy can reconnect
+   * hundreds of times — an event per reconnect would bill for the pathology instead of measuring it.
    * The first-outage event answers "what share of sessions lose MCP at all", which is the number
    * that decides whether this is fixed.
    */
@@ -196,9 +196,9 @@ export const TelemetryEventKind = {
    * A tool could not do what was asked, and said so.
    *
    * The refusal path already computes a precise diagnosis, hands it to the agent as prose, and then
-   * throws it away. So the largest cohort in the funnel — the users who connect an agent and never
-   * drive — is visible only by subtraction, and the three genuinely different situations behind it
-   * (nothing was ever wired here, the app is not running, a session was lost) arrive as one silence.
+   * throws it away. So a connected agent that never drives is visible only by subtraction, and the
+   * three genuinely different situations behind it (nothing was ever wired here, the app is not
+   * running, a session was lost) arrive as one silence.
    *
    * `noSessionErrors` on the session summary counts one of those causes and only at the end of a
    * session, without the tool, without the discriminator, and without whether the agent tried again.
@@ -714,10 +714,10 @@ export const McpOutageSchema = z.object({
   /**
    * In-flight tool calls this drop actually killed — the only part an agent can FEEL.
    *
-   * Without it every drop looks equally bad. In the field almost every outage was
-   * `stage: first` with `attempts: 1`** — the stream ended once and the proxy reconnected, which for
-   * an agent with nothing in flight is invisible. Reading that 321 as "the agent lost its tools 321
-   * times" overstates the problem by roughly the whole number, and buries the one drop that mattered.
+   * Without it every drop looks equally bad. The common outage is `stage: first` with `attempts: 1`
+   * — the stream ended once and the proxy reconnected, which for an agent with nothing in flight is
+   * invisible. Counting those as "the agent lost its tools" overstates the problem by roughly the
+   * whole total, and buries the one drop that mattered.
    *
    * Zero means nobody noticed. Non-zero is the number of calls that came back `-32001` and the count
    * worth driving down.

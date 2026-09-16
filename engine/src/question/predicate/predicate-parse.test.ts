@@ -1,12 +1,11 @@
 /**
  * A raw zod array must never reach the agent.
  *
- * Measured on 2026-08-10: **9 of the 58 tool errors recorded that day — 16% — were a serialized zod
- * issue array**, and every one landed on `reticle_act_and_wait` (4), `reticle_wait_for` (4) or
- * `reticle_assert` (1). Those are precisely the three tools that produced every action-derived
- * finding in the dataset, so the least readable error we emit lands on the highest-value path.
+ * A serialized zod issue array is the least readable error we emit, and the tools it lands on are
+ * `reticle_act_and_wait`, `reticle_wait_for` and `reticle_assert` — the three that derive a finding
+ * from an action. So the worst error shape sits on the highest-value path.
  *
- * What the agent got, redacted by the telemetry pipeline:
+ * The shape an agent gets back:
  *
  *   [ { *: *, *: [ * ], *: [], *: * } ]
  *

@@ -274,8 +274,7 @@ export const SessionSummarySchema = z.object({
    * Zero here is the single most diagnostic number in the payload: the daemon ran and no app ever
    * connected, which is a BROKEN INSTALL. Non-zero with no tool calls is the opposite problem — the
    * install works and the agent never asked. Before this field those two were the same row, and
-   * they have opposite fixes. In the field most users who attached an agent never
-   * drove, and we could not say which case any of them was.
+   * they have opposite fixes, and before this field we could not say which case a row was.
    *
    * A counter rather than an event because the SDK reconnects on every page reload — an event per
    * connect would be high volume for a question one number answers.
@@ -294,8 +293,8 @@ export const SessionSummarySchema = z.object({
    * Distinct from `exit`, which says why the PROCESS ended. A daemon can exit tidily on idle while
    * the agent's work was abandoned mid-task, and those are different findings.
    *
-   * In the field most agents that drove an app produced no verdict, and nothing
-   * could say whether that was a product failure or a task that simply ended.
+   * An agent can drive an app and never reach a verdict, and without this nothing could say whether
+   * that was a product failure or a task that simply ended.
    *
    * Most of this is derivable at query time from `toolCalls` / `verifications` /
    * `abandonedActions`. The part that is NOT derivable is `client_left` — whether the agent
@@ -376,10 +375,10 @@ export const SessionSummarySchema = z.object({
   /**
    * WHY the daemon exited. Absent on a periodic flush (`final: false`) — nothing exited.
    *
-   * Without this, a designed exit and a real failure are the same row. In the field the large
-   * majority of `mcp_connection_lost` events were `sse_ended` — the stream the daemon closes on its own
-   * scheduled idle shutdown — so the metric meant to say "the agent lost its tools" was mostly
-   * counting the daemon going to sleep as designed, and a genuine outage was invisible inside it.
+   * Without this, a designed exit and a real failure are the same row. `sse_ended` — the stream the
+   * daemon closes on its own scheduled idle shutdown — dominates `mcp_connection_lost`, so a metric
+   * meant to say "the agent lost its tools" mostly counts the daemon going to sleep as designed, and
+   * a genuine outage is invisible inside it.
    *
    * The daemon has always known this (`recordExitReason`); it simply never put it on an event. The
    * proxy that emits the outage cannot know it — it only sees a socket end — so the join is made

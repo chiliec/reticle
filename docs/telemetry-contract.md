@@ -41,7 +41,7 @@ So every `bug_found` carries **`repeat`**: false the first time a KIND is seen i
 
 The denominator is **`verification_completed`**, which fires per verdict with `via`, `verified`, `passed` and `falseGreenCaught`. Defects per verification is the honest rate; raw defect counts grow with usage and say nothing on their own.
 
-**And `repeat` only means anything if the session remembers.** `SessionMetrics.reset()` runs at every periodic flush and used to clear the seen-kinds set with the window counters, so the same defect, re-found after a flush, reported `repeat: false` again. Sessions in the data run to 11.5 hours. Window counters zero on a flush; session-lifetime memory does not. (`session-window.test.ts`)
+**And `repeat` only means anything if the session remembers.** `SessionMetrics.reset()` runs at every periodic flush and used to clear the seen-kinds set with the window counters, so the same defect, re-found after a flush, reported `repeat: false` again. Sessions can run many hours. Window counters zero on a flush; session-lifetime memory does not. (`session-window.test.ts`)
 
 Two rules follow, and both are gated:
 
@@ -218,13 +218,13 @@ A licensed deployment reports which licence it is running under, so per-customer
 
 **The organisation name never goes on the wire.** It is free text somebody typed when the key was signed, so it falls under rule 3. The id is opaque; the map from id to company is a local ledger. An analytics-side breach therefore cannot expose who is evaluating Reticle.
 
-Resolution reads the EVENT's clock, not one captured at daemon start: sessions here run to eleven hours, and a key that expires mid-session has to start reporting `expired` from the event it expired on.
+Resolution reads the EVENT's clock, not one captured at daemon start: sessions can run many hours, and a key that expires mid-session has to start reporting `expired` from the event it expired on.
 
 > **This changes what a licensed deployment sends, so it is a contract term, not a quiet addition.** The enterprise agreement has to say that licensed deployments report usage attributed to their licence id, and list these fields. `RETICLE_TELEMETRY=0` and `DO_NOT_TRACK` still switch it off exactly as they switch off everything else. There is no exception for licensed installs, and adding one would put a hole in the kill switch that a security review is entitled to find.
 
 ## Why they stopped: `tool_refused`
 
-The refusal path computes a precise diagnosis, hands it to the agent as prose, and throws it away. So the biggest cohort in the funnel, the users who attach an agent and never drive, emitted nothing at all and was reachable only by subtracting two other numbers. Half of issue #172.
+The refusal path computes a precise diagnosis, hands it to the agent as prose, and throws it away. So an agent that attaches and never drives emitted nothing at all, and was reachable only by subtracting two other numbers. Half of issue #172.
 
 - `refusal_tool`: which tool, from our own fixed namespace. Never app data.
 - `refusal_reason`: the closed `RefusalReason`: `no_session` | `no_match` | `unsupported` | `bad_args` | `not_ready` | `other`. Four different owners, and one undifferentiated "they stopped" number is actionable by none of them.
@@ -253,7 +253,7 @@ Capped at 50 per daemon run. Volume is part of this taxonomy's design and a stuc
 
 What it does **not** answer: whether the agent surfaced the nudge to its human. Nothing on this side of the envelope can see that, and inferring it from a later upgrade would credit the nudge for a `reticle update` somebody ran for their own reasons -- which is precisely the credit `nudge-credit.ts` bounds to a seven-day window rather than claiming outright.
 
-One edge to know when querying: `updateNudged` reads the delivery flag, and `armUpdateNudgeFrom` re-arms it when a newer manifest lands mid-session. On a long session that spans a release it therefore reports the LAST arming's state, not "was ever shown". Sessions in the data run to eleven hours, so this is reachable; it is rare, and it errs toward `false`.
+One edge to know when querying: `updateNudged` reads the delivery flag, and `armUpdateNudgeFrom` re-arms it when a newer manifest lands mid-session. On a long session that spans a release it therefore reports the LAST arming's state, not "was ever shown". Sessions can run many hours, so this is reachable; it is rare, and it errs toward `false`.
 
 ## Which route brought them in: `installSource`
 

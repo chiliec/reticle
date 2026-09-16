@@ -11,7 +11,7 @@
  * was clean, and the honesty grade was `signal` — the strongest evidence class we have. The verdict
  * was `no`, because one POST had not settled while the app navigated optimistically. A timing
  * observation overruled a consequence observation, inverting the grade hierarchy the verifier is
- * built on. In field data `contradicted` is half of every `no` verdict.
+ * built on.
  *
  * A false negative is not the mirror of a false positive here. It makes an agent redo work that
  * already succeeded, or stop trusting the verdict channel — and the verdict channel is the product.

@@ -79,8 +79,8 @@ describe('resolveProjectId', () => {
  * while the plugin's `process.cwd()` matched the directory `init` ran in. A dev server in a
  * container breaks that: the root is `/app` inside and the host path outside, so the page announced
  * one project and the daemon expected another, and the bridge refused every connection with
- * `authentication failed` — an error that says nothing about paths. Measured in the field at six
- * minutes to diagnose, ending in a hand-written `projectId` option in vite.config.
+ * `authentication failed` — an error that says nothing about paths, and is slow to diagnose because
+ * nothing in it points at the mismatch. It ends in a hand-written `projectId` option in vite.config.
  *
  * `.reticle.json` already carries the answer, it is already the file the server walks up to find,
  * and the plugin simply never opened it.
