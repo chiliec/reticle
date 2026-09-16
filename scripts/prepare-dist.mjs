@@ -32,6 +32,21 @@
  */
 import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { TEST_SUFFIXES } from './test-suffixes.mjs';
+
+/**
+ * Test scaffolding, as the COMPILED file it becomes.
+ *
+ * The suffix list is written against sources (`.test-harness.ts`); by the time this runs, `tsc` has
+ * emitted `.test-harness.js` and `.test-harness.d.ts` beside it. Stripping the source extension and
+ * matching the stem covers every emitted form without a second list to keep true.
+ *
+ * `bridge.test-harness.js` shipped to npm because the old rule was a literal `.test.` and that name
+ * has no dot after `test`.
+ */
+const TEST_STEMS = TEST_SUFFIXES.map((suffix) => suffix.replace(/\.[cm]?[jt]sx?$/, ''));
+const isTestArtifact = (name) =>
+  name.includes('.test.') || TEST_STEMS.some((stem) => name.includes(stem + '.'));
 
 const MAP_COMMENT = /\n?\/\/# sourceMappingURL=.*\.map\s*$/;
 
@@ -135,7 +150,7 @@ let tests = 0;
 
 for (const file of walk(target)) {
   // Tests first, so their maps are never counted or rewritten on the way out.
-  if (/\.test\./.test(file.split(/[\\/]/).pop() ?? '')) {
+  if (isTestArtifact(file.split(/[\\/]/).pop() ?? '')) {
     rmSync(file);
     tests += 1;
     continue;

@@ -5,7 +5,7 @@ import type { PresenterRunState } from './presenter-run-state.js';
 import { LOG_CSS } from './chrome/presenter-log.js';
 import { buildSnapshot } from '@/dom/snapshot.js';
 import { isIgnored } from '@/dom/dom-ignore.js';
-import { until, wait } from './presenter-test-helpers.js';
+import { until, wait } from './presenter.test-helpers.js';
 import { ACT_STRIP } from './presenter-config.js';
 
 describe('presenter / transparency layer', () => {

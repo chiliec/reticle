@@ -20,12 +20,13 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { isTestFile } from './test-suffixes.mjs';
 
 /** Source files git knows about under a package's `src`, excluding tests. */
 export function sourceFiles(packageDir) {
   return execFileSync('git', ['ls-files', 'src'], { cwd: packageDir, encoding: 'utf8' })
     .split('\n')
-    .filter((f) => f.endsWith('.ts') && !f.includes('.test.'));
+    .filter((f) => f.endsWith('.ts') && !isTestFile(f));
 }
 
 /** Every directory under `src` holding a source file, as package-relative posix paths. */

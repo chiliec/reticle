@@ -16,12 +16,16 @@ import { scanPackage } from '../../../../scripts/orphan-scan.mjs';
 
 const PACKAGE_DIR = join(__dirname, '..');
 
-/** Modules with no production importer, each with the reason it is allowed to stay. */
-const DECLARED_UNWIRED: Record<string, string> = {
-  'presenter/presenter-test-helpers.ts':
-    'Test-only DOM and presenter builders shared by presenter specs. Production code has no ' +
-    'reason to import test fixture construction.',
-};
+/**
+ * Modules with no production importer, each with the reason it is allowed to stay.
+ *
+ * Empty, and that is the point. Its one entry was `presenter.test-helpers.ts`, declared because the
+ * scanner did not recognise the suffix and so counted test scaffolding as a production module. The
+ * suffix is in `scripts/test-suffixes.mjs` now, shared with `prepare-dist.mjs` and
+ * `directory-reach.mjs`, so the file is excluded structurally and the exception has nothing left to
+ * excuse. A declared exception that compensates for a scanner's blind spot hides the blind spot.
+ */
+const DECLARED_UNWIRED: Record<string, string> = {};
 
 describe('no undeclared orphan modules', () => {
   const { orphans, stale } = scanPackage(PACKAGE_DIR, DECLARED_UNWIRED);

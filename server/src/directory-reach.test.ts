@@ -272,20 +272,24 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   recording: [],
   /** What a human wrote on a step, and where they pointed when they wrote it. */
   'annotate-notes': [],
+  /*
+   * Six reaches came off this list when `bridge.test-harness.ts` was renamed to
+   * `bridge.test-harness.ts` — `flows`, `fs`, `project`, `stores`, `tape` and `tools`.
+   *
+   * None of them were the bridge's. They were a TEST HARNESS's, counted as production code because
+   * its name did not match the `.test.` pattern this scanner and `prepare-dist.mjs` both read. The
+   * rename was to stop the harness shipping in the tarball; that it also halved this list is the
+   * more interesting half, because the coupling recorded here was partly an artifact of scaffolding
+   * being mistaken for the thing it scaffolds.
+   */
   bridge: [
     // The event bus. See the note on `cloud` below for why many directories reach it.
     'hooks',
-    'stores',
     'facts',
-    'flows',
-    'fs',
     'identity',
     'impact',
-    'project',
     'session',
-    'tape',
     'telemetry',
-    'tools',
     'version',
   ],
   capsule: ['dir', 'fs'],

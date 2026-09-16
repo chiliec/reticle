@@ -17,8 +17,8 @@ import { join, relative, sep } from 'node:path';
 /** Extensions the scanner treats as source. */
 const SOURCE_EXTENSIONS = ['.ts', '.tsx'];
 
-/** Suffixes that are test scaffolding rather than production modules. */
-const TEST_SUFFIXES = ['.test.ts', '.test.tsx', '.test-harness.ts', '.live.test.ts'];
+/** Suffixes that are test scaffolding rather than production modules. See test-suffixes.mjs. */
+import { TEST_SUFFIXES } from './test-suffixes.mjs';
 
 /**
  * Every build output named anywhere in a package manifest, flattened.

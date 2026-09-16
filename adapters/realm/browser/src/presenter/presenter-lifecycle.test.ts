@@ -11,7 +11,7 @@ import {
   trackGlowFlips,
   dataOn,
   dataBusy,
-} from './presenter-test-helpers.js';
+} from './presenter.test-helpers.js';
 
 describe('presenter v2 session border', () => {
   it('1 sessionStart turns the base border on (data-on=1)', () => {
