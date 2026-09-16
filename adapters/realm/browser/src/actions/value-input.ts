@@ -1,5 +1,5 @@
-import { captureValueSetter } from '../patching/capture-method.js';
-import { valuePrototypeOf } from '../dom/realm.js';
+import { captureValueSetter } from '@/patching/capture-method.js';
+import { valuePrototypeOf } from '@/dom/realm.js';
 
 /**
  * Writing a value into a field, and the two preconditions that make it honest.

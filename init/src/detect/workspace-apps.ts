@@ -1,4 +1,4 @@
-import type { InitIo } from '../run-types.js';
+import type { InitIo } from '@/run-types.js';
 import { DEV_SCRIPT_NAMES } from './dev-script.js';
 
 /**

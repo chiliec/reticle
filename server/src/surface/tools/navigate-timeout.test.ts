@@ -13,10 +13,10 @@
 import { describe, expect, it } from 'vitest';
 import { BROWSER_TOOLS } from './browser-tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import { LastAct } from '../../portal/session/last-act.js';
+import { LastAct } from '@/portal/session/last-act.js';
 import type { CommandResult } from '@reticlehq/core';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 import type { ToolDeps } from './tools.js';
 
 const FROM = 'http://localhost:3000/';

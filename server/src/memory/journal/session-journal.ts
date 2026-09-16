@@ -6,13 +6,13 @@ import {
   type JournalAction,
   type ReticleEvent,
 } from '@reticlehq/core';
-import type { FileSystemPort } from '../project/fs/fs-port.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
 import {
   isValidSessionId,
   journalActionsPath,
   journalEventsPath,
   sessionDirPath,
-} from '../project/dir/reticle-dir.js';
+} from '@/memory/project/dir/reticle-dir.js';
 
 /**
  * The durable per-session journal: append-only JSONL for events and actions, the ledger the ring

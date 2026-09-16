@@ -22,15 +22,15 @@ import { ReticleTool } from '@reticlehq/core';
 // aggregator composes the tool arrays out of five directories, and anything importing it back is how
 // this package accumulated cycles; the barrel sits above both it and this file, which is the
 // direction that does not close a loop.
-import { start, TOOLS, type RunningServer } from '../../../index.js';
-import { runTool } from '../../../surface/tools/invoke-tool.js';
-import type { ToolDef } from '../../../surface/tools/tool-kit.js';
-import { buildVerifyDeps } from '../cli-verify.js';
+import { start, TOOLS, type RunningServer } from '@/index.js';
+import { runTool } from '@/surface/tools/invoke-tool.js';
+import type { ToolDef } from '@/surface/tools/tool-kit.js';
+import { buildVerifyDeps } from '@/command/cli/cli-verify.js';
 import {
   readOrCreatePairingTokenSync,
   defaultPairingTokenDir,
-} from '../../../portal/bridge/pairing-token.js';
-import { tutorialScript, TutorialAudience, demoPlan } from '../tutorial.js';
+} from '@/portal/bridge/pairing-token.js';
+import { tutorialScript, TutorialAudience, demoPlan } from '@/command/cli/tutorial.js';
 import { sdkGraph, demoPageHtml, serveDemoPage, DEMO_SIGNAL } from './demo-page.js';
 
 /** How long to wait for the demo page to dial the bridge before giving up on it. */

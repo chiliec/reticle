@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FlowSchema, InvokeSchema, OVP_FLOW_GRAMMAR_VERSION } from '../index.js';
+import { FlowSchema, InvokeSchema, OVP_FLOW_GRAMMAR_VERSION } from '@/index.js';
 
 /**
  * Composition: a document that runs another document.

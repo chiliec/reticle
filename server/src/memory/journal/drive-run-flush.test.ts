@@ -8,7 +8,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { HookEvent, type HookPayload } from '@reticlehq/core/hooks';
-import { emitHook, resetHooks } from '../../hooks/hook-bus.js';
+import { emitHook, resetHooks } from '@/hooks/hook-bus.js';
 import { attachDriveRunFlush } from './drive-run-flush.js';
 
 afterEach(() => resetHooks());

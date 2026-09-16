@@ -8,7 +8,7 @@
  * It is the onboarding funnel's most important field, and it was wrong in the flattering direction
  * on exactly the runs least likely to have a working install.
  */
-import { StepStatus } from '../plan/plan.js';
+import { StepStatus } from '@/plan/plan.js';
 
 export function wasMcpRegistered(status: StepStatus | undefined): boolean {
   return status === StepStatus.APPLY || status === StepStatus.ALREADY;

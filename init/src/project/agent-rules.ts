@@ -18,8 +18,8 @@
  * re-run is a no-op. Mirrors the apply/already result shape used across init (see mcp-clients.ts).
  */
 
-import { NPX } from '../register/mcp.js';
-import { RETICLE_NPM_PACKAGE } from '../version.js';
+import { NPX } from '@/register/mcp.js';
+import { RETICLE_NPM_PACKAGE } from '@/version.js';
 
 /** Project-root instruction files the agent re-reads every session. */
 export const CLAUDE_MD_PATH = 'CLAUDE.md';

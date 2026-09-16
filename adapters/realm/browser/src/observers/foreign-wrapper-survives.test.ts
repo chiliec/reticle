@@ -12,7 +12,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { installContextOpen } from './context-open.js';
 import { installDownload } from './download.js';
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 import type { Emit, Teardown } from './types.js';
 
 const quiet: Emit = () => undefined;

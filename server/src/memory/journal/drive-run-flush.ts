@@ -32,8 +32,8 @@
  */
 
 import { HookEvent, type HookPayload } from '@reticlehq/core/hooks';
-import { onHook } from '../../hooks/hook-bus.js';
-import { log } from '../../log.js';
+import { onHook } from '@/hooks/hook-bus.js';
+import { log } from '@/log.js';
 
 /** Long enough to collapse a burst of verdicts, short enough that a human reads it as "live". */
 const FLUSH_DEBOUNCE_MS = 3_000;

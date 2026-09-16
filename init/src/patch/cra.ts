@@ -14,7 +14,7 @@
  */
 
 import { bridgeWsUrl } from '@reticlehq/core';
-import { CLI } from '../project/agent-rules.js';
+import { CLI } from '@/project/agent-rules.js';
 import { registerCapabilitiesCall } from './snippets.js';
 
 /** The line added to `src/index.tsx` / `src/index.js`. Side-effect import: the module guards itself on NODE_ENV. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /**
  * No sibling directory reaches back into the tool aggregator.

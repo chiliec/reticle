@@ -5,10 +5,10 @@ import {
   FEEDBACK_KINDS,
   KIND_FLAG,
   RATING_FLAG,
-} from '../command/cli/cli-parse.js';
+} from '@/command/cli/cli-parse.js';
 import { describeFeedbackPayload, submitFeedback } from './feedback.js';
 import { describeTelemetry, setTelemetryEnabled } from './telemetry.js';
-import { TelemetryAction } from '../command/cli/cli-parse.js';
+import { TelemetryAction } from '@/command/cli/cli-parse.js';
 import {
   clearIdentity,
   IDENTIFY_NOTICE,

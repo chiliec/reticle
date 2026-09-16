@@ -21,10 +21,21 @@ import { dirname, join, normalize, sep } from 'node:path';
  * Returns undefined for bare package names like `zod` — those are somebody else's code, and this
  * walker only cares about modules inside this package.
  *
+ * `@/x` IS inside this package: it is the alias for this package's own `src`, resolved by tsconfig
+ * at compile time and rewritten to a relative path at build time. It has to resolve here, and the
+ * reason is not tidiness. Two callers of this function are boundary guards — one keeps the free
+ * build from reaching separately-licensed code, the other polices the library path — and both ask
+ * "where does this import land". An alias answered `undefined` reads as "somebody else's package",
+ * so every aliased import became invisible to them the moment the convention landed: the licence
+ * boundary would have kept passing while no longer checking anything. A guard that goes quiet as its
+ * subject changes underneath it is the failure this repository keeps paying for.
+ *
  * Imports here are always written with a `.js` extension even though the file on disk is `.ts`
  * (that is how Node resolves ES modules after they are compiled), so the extension is swapped back.
  */
 export function resolveImport(fromFile: string, specifier: string): string | undefined {
+  // `@/x` is already relative to the source root, which is exactly what this returns.
+  if (specifier.startsWith('@/')) return specifier.slice(2).replace(/\.js$/, '.ts');
   if (!specifier.startsWith('.')) return undefined;
   return normalize(join(dirname(fromFile), specifier))
     .split(sep)

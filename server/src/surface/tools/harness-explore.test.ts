@@ -6,7 +6,7 @@ import {
   FINISH_TOOL,
   type ModelDriver,
   type ModelTurn,
-} from '../../features/harness/harness.js';
+} from '@/features/harness/harness.js';
 import {
   exploreApp,
   harnessAvailable,

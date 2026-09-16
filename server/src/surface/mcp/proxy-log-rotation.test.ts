@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_DAEMON_LOG_BYTES } from '../../command/daemon/daemon.js';
+import { MAX_DAEMON_LOG_BYTES } from '@/command/daemon/daemon.js';
 import {
   PROXY_LOG_CHECK_BYTES,
   accountProxyLogWrite,

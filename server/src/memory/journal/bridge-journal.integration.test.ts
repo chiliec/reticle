@@ -1,19 +1,14 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EventType, type JournalAction, type ReticleEvent } from '@reticlehq/core';
-import { Bridge } from '../../portal/bridge/bridge.js';
+import { Bridge } from '@/portal/bridge/bridge.js';
 import { ReticleTool } from '@reticlehq/core';
-import { createNodeFileSystem } from '../project/fs/fs-port.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
-import {
-  FakeBrowser,
-  callTool,
-  makeDeps,
-  waitUntil,
-} from '../../portal/bridge/bridge.test-harness.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
+import { FakeBrowser, callTool, makeDeps, waitUntil } from '@/portal/bridge/bridge.test-harness.js';
 import { makeJournalAttach } from './attach-journal.js';
 
 /**

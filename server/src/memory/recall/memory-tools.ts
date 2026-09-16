@@ -13,11 +13,11 @@
  */
 import { z } from 'zod';
 import { ReticleTool } from '@reticlehq/core';
-import { countSchema } from '../../surface/tools/args/numeric-bounds.js';
-import { sessionIdShape } from '../../surface/tools/tool-kit.js';
+import { countSchema } from '@/surface/tools/args/numeric-bounds.js';
+import { sessionIdShape } from '@/surface/tools/tool-kit.js';
 import { asNumber, asString } from '@reticlehq/core';
-import { sessionRoot } from '../project/session-root.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
+import { sessionRoot } from '@/memory/project/session-root.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
 import { MemoryUnavailable, readProjectMemory } from './project-memory.js';
 import { homedir } from 'node:os';
 

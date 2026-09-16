@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { BlindSpotKind, EventType } from '@reticlehq/core';
 import { diffState, installStoreState } from './state.js';
-import { registerStore, unregisterStore } from '../registry/stores.js';
+import { registerStore, unregisterStore } from '@/registry/stores.js';
 
 interface Captured {
   type: EventType;

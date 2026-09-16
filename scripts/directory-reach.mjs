@@ -59,8 +59,21 @@ export function reaches(packageDir) {
     if ('src' === fromDir) continue; // a file with no directory of its own has no neighbours
     const own = posix.basename(fromDir);
     const text = readFileSync(join(packageDir, file), 'utf8');
-    for (const match of text.matchAll(/from '((?:\.\.\/|\.\/)[^']+)'/g)) {
-      const target = posix.normalize(posix.join(fromDir, match[1] ?? ''));
+    /*
+     * `@/x` as well as `./x` and `../x`.
+     *
+     * `@/` means "this package's src", resolved at compile time by tsconfig `paths` and rewritten
+     * back to a relative path at build time. This graph is built from SOURCE, so it sees the alias
+     * and has to resolve it — a matcher that recognised only relative specifiers would report an
+     * ever-shrinking graph as the codebase adopted the alias, and report it as the coupling going
+     * DOWN. A guard that goes quiet while its subject changes underneath it is the failure this
+     * repository keeps paying for.
+     */
+    for (const match of text.matchAll(/from '((?:\.\.\/|\.\/|@\/)[^']+)'/g)) {
+      const spec = match[1] ?? '';
+      const target = spec.startsWith('@/')
+        ? posix.normalize(posix.join('src', spec.slice(2)))
+        : posix.normalize(posix.join(fromDir, spec));
       if (!target.startsWith('src/')) continue; // left the package: not this check's business
       const other = posix.basename(posix.dirname(target));
       if ('' === other || other === own || 'src' === other) continue;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';
-import { EnterpriseLicenseError } from '../license/license.js';
+import { EnterpriseLicenseError } from '@/features/license/license.js';
 import { recordAuditEvent } from './audit-log.js';
 
 /** The gated enterprise example: free in dev/eval, blocked in production without a license. */

@@ -33,7 +33,7 @@ import {
   tierOfFinding,
 } from '@reticlehq/core';
 import { findContradictions } from '@reticlehq/engine/disagreement/contradictions.js';
-import type { Session } from '../session/session.js';
+import type { Session } from '@/portal/session/session.js';
 
 /**
  * Reticle's own realms, said in the protocol's words.

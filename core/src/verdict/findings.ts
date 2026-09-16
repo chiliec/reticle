@@ -4,7 +4,7 @@
  * file under the size cap.
  */
 
-import { ChannelId, disagreementCanConvict } from '../wire/channel.js';
+import { ChannelId, disagreementCanConvict } from '@/wire/channel.js';
 
 /**
  * Cross-channel contradictions: two observation channels making INCOMPATIBLE claims about the same

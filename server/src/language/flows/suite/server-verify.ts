@@ -6,15 +6,15 @@
  * there is no reachable preview URL for the server to hit.
  */
 import type { SuiteVerdict, SuiteFlowResult } from '@reticlehq/core';
-import type { ToolDeps } from '../../../surface/tools/tool-kit.js';
-import { VerifyMode, type ProjectCloud } from '../../../memory/cloud/cloud-config.js';
+import type { ToolDeps } from '@/surface/tools/tool-kit.js';
+import { VerifyMode, type ProjectCloud } from '@/memory/cloud/cloud-config.js';
 import {
   CLOUD_VERIFY_TIMEOUT_MS,
   cloudFetch,
   submitServerVerification,
   type ServerVerification,
-} from '../../../memory/cloud/cloud-sync.js';
-import { log } from '../../../log.js';
+} from '@/memory/cloud/cloud-sync.js';
+import { log } from '@/log.js';
 
 const PASS = 'pass';
 const UNVERIFIED = 'unverified';

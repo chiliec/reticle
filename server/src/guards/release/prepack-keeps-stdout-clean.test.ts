@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /**
  * Nothing a `prepack` script runs may print on stdout.

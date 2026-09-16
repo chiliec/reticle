@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "baseUrl": ".",
     // This SDK is embedded in users' apps, so every byte here is bundled into somebody else's
     // bundle. The comments in this repo are long and explanatory on purpose, and that is right for
     // the source and wrong for the artefact: they were 320KB of the shipped .js and 114KB of the

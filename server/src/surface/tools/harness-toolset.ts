@@ -14,8 +14,8 @@ import { ReticleTool } from '@reticlehq/core';
 import { TOOLS, type ToolDef, type ToolDeps } from './tools.js';
 import { runTool } from './invoke-tool.js';
 import { TOOL_SURFACE, filterTools } from './tool-surface.js';
-import { withTimeout } from '../../features/harness/with-timeout.js';
-import type { HarnessTool, HarnessToolset } from '../../features/harness/harness.js';
+import { withTimeout } from '@/features/harness/with-timeout.js';
+import type { HarnessTool, HarnessToolset } from '@/features/harness/harness.js';
 
 /**
  * The two tools the harness is given beyond the advertised surface.

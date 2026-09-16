@@ -17,7 +17,7 @@
  * being one.
  */
 
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 
 /**
  * How many installs are live.

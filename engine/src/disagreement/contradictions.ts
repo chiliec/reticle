@@ -5,7 +5,7 @@ import {
   isSameEditEpoch,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { describeSuperseded } from '../question/predicate/observed-in-window.js';
+import { describeSuperseded } from '@/question/predicate/observed-in-window.js';
 import {
   describe,
   isMutating,
@@ -21,7 +21,7 @@ import { findBodyFailures } from './body-failures.js';
 import { findEchoMismatches } from './echo-mismatch.js';
 import { findUnitMismatches } from './unit-mismatch.js';
 import { asString } from '@reticlehq/core';
-import { matchesDeclaredFailure } from '../question/declared.js';
+import { matchesDeclaredFailure } from '@/question/declared.js';
 import { runRegisteredFolds } from './contradiction-folds.js';
 import type {
   Contradiction,

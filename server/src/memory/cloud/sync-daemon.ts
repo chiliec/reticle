@@ -21,8 +21,8 @@
  * laptop on a train would otherwise fill the log with the same line four hundred times and teach
  * everyone to ignore it.
  */
-import { log } from '../../log.js';
-import { emitSyncHook } from '../../hooks/hook-emit.js';
+import { log } from '@/log.js';
+import { emitSyncHook } from '@/hooks/hook-emit.js';
 import { describeSync, runSyncCycle, type SyncReport } from './sync-cycle.js';
 import { diskSink, diskSource, readCloudState } from './sync-disk.js';
 import type { ProjectCloud } from './cloud-config.js';

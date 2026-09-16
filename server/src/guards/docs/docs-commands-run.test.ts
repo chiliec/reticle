@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseCliArgs, knownCommand, UNKNOWN_COMMAND } from '../../command/cli/cli-parse.js';
-import { REPO_ROOT } from '../../machine/repo-root.js';
-import { publishedPackageDirs } from '../../workspace-packages.js';
+import { parseCliArgs, knownCommand, UNKNOWN_COMMAND } from '@/command/cli/cli-parse.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
+import { publishedPackageDirs } from '@/workspace-packages.js';
 
 /**
  * Every command the docs tell somebody to run is EXECUTED against the shipped parser, not read.

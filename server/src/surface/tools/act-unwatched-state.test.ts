@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { BlindSpotKind, SessionState, Verified } from '@reticlehq/core';
 import type { CommandResult, ReticleEvent } from '@reticlehq/core';
-import { LastAct } from '../../portal/session/last-act.js';
+import { LastAct } from '@/portal/session/last-act.js';
 import { TOOLS, type ToolDeps } from './tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import { BaselineStore } from '../../memory/project/baselines.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import { FlowStore } from '../../language/flows/flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
-import { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
-import type { CausalSummary } from '../../judgement/capsule/causal-summary.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { AnnotationStore } from '@/language/flows/stores/annotation-store.js';
+import type { CausalSummary } from '@/judgement/capsule/causal-summary.js';
 import type { HonestyBlock } from '@reticlehq/engine/evidence/honesty.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 
 /**
  * An act over an app with NO subscribed store returns `stateDiffs: []` — which reads as "the app

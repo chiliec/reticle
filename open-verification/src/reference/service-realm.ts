@@ -1,6 +1,6 @@
-import { Realm } from '../spi/realm.js';
-import type { DeterminismProfile } from '../vocabulary/determinism.js';
-import { CHANNEL_DEFAULTS, ChannelId, type ChannelDescriptor } from '../vocabulary/channel.js';
+import { Realm } from '@/spi/realm.js';
+import type { DeterminismProfile } from '@/vocabulary/determinism.js';
+import { CHANNEL_DEFAULTS, ChannelId, type ChannelDescriptor } from '@/vocabulary/channel.js';
 import {
   type Action,
   type ActionReceipt,
@@ -8,9 +8,9 @@ import {
   CloseCondition,
   RefusalReason,
   type Window,
-} from '../vocabulary/realm-surface.js';
-import { BlindSpotKind, type Coverage, type Observation } from '../vocabulary/evidence.js';
-import { Surface, type SubjectRef } from '../vocabulary/subject.js';
+} from '@/vocabulary/realm-surface.js';
+import { BlindSpotKind, type Coverage, type Observation } from '@/vocabulary/evidence.js';
+import { Surface, type SubjectRef } from '@/vocabulary/subject.js';
 
 /**
  * A realm for something with no screen, written to find out whether this interface is honest.

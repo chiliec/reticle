@@ -10,11 +10,11 @@
  * detected in the same place: before the generic Vite branch.
  */
 import { describe, expect, it } from 'vitest';
-import { detect, Framework, UiLibrary, type DetectInput } from '../detect/detect.js';
-import { buildPlan, frameworkPackages, StepStatus, type PlanInput } from '../plan/plan.js';
-import { tanstackStartSteps, VITE_PLUGIN_DETAIL, viteSteps } from '../plan/plan-framework.js';
+import { detect, Framework, UiLibrary, type DetectInput } from '@/detect/detect.js';
+import { buildPlan, frameworkPackages, StepStatus, type PlanInput } from '@/plan/plan.js';
+import { tanstackStartSteps, VITE_PLUGIN_DETAIL, viteSteps } from '@/plan/plan-framework.js';
 import { TANSTACK_START_ROOT_PATH } from './tanstack-start.js';
-import { isConnectStep } from '../plan/connect-steps.js';
+import { isConnectStep } from '@/plan/connect-steps.js';
 
 const input = (over: Partial<DetectInput> = {}): DetectInput => ({
   pkg: {},

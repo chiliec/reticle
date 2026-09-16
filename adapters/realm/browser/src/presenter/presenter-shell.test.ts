@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { Presenter } from './presenter.js';
 import { HudShell } from './presenter-shell.js';
-import { asSyntheticInput } from '../actions/synthetic/synthetic-input.js';
-import { Annotator } from '../review/annotator.js';
+import { asSyntheticInput } from '@/actions/synthetic/synthetic-input.js';
+import { Annotator } from '@/review/annotator.js';
 import { LOG_KIND } from './chrome/presenter-log.js';
 
 const click = (el: Element | null | undefined): void => {

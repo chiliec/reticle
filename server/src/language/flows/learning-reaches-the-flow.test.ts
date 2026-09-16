@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FlowReplayResult } from '@reticlehq/core';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
 import { persistLearning } from './flow-learning.js';
 
 /**

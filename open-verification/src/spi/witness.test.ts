@@ -7,11 +7,11 @@ import {
   Grade,
   Independence,
   type ChannelDescriptor,
-} from '../vocabulary/channel.js';
-import { AnomalyKind, AnomalyTier, Verdict } from '../vocabulary/verdict.js';
-import { CloseCondition, type Window } from '../vocabulary/realm-surface.js';
-import { BlindSpotKind, type Coverage, type Observation } from '../vocabulary/evidence.js';
-import { Surface, type SubjectRef } from '../vocabulary/subject.js';
+} from '@/vocabulary/channel.js';
+import { AnomalyKind, AnomalyTier, Verdict } from '@/vocabulary/verdict.js';
+import { CloseCondition, type Window } from '@/vocabulary/realm-surface.js';
+import { BlindSpotKind, type Coverage, type Observation } from '@/vocabulary/evidence.js';
+import { Surface, type SubjectRef } from '@/vocabulary/subject.js';
 
 /**
  * A second vantage point that can look and cannot touch.

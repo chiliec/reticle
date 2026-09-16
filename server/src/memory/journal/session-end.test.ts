@@ -1,9 +1,9 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createNodeFileSystem } from '../project/fs/fs-port.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
 import {
   AppRuntime,
   ReticleVerificationRunSchema,
@@ -14,7 +14,7 @@ import {
 import { AmbientStore } from './ambient-store.js';
 import { makeSessionEnd, type SessionEndTarget } from './session-end.js';
 import { DEFAULT_SESSION_RETENTION } from './on-disk/retention.js';
-import { reticleDirPaths, sessionDirPath } from '../project/dir/reticle-dir.js';
+import { reticleDirPaths, sessionDirPath } from '@/memory/project/dir/reticle-dir.js';
 
 function fakeSession(
   id: string,

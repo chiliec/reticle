@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { sessionRoot } from '../../memory/project/session-root.js';
+import { sessionRoot } from '@/memory/project/session-root.js';
 import {
   CapabilitiesSchema,
   ContractReadError,
@@ -10,11 +10,7 @@ import { ReticleTool } from '@reticlehq/core';
 import { capabilityAbsences } from './gaps/capability-absences.js';
 import { asString } from '@reticlehq/core';
 import { sessionIdShape, commandOrThrow } from './tool-kit.js';
-import {
-  reticleDirPaths,
-  readContract,
-  writeContract,
-} from '../../memory/project/dir/reticle-dir.js';
+import { reticleDirPaths, readContract, writeContract } from '@/memory/project/dir/reticle-dir.js';
 import type { ToolDef, ToolDeps } from './tool-kit.js';
 
 /**

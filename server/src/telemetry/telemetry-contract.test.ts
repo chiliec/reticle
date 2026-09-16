@@ -17,9 +17,9 @@ import {
   LicenseActivation,
 } from '@reticlehq/core';
 import { generateKeyPairSync } from 'node:crypto';
-import { TOOLS } from '../surface/tools/tools.js';
+import { TOOLS } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import { VERDICT_TOOLS } from '../surface/tools/feedback-tools.js';
+import { VERDICT_TOOLS } from '@/surface/tools/feedback-tools.js';
 import { bugsInResult, type BugCandidate } from './bug-found.js';
 import { describeParam } from './argument-shape.js';
 import { licenseFacts } from './license-activation.js';
@@ -27,8 +27,8 @@ import {
   LICENSE_KEY_ENV,
   LICENSE_PUBLIC_KEY_ENV,
   signLicenseKey,
-} from '../features/license/license.js';
-import { REPO_ROOT } from '../machine/repo-root.js';
+} from '@/features/license/license.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 import { join } from 'node:path';
 
 /**

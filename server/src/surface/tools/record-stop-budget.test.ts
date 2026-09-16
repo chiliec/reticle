@@ -3,12 +3,12 @@ import { EventType, REPLAY_PROGRAM_VERSION } from '@reticlehq/core';
 import { READ_TOOLS } from './read-tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import type { ToolDeps } from './tools.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 import {
   RecordingStore,
   type CompiledProgram,
-} from '../../language/flows/recording/tape/recordings.js';
+} from '@/language/flows/recording/tape/recordings.js';
 
 function recordStopTool() {
   const t = READ_TOOLS.find((x) => x.name === ReticleTool.RECORD_STOP);

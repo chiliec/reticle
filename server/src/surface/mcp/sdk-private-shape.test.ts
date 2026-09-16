@@ -16,8 +16,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { createMcpServer, CALL_TOOL_METHOD } from './mcp.js';
-import { TOOL_SURFACE } from '../tools/tool-surface.js';
-import type { ToolDeps } from '../tools/tools.js';
+import { TOOL_SURFACE } from '@/surface/tools/tool-surface.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
 
 const toolDepsForTest = (): ToolDeps =>
   ({ sessions: { resolve: () => ({ id: 'x' }) } }) as unknown as ToolDeps;

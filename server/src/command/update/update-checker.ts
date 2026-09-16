@@ -3,8 +3,8 @@ import * as https from 'node:https';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { UpdateCheckIntervalMs } from '@reticlehq/core';
-import { RETICLE_NPM_PACKAGE } from '../version/identity/server-version.js';
-import { log } from '../../log.js';
+import { RETICLE_NPM_PACKAGE } from '@/command/version/identity/server-version.js';
+import { log } from '@/log.js';
 
 const RETICLE_HOME = join(homedir(), '.reticle');
 const MANIFEST_PATH = join(RETICLE_HOME, 'update-manifest.json');

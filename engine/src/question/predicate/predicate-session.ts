@@ -1,6 +1,6 @@
 import type { CommandResult, ReticleEvent } from '@reticlehq/core';
-import type { KeepCallerContextFn, NoteFn } from '../../window/engine-host.js';
-import type { AmbientCounts } from '../../window/ambient.js';
+import type { KeepCallerContextFn, NoteFn } from '@/window/engine-host.js';
+import type { AmbientCounts } from '@/window/ambient.js';
 
 /**
  * What the predicate engine needs from a session, and nothing more.

@@ -9,10 +9,10 @@
 import { StepStatus, type PlanInput, type Step } from './plan-types.js';
 import { StepTitle } from './connect-steps.js';
 import { capabilitiesStep, patchStep } from './plan-framework.js';
-import { patchElectronViteConfig } from '../patch/electron-vite-patch.js';
-import { patchElectronMain, patchElectronPreload } from '../patch/electron-patch.js';
-import { ELECTRON_CAPTURE_FIX, ELECTRON_PRELOAD_FIX } from '../diagnose/desktop-doctor.js';
-import { electronViteManual, ELECTRON_VITE_DEV_MODULE_PATH } from '../patch/snippets.js';
+import { patchElectronViteConfig } from '@/patch/electron-vite-patch.js';
+import { patchElectronMain, patchElectronPreload } from '@/patch/electron-patch.js';
+import { ELECTRON_CAPTURE_FIX, ELECTRON_PRELOAD_FIX } from '@/diagnose/desktop-doctor.js';
+import { electronViteManual, ELECTRON_VITE_DEV_MODULE_PATH } from '@/patch/snippets.js';
 
 /**
  * electron-vite: the renderer plugin, then capabilities, then the two Electron halves.

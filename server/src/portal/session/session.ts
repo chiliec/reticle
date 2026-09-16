@@ -2,10 +2,10 @@ import type { WebSocket } from 'ws';
 import type { ChannelId, ImpactSnapshot } from '@reticlehq/core';
 import type { HandshakeFacts } from './facts/handshake-facts.js';
 import { refusedResult } from './page-commands/undeclared-command.js';
-import { recordImpact } from '../../memory/impact/impact-recorder.js';
+import { recordImpact } from '@/memory/impact/impact-recorder.js';
 import { LastAct } from './last-act.js';
 import { GapLedger } from '@reticlehq/engine/evidence/gap-ledger.js';
-import { CaptureLedger } from '../../surface/tools/feature-capture.js';
+import { CaptureLedger } from '@/surface/tools/feature-capture.js';
 import { commandTimeoutMessage, type PageRuntime } from './timing/command-timeout.js';
 import { readHealthEvent, pendingNavigationMs, type SessionHealth } from './session-health.js';
 import { MIRRORED_COMMANDS, mirroredNarration } from './presence/session-mirror.js';
@@ -16,7 +16,7 @@ export type { SessionHealth };
 const IMPACT_PUSH_DEBOUNCE_MS = 700;
 
 import { PendingCommands, CommandTimeoutError } from './page-commands/pending-commands.js';
-import { span } from '../../trace.js';
+import { span } from '@/trace.js';
 import { keepCallerContextInDaemon, noteToDaemonLog } from './daemon-answers.js';
 import {
   isKnownRealm,
@@ -40,15 +40,15 @@ import {
   type ReticleEvent,
 } from '@reticlehq/core';
 import { RingBuffer } from '@reticlehq/engine/window/ring-buffer.js';
-import type { JournalReader, JournalRecorder } from '../../memory/journal/journal-recorder.js';
+import type { JournalReader, JournalRecorder } from '@/memory/journal/journal-recorder.js';
 import {
   filterEvents,
   mergeEventsBySeq,
   type EventQueryOptions,
-} from '../../memory/journal/journal-query.js';
+} from '@/memory/journal/journal-query.js';
 import { type AmbientCounts } from '@reticlehq/engine/window/ambient.js';
 import { ObservedState } from './facts/observed-state.js';
-import { recordBrowserLatency, recordSdkFailure } from '../../telemetry/session-metrics.js';
+import { recordBrowserLatency, recordSdkFailure } from '@/telemetry/session-metrics.js';
 import { LiveControl, type InboxMessage } from './human/live-control.js';
 export type { InboxMessage } from './human/live-control.js'; // moved; still part of Session's surface
 import { ReviewStore, type ReviewMark } from './human/review-store.js';

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { dirname } from 'node:path';
-import type { FileSystemPort } from '../project/fs/fs-port.js';
-import { reticleDirPaths } from '../project/dir/reticle-dir.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
 import { RouteEnvelopeSchema, type RouteEnvelope } from './envelope.js';
 
 /** Bumped on any breaking change to the persisted envelope shape (matches the runs/contract convention). */

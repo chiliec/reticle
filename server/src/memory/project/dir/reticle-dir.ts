@@ -11,7 +11,7 @@ import {
   type ManifestGovernance,
   type RunId,
 } from '@reticlehq/core';
-import type { FileSystemPort } from '../fs/fs-port.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
 
 /** Resolved absolute paths inside a `.reticle/` root. Pure: join only, no IO, no cwd. */
 export interface ReticleDirPaths {

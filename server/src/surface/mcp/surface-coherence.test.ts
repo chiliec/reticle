@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { TOOL_SURFACE, CORE_TOOL_NAMES, resolveToolSurface } from '../tools/tool-surface.js';
+import { TOOL_SURFACE, CORE_TOOL_NAMES, resolveToolSurface } from '@/surface/tools/tool-surface.js';
 import { ReticleTool } from '@reticlehq/core';
 import { buildServerInstructions } from './server-instructions.js';
 import { advertisedTools } from './mcp.js';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /**
  * Three sources describe the tool surface, and they have to agree.

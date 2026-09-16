@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TOOLS } from './tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import { TOOL_SURFACE, filterTools, type ToolSurface } from './tool-surface.js';
-import { advertisedTools } from '../mcp/mcp.js';
+import { advertisedTools } from '@/surface/mcp/mcp.js';
 
 /**
  * Under every profile, a tool named in another tool's description must be REACHABLE.

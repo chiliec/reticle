@@ -13,11 +13,11 @@ import { ReticleTool } from '@reticlehq/core';
 import { cursorSchema } from './args/numeric-bounds.js';
 import { reconcile, type Mismatch } from '@reticlehq/engine/disagreement/reconcile.js';
 import { salvageJson } from '@reticlehq/engine/window/json-salvage.js';
-import { withControl } from '../../portal/session/control-envelope.js';
+import { withControl } from '@/portal/session/control-envelope.js';
 import { asNumber, asString } from '@reticlehq/core';
 import { type ToolDef, sessionIdShape, commandOrThrow } from './tool-kit.js';
 import { readCompleteTree } from './read/complete-snapshot.js';
-import { HttpWitness } from '../../portal/realm/http-witness.js';
+import { HttpWitness } from '@/portal/realm/http-witness.js';
 
 /**
  * Does the screen agree with the data the app was given?

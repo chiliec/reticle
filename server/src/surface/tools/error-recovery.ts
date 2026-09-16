@@ -10,11 +10,11 @@
  */
 
 import { RefusalReason, TRANSPORT_LIMITS } from '@reticlehq/core';
-import { SELF_RECOVERING_MARKER } from '../../portal/session/no-session-diagnosis.js';
+import { SELF_RECOVERING_MARKER } from '@/portal/session/no-session-diagnosis.js';
 import {
   chromiumInstallCommand,
   bundledPlaywrightVersion,
-} from '../../command/cli/doctor/browser/chromium-hint.js';
+} from '@/command/cli/doctor/browser/chromium-hint.js';
 
 /** Marks where an over-long message had its middle removed. Named so tests assert it by value. */
 const ELISION = '… [elided] …';

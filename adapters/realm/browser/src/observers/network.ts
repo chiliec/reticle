@@ -5,7 +5,7 @@ import {
   StreamTransport,
   StreamDirection,
 } from '@reticlehq/core';
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 import { observeSafely, observeValue, type Emit, type Teardown } from './types.js';
 import {
   isCapturableType,
@@ -16,7 +16,7 @@ import {
 } from './net-detail/network-body.js';
 import { redactUrl, netUrlFields } from './net-detail/network-redact.js';
 import { watchStreamedBody } from './network-stream.js';
-import { requireCapturedMethod } from '../util/captured-method.js';
+import { requireCapturedMethod } from '@/util/captured-method.js';
 
 // Redaction moved to its own cohesive module (network.ts is at its line cap); re-exported so callers
 // and the existing test suite keep importing it from here.

@@ -7,7 +7,7 @@
  * plan.ts is at its file cap.
  */
 
-import { PackageManager, installCommandParts } from '../detect/detect.js';
+import { PackageManager, installCommandParts } from '@/detect/detect.js';
 
 export interface InstallRetry {
   command: string;

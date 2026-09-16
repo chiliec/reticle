@@ -26,7 +26,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { HOOK_EVENT_NAMES, HookConfigSchema, type HookPayload } from '@reticlehq/core/hooks';
 import { ReticleDir } from '@reticlehq/core';
-import { log } from '../log.js';
+import { log } from '@/log.js';
 import { onHook } from './hook-bus.js';
 
 /**

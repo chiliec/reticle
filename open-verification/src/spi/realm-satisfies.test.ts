@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { typecheckComposite, TypeErrorKind } from '../language/typecheck.js';
+import { typecheckComposite, TypeErrorKind } from '@/language/typecheck.js';
 import { Realm } from './realm.js';
 
 /**

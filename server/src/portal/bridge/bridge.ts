@@ -1,10 +1,10 @@
 import * as http from 'node:http';
 import { authFailureReason } from './auth-failure-reason.js';
-import { impactSnapshot, recordImpact } from '../../memory/impact/impact-recorder.js';
+import { impactSnapshot, recordImpact } from '@/memory/impact/impact-recorder.js';
 import type { AddressInfo } from 'node:net';
 import { WebSocketServer, type RawData, type WebSocket } from 'ws';
 import { HookEvent } from '@reticlehq/core/hooks';
-import { emitSessionHook } from '../../hooks/hook-emit.js';
+import { emitSessionHook } from '@/hooks/hook-emit.js';
 import {
   EventType,
   HumanControlKind,
@@ -24,17 +24,17 @@ import {
   type HelloMessage,
   CONTRACT_FINGERPRINT,
 } from '@reticlehq/core';
-import { Session } from '../session/session.js';
-import { SessionManager } from '../session/session-manager.js';
+import { Session } from '@/portal/session/session.js';
+import { SessionManager } from '@/portal/session/session-manager.js';
 import { tokensMatch } from './token-auth.js';
 import { pairingTokenSource } from './pairing-token.js';
-import { log } from '../../log.js';
-import { getSessionMetrics } from '../../telemetry/session-metrics.js';
-import { sessionReplacedReason } from '../session/facts/session-replaced.js';
-import { describeSkew, sdkFix, SkewPair } from '../../command/version/version-skew.js';
-import { noteVersionSkew } from '../../command/version/version-nudge.js';
+import { log } from '@/log.js';
+import { getSessionMetrics } from '@/telemetry/session-metrics.js';
+import { sessionReplacedReason } from '@/portal/session/facts/session-replaced.js';
+import { describeSkew, sdkFix, SkewPair } from '@/command/version/version-skew.js';
+import { noteVersionSkew } from '@/command/version/version-nudge.js';
 import { protocolSkewReason } from './protocol-skew.js';
-import { SERVER_VERSION } from '../../command/version/identity/server-version.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
 
 /**
  * Take the mutable half of a session's identity from a repeat HELLO.

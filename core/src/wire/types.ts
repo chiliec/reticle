@@ -1,4 +1,4 @@
-import type { Ref } from '../identity/brand.js';
+import type { Ref } from '@/identity/brand.js';
 import { z } from 'zod';
 import { CONTRACT_FILE_VERSION, ElementState, QueryBy } from './constants/constants.js';
 // Named where they actually live. These five reached this file through a `export * from
@@ -12,9 +12,9 @@ import {
   PROJECT_FILE_VERSION,
   RunKind,
   RunStatus,
-} from '../artifacts/flow-constants.js';
-import { RiskSurface } from '../verdict/verification-run.js';
-import type { FlowExpect } from '../artifacts/flow-types.js';
+} from '@/artifacts/flow-constants.js';
+import { RiskSurface } from '@/verdict/verification-run.js';
+import type { FlowExpect } from '@/artifacts/flow-types.js';
 
 /**
  * A query describing which element(s) to find, Testing-Library style.

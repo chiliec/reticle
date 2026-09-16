@@ -1,12 +1,12 @@
-import { removeTempDir } from '../../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, mkdir, writeFile, readdir } from 'node:fs/promises';
 import { utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createNodeFileSystem, type FileSystemPort } from '../../project/fs/fs-port.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
 import { pruneFeedback, pruneSessions, pruneVisualDiffs, selectPrunable } from './retention.js';
-import { visualDiffPath, visualDir, visualPath } from '../../project/dir/reticle-dir.js';
+import { visualDiffPath, visualDir, visualPath } from '@/memory/project/dir/reticle-dir.js';
 
 describe('selectPrunable', () => {
   it('removes the oldest dirs beyond the retention count', () => {

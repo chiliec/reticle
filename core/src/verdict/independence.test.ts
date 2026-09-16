@@ -4,7 +4,7 @@ import {
   ChannelId,
   Independence,
   disagreementCanConvict,
-} from '../wire/channel.js';
+} from '@/wire/channel.js';
 import {
   CONTRADICTION_CHANNELS,
   ContradictionKind,

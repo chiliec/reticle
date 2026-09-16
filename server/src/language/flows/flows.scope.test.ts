@@ -1,11 +1,11 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { asFlowName, AnchorKind, FLOW_FILE_VERSION, type FlowFile } from '@reticlehq/core';
-import { createNodeFileSystem, type FileSystemPort } from '../../memory/project/fs/fs-port.js';
-import { flowPath, reticleDirPaths } from '../../memory/project/dir/reticle-dir.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { flowPath, reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
 import { FlowStore } from './flows.js';
 
 const clock = { now: (): number => 1234 };

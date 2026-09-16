@@ -20,7 +20,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { createMcpServer } from '../mcp/mcp.js';
+import { createMcpServer } from '@/surface/mcp/mcp.js';
 import { TOOL_SURFACE, type ToolSurface } from './tool-surface.js';
 import type { ToolDeps } from './tools.js';
 

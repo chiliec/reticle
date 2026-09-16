@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ChannelId } from '../vocabulary/channel.js';
+import { ChannelId } from '@/vocabulary/channel.js';
 import { CompilePhase, compileFor, portableAcross } from './phases.js';
 
 /**

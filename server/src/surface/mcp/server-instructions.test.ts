@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ReticleTool } from '@reticlehq/core';
-import { CORE_TOOL_NAMES } from '../tools/tool-surface.js';
+import { CORE_TOOL_NAMES } from '@/surface/tools/tool-surface.js';
 import { buildServerInstructions } from './server-instructions.js';
 
 /**

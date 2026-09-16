@@ -55,8 +55,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -b",
-    "prepack": "node ../scripts/prepare-dist.mjs --clean dist && tsc -b --force && node ../scripts/prepare-dist.mjs dist",
+    "build": "tsc -b && tsc-alias",
+    "prepack": "node ../scripts/prepare-dist.mjs --clean dist && tsc -b --force && tsc-alias && node ../scripts/prepare-dist.mjs dist",
     "typecheck": "tsc -b",
     "lint": "eslint src",
     "test:unit": "node ../scripts/guard-tests.mjs unit",

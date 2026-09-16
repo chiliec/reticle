@@ -1,9 +1,9 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { startDaemon, type RunningServer } from '../../index.js';
+import { startDaemon, type RunningServer } from '@/index.js';
 
 /**
  * End-to-end wiring test for `reticle serve --http`: start the daemon with the verify endpoint enabled

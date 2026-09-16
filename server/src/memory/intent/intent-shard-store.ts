@@ -20,11 +20,11 @@
  * is a separate decision somebody can take once they believe the migration.
  */
 import { parseIntentFile, type Intent } from '@reticlehq/core/artifacts';
-import type { FileSystemPort } from '../project/fs/fs-port.js';
-import { reticleDirPaths } from '../project/dir/reticle-dir.js';
-import { withFileLock } from '../project/file-lock.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
+import { withFileLock } from '@/memory/project/file-lock.js';
 import { subjectFor } from './intent-subject.js';
-import type { Clock } from '../../machine/clock.js';
+import type { Clock } from '@/machine/clock.js';
 import {
   emptyShard,
   indexFrom,

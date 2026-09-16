@@ -12,8 +12,8 @@
  */
 
 import type { Contradiction, ReactionDigest, ReticleEvent } from '@reticlehq/core';
-import { buildReactionReport, summarizeReaction } from '../question/reaction.js';
-import { findContradictions } from '../disagreement/contradictions.js';
+import { buildReactionReport, summarizeReaction } from '@/question/reaction.js';
+import { findContradictions } from '@/disagreement/contradictions.js';
 
 /** The cursor pair an observer can re-read this step's evidence with. */
 export interface StepWindow {

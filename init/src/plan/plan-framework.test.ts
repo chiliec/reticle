@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { detect, Framework, type DetectInput } from '../detect/detect.js';
+import { detect, Framework, type DetectInput } from '@/detect/detect.js';
 import { frameworkSteps } from './framework-adapter.js';
 import { STEP_TITLES, StepTitle } from './connect-steps.js';
 import { type PlanInput, type Step } from './plan.js';

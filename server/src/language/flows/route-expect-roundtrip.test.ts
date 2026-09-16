@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  predicateToExpect,
-  enforcedOnReplay,
-} from '../../judgement/outcome/predicate-to-expect.js';
+import { predicateToExpect, enforcedOnReplay } from '@/judgement/outcome/predicate-to-expect.js';
 import { successToPredicate } from './flow-success.js';
 import { classifyFlowAssertions, FlowAssertionGrade } from './flow-classify.js';
 import { FlowExpectSchema, PredicateKind } from '@reticlehq/core';

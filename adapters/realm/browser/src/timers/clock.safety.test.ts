@@ -16,7 +16,7 @@ import {
   isClockFrozen,
   FREEZE_WATCHDOG_MS,
 } from './clock.js';
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 
 type SlotMap = Record<string, (...args: unknown[]) => unknown>;
 const slots = window as unknown as SlotMap;

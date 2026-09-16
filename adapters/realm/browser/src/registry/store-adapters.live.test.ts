@@ -18,7 +18,7 @@ import {
   valtioStore,
   xstateStore,
 } from './store-adapters.js';
-import { sanitizeForTransport } from '../security/serialization.js';
+import { sanitizeForTransport } from '@/security/serialization.js';
 
 /**
  * The adapters, against the REAL libraries.

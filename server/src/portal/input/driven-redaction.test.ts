@@ -9,8 +9,8 @@ import {
   resetDrivenRedaction,
 } from './driven-redaction.js';
 import { buildNetworkDetail } from './network-detail.js';
-import { Session } from '../session/session.js';
-import { SessionManager } from '../session/session-manager.js';
+import { Session } from '@/portal/session/session.js';
+import { SessionManager } from '@/portal/session/session-manager.js';
 
 afterEach(() => {
   resetDrivenRedaction();

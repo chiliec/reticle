@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { EventType, REDACTED_VALUE, URL_RAW, type ReticleEvent } from '@reticlehq/core';
 import { evalNet } from './predicate/predicate-eval.js';
 import { PredicateKind } from './predicate/predicate.js';
-import { matchNet, withoutUrlRaw } from '../window/event-filters.js';
+import { matchNet, withoutUrlRaw } from '@/window/event-filters.js';
 
 function netEvent(data: Record<string, unknown>): ReticleEvent {
   return { type: EventType.NET_REQUEST, t: 1, sessionId: 's', data };

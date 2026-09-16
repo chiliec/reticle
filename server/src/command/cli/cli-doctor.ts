@@ -1,17 +1,17 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ReticleEnv } from '@reticlehq/core';
-import { readPid, reticleStateHome } from '../daemon/daemon.js';
-import { PortPresence, probePresence } from '../daemon/binding/port-presence.js';
-import { probeDaemon } from '../../surface/mcp/mcp-proxy.js';
+import { readPid, reticleStateHome } from '@/command/daemon/daemon.js';
+import { PortPresence, probePresence } from '@/command/daemon/binding/port-presence.js';
+import { probeDaemon } from '@/surface/mcp/mcp-proxy.js';
 import { fetchStatus } from './launch/cli-launch.js';
 import { daemonLine, type DaemonIdentity } from './doctor/doctor-daemon-line.js';
 import { projectWiringLine } from './doctor/doctor-project-line.js';
-import { hasProjectConnectedBefore } from '../../memory/recall/prior/connection-memory.js';
+import { hasProjectConnectedBefore } from '@/memory/recall/prior/connection-memory.js';
 import { sessionsLine, type SessionsLine } from './doctor/doctor-sessions-line.js';
 import { captureLookup, describeForeignHolder, findPortHolder } from './ports/port-holder.js';
 import { chromiumHint, probeChromium } from './doctor/browser/chromium-hint.js';
-import { SERVER_VERSION } from '../version/identity/server-version.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
 import { CONTRACT_FINGERPRINT } from '@reticlehq/core';
 import { diagnoseDesktop, isDesktopProject, diagnoseWebCsp } from '@reticlehq/init';
 import {
@@ -21,15 +21,15 @@ import {
   readProjectPort,
 } from './ports/resolve/cli-port.js';
 import { DoctorRow, doctorRow } from './doctor/doctor-rows.js';
-import { attachState, describeAttachState } from '../../surface/mcp/attach-memory.js';
+import { attachState, describeAttachState } from '@/surface/mcp/attach-memory.js';
 import { findOccupiedSiblings, siblingListenerNote } from './ports/sibling-ports.js';
 import {
   daemonsServingProjectElsewhere,
   resolveDaemonForProject,
   splitBrainNote,
   wrongDaemonNote,
-} from '../daemon/daemon-resolve.js';
-import { isAlive } from '../daemon/daemon.js';
+} from '@/command/daemon/daemon-resolve.js';
+import { isAlive } from '@/command/daemon/daemon.js';
 
 /**
  * `reticle doctor` — collapse the ~6 independent first-run failure modes into one command. Checks the

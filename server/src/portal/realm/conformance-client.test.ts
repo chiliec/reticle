@@ -3,8 +3,8 @@ import { Declaration, Verdict } from 'open-verification';
 import { ChannelId, MessageKind, ReticleCommand } from '@reticlehq/core';
 import { conformanceClient } from './conformance-client.js';
 import { WebRealm } from './web-realm.js';
-import { createFakeSession } from '../session/fake-session.js';
-import type { Session } from '../session/session.js';
+import { createFakeSession } from '@/portal/session/fake-session.js';
+import type { Session } from '@/portal/session/session.js';
 
 /**
  * Reticle, scored against the specification Reticle publishes.

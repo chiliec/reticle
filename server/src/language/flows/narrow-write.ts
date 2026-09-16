@@ -1,6 +1,6 @@
 import { FlowErrorCode, FlowFileSchema, type FlowFile } from '@reticlehq/core';
 import { describeFlowZodFailure } from './flow-expect-grammar.js';
-import { isValidFlowName } from '../../memory/project/dir/reticle-dir.js';
+import { isValidFlowName } from '@/memory/project/dir/reticle-dir.js';
 import { safeProjectId, type FlowResult } from './flow-result.js';
 
 /**

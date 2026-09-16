@@ -30,12 +30,12 @@
  */
 import { InitConfirmation, RETICLE_DEFAULT_PORT } from '@reticlehq/core';
 import type { DevServerEntry, InitOutcome } from '@reticlehq/core';
-import { fetchStatus, summarizeStatus } from '../../cli/launch/cli-launch.js';
-import { readDevServers } from '../../daemon/dev-servers.js';
+import { fetchStatus, summarizeStatus } from '@/command/cli/launch/cli-launch.js';
+import { readDevServers } from '@/command/daemon/dev-servers.js';
 import { devServersForProject } from '@reticlehq/core/artifacts';
-import { readProjectId } from '../../cli/ports/resolve/cli-port.js';
-import { reticleStateHome } from '../../daemon/daemon.js';
-import { reportInitOutcome } from '../../../telemetry/init-telemetry.js';
+import { readProjectId } from '@/command/cli/ports/resolve/cli-port.js';
+import { reticleStateHome } from '@/command/daemon/daemon.js';
+import { reportInitOutcome } from '@/telemetry/init-telemetry.js';
 
 /**
  * How long a human is asked to wait.

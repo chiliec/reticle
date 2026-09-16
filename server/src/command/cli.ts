@@ -14,8 +14,8 @@ import { readDevServers } from './daemon/dev-servers.js';
 import {
   hasAnyAppConnectedBefore,
   hasProjectConnectedBefore,
-} from '../memory/recall/prior/connection-memory.js';
-import { attachStatusFields } from '../surface/mcp/attach-memory.js';
+} from '@/memory/recall/prior/connection-memory.js';
+import { attachStatusFields } from '@/surface/mcp/attach-memory.js';
 import { splitBrainFields, withNextAction } from './cli/status-fields.js';
 import { reticleStateHome } from './daemon/daemon.js';
 import { handleMcp } from './cli/mcp-command.js';
@@ -34,20 +34,20 @@ import {
   ReticleEnv,
   devServersForProject,
 } from '@reticlehq/core';
-import { loadDotEnv } from '../telemetry/dev-repo.js';
-import { licenseKeyFromEnvFiles } from '../features/license/license-env.js';
-import { LICENSE_KEY_ENV } from '../features/license/license.js';
-import { createNodeFileSystem } from '../memory/project/fs/fs-port.js';
-import { affectedSavedFlows } from '../language/flows/change/flow-sources.js';
+import { loadDotEnv } from '@/telemetry/dev-repo.js';
+import { licenseKeyFromEnvFiles } from '@/features/license/license-env.js';
+import { LICENSE_KEY_ENV } from '@/features/license/license.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import { affectedSavedFlows } from '@/language/flows/change/flow-sources.js';
 
 import { availableUpdate } from './update/update-nudge.js';
 import { handleUpdate, handleRollback } from './cli/cli-update-commands.js';
 
-import { startDaemon, RETICLE_VERIFY_DEFAULT_PORT } from '../index.js';
-import { verifyEndpointMismatch } from '../status-payload.js';
+import { startDaemon, RETICLE_VERIFY_DEFAULT_PORT } from '@/index.js';
+import { verifyEndpointMismatch } from '@/status-payload.js';
 import { isCloudCommand, runCloudCommand } from './cli/cloud-cli.js';
 import { SERVER_VERSION } from './version/identity/server-version.js';
-import { log } from '../log.js';
+import { log } from '@/log.js';
 import {
   readPid,
   isAlive,
@@ -63,7 +63,7 @@ import {
   presenceIsUsable,
   describePresence,
 } from './daemon/binding/port-presence.js';
-import { waitForDaemon, probeDaemon } from '../surface/mcp/mcp-proxy.js';
+import { waitForDaemon, probeDaemon } from '@/surface/mcp/mcp-proxy.js';
 import {
   installDaemonResilience,
   recordExitReason,
@@ -87,26 +87,26 @@ import {
 import { handleDrive } from './cli/drive/drive-command.js';
 import { handleVerify } from './cli/cli-verify.js';
 import { runKill } from './cli/cli-kill.js';
-import { summarizeHunt, type HuntAnomaly, type HuntRun } from '../judgement/hunt/hunt-report.js';
+import { summarizeHunt, type HuntAnomaly, type HuntRun } from '@/judgement/hunt/hunt-report.js';
 import { runInit, buildNodeIo } from '@reticlehq/init';
 import { continueAfterInit } from './setup/init/init-runtime.js';
 import { handleDoctor } from './cli/cli-doctor.js';
 import { serverInitHost } from './setup/init/init-host.js';
-import { describeLicense } from '../features/license/license.js';
+import { describeLicense } from '@/features/license/license.js';
 import {
   isLikelyDevServerPort,
   devServerPortWarning,
   readProjectPort,
   readProjectId,
 } from './cli/ports/resolve/cli-port.js';
-import type { StartOptions } from '../index.js';
+import type { StartOptions } from '@/index.js';
 
 import { DAEMON_INNER_COMMAND, PORT_FLAG, parseCliArgs, CLI_USAGE } from './cli/cli-parse.js';
-import { handleFeedback, handleIdentify, handleTelemetry } from '../telemetry/feedback-cli.js';
-import { installDaemonTelemetry } from '../telemetry/daemon-telemetry.js';
-import { reportCliRun } from '../telemetry/cli-telemetry.js';
+import { handleFeedback, handleIdentify, handleTelemetry } from '@/telemetry/feedback-cli.js';
+import { installDaemonTelemetry } from '@/telemetry/daemon-telemetry.js';
+import { reportCliRun } from '@/telemetry/cli-telemetry.js';
 
-// Re-exported so existing imports (and the CLI tests) keep resolving from '../cli.js'.
+// Re-exported so existing imports (and the CLI tests) keep resolving from '@/cli.js'.
 export { parseCliArgs, CLI_USAGE };
 export type { CliResult } from './cli/cli-parse.js';
 

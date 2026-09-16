@@ -10,12 +10,12 @@
  * a cohesion backstop rather than a budget, so the answer is a split along a real seam and not a
  * larger number.
  */
-import { CONTAINERISED_TITLE, containerisedDevServerNote } from '../diagnose/containerised-dev-server.js';
-import { mcpWindowsNote } from '../register/mcp.js';
-import { unverifiedUiLibraryNote, WEBGL_CANVAS_LIMIT_NOTE } from '../patch/snippets.js';
+import { CONTAINERISED_TITLE, containerisedDevServerNote } from '@/diagnose/containerised-dev-server.js';
+import { mcpWindowsNote } from '@/register/mcp.js';
+import { unverifiedUiLibraryNote, WEBGL_CANVAS_LIMIT_NOTE } from '@/patch/snippets.js';
 import { FRAMEWORK_ADAPTERS } from './framework-adapter.js';
-import { NodePlatform } from '../detect/platform.js';
-import { UiLibrary } from '../detect/detect.js';
+import { NodePlatform } from '@/detect/platform.js';
+import { UiLibrary } from '@/detect/detect.js';
 // `Step` and `PlanInput` are TYPES, so importing them back from `plan.ts` is erased at build
 // time and creates no cycle. `StepStatus` and `MCP_TARGET` are values, and both are read inside
 // function bodies rather than at module scope, which is what keeps the pair safe to import in

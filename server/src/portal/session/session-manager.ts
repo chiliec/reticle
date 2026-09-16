@@ -1,10 +1,10 @@
 import { NO_SESSION_CONNECTED_ERROR } from '@reticlehq/core';
-import { notePendingNoSessionReason } from '../../telemetry/tool-refused.js';
+import { notePendingNoSessionReason } from '@/telemetry/tool-refused.js';
 import type { NoSessionReason } from '@reticlehq/core/telemetry';
 import {
   declareDrivenRedactionKeys,
   forgetDrivenRedactionKeys,
-} from '../input/driven-redaction.js';
+} from '@/portal/input/driven-redaction.js';
 import { Session, type SessionInfo } from './session.js';
 import { AttachmentHistory } from './presence/attachment-history.js';
 import type { NoSessionNextAction } from './no-session-next-action.js';

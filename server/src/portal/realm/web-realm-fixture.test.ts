@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fixtureIsUsable, type FixtureRef } from 'open-verification';
 import { WebRealm } from './web-realm.js';
-import { createFakeSession } from '../session/fake-session.js';
+import { createFakeSession } from '@/portal/session/fake-session.js';
 
 /**
  * A realm must not OFFER a fixture it cannot honour.

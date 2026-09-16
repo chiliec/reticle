@@ -7,7 +7,7 @@
  * reachable from the SDK entry, and three separate additions to them moved the first-load ceiling
  * in a single week.
  */
-import { FlowStepTool } from '../artifacts/flow-step-tool.js';
+import { FlowStepTool } from '@/artifacts/flow-step-tool.js';
 
 /**
  * The names an agent calls Reticle by.

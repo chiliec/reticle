@@ -16,7 +16,7 @@
 import type { SourcePatch } from './patch-kind.js';
 import { patchViteOwningConfig, type ViteOwningConfig } from './vite-owning-config.js';
 import { sdkImport } from './snippets.js';
-import { UiLibrary } from '../detect/detect.js';
+import { UiLibrary } from '@/detect/detect.js';
 
 /** The config filenames Nuxt itself accepts, in the order `init` should prefer them. */
 export const NUXT_CONFIG_CANDIDATES = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs'];

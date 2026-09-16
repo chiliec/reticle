@@ -5,15 +5,15 @@
  * installed version, restart) and the file they came from is the CLI's dispatch table, which grows
  * for entirely different reasons.
  */
-import { checkForUpdate } from '../update/update-checker.js';
-import { updateTarget } from '../update/update-nudge.js';
-import { applyUpdate, rollback } from '../update/updater.js';
+import { checkForUpdate } from '@/command/update/update-checker.js';
+import { updateTarget } from '@/command/update/update-nudge.js';
+import { applyUpdate, rollback } from '@/command/update/updater.js';
 import { refreshAgentRules, detectPackageManager, buildNodeIo, SILENT_HOST } from '@reticlehq/init';
-import { SERVER_VERSION } from '../version/identity/server-version.js';
-import { log } from '../../log.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
+import { log } from '@/log.js';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { reticleDepsOf, sdkSyncCommand } from '../update/sdk-sync.js';
+import { reticleDepsOf, sdkSyncCommand } from '@/command/update/sdk-sync.js';
 
 /**
  * Bring the SDK in the CURRENT project to the version being installed.

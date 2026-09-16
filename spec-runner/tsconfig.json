@@ -4,8 +4,16 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "lib": ["ES2023"],
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": "."
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../core" }, { "path": "../server" }]
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../server"
+    }
+  ]
 }

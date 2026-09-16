@@ -57,6 +57,32 @@ if (args.includes('--clean')) {
   console.error(`prepare-dist: cleaned ${target}`);
   process.exit(0);
 }
+/**
+ * An `@/…` that is a real import STATEMENT, or undefined.
+ *
+ * Line-by-line and comment-aware, because a plain substring search is wrong in both directions here.
+ * It fires on prose — `server/src/command/cli.ts` has a comment reading "keep resolving from
+ * `@/cli.js`", which is not an import and would have blocked every publish. And `@/` is a common
+ * alias in the apps Reticle scaffolds, so `init`'s own source quotes `import … from '@/components/…'`
+ * as the text it writes into somebody's Next.js project: OUR emitted code must not contain the
+ * alias, but code we generate for a user legitimately does.
+ *
+ * So this matches the shape tsc actually emits — an import or export whose specifier begins `@/` —
+ * and only outside a comment. A quoted example inside a string keeps its quotes and does not match.
+ */
+function unresolvedAlias(text) {
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('//') || line.startsWith('*') || line.startsWith('/*')) continue;
+    const match =
+      /^(?:import|export)\s[^'"]*from\s*(['"])(@\/[^'"]*)\1|^import\s*\(\s*(['"])(@\/[^'"]*)\3/.exec(
+        line,
+      );
+    if (match !== null) return `'${match[2] ?? match[4] ?? '@/'}'`;
+  }
+  return undefined;
+}
+
 let removed = 0;
 let stripped = 0;
 
@@ -76,6 +102,27 @@ for (const file of walk(target)) {
   }
   if (!file.endsWith('.js') && !file.endsWith('.d.ts') && !file.endsWith('.cjs')) continue;
   const before = readFileSync(file, 'utf8');
+  /*
+   * An unrewritten `@/…` must never leave this directory.
+   *
+   * Source uses `@/x` for anything outside its own directory, and `tsc-alias` turns that back into a
+   * relative path after `tsc`. TypeScript resolves the alias at COMPILE time and Node does not
+   * resolve it at all, so a survivor here is a bare specifier Node looks for in `node_modules`: the
+   * package typechecks, builds, packs, publishes, and then fails on the user's first import.
+   *
+   * Checked HERE, in the one script every publishable package already runs at prepack, rather than
+   * in a guard per package. That is the repo's own rule about fixing the shared function instead of
+   * watching its callers — and it is what makes "somebody adds a package and forgets the rewrite
+   * step" impossible rather than merely unlikely, which is the one risk this convention carries.
+   */
+  const unresolved = unresolvedAlias(before);
+  if (unresolved !== undefined) {
+    throw new Error(
+      `prepare-dist: ${file} still imports ${unresolved}. tsc-alias did not run for this package — ` +
+        `its build must be \`tsc -b && tsc-alias\`. Publishing this would fail on the user's first ` +
+        `import.`,
+    );
+  }
   const after = before.replace(MAP_COMMENT, '\n');
   if (after !== before) {
     writeFileSync(file, after);

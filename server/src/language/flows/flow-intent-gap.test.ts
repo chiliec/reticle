@@ -10,18 +10,18 @@ import {
   type InstrumentationGap,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { createMemoryFs } from '../../memory/project/memory-fs.js';
+import { createMemoryFs } from '@/memory/project/memory-fs.js';
 import { FlowStore, type FlowAnnotations } from './flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
 import { AnnotationStore } from './stores/annotation-store.js';
 import { RecordingStore, type CompiledProgram } from './recording/tape/recordings.js';
 import { FLOW_TOOLS } from './flow-tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import { flowIntentId } from './flow-intent.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 
 const ROOT = '/repo/.reticle';
 const NOW = 1_000;

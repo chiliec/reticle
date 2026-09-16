@@ -12,12 +12,12 @@
  * somebody else is refused rather than stolen, which is the same rule `reticle mcp` follows.
  */
 
-import { log } from '../../../log.js';
-import { spawnDaemon } from '../../daemon/daemon.js';
-import { probePresence, presenceIsUsable } from '../../daemon/binding/port-presence.js';
-import { waitForDaemon, probeDaemon } from '../../../surface/mcp/mcp-proxy.js';
-import { daemonSpawnArgs } from '../../cli/daemon-start-options.js';
-import { fetchStatus } from '../../cli/launch/cli-launch.js';
+import { log } from '@/log.js';
+import { spawnDaemon } from '@/command/daemon/daemon.js';
+import { probePresence, presenceIsUsable } from '@/command/daemon/binding/port-presence.js';
+import { waitForDaemon, probeDaemon } from '@/surface/mcp/mcp-proxy.js';
+import { daemonSpawnArgs } from '@/command/cli/daemon-start-options.js';
+import { fetchStatus } from '@/command/cli/launch/cli-launch.js';
 
 interface EnsureDaemonDeps {
   readonly usable: (port: number) => Promise<boolean>;

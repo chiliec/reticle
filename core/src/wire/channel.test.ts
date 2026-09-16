@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PredicateKind } from '../verdict/consequence.js';
+import { PredicateKind } from '@/verdict/consequence.js';
 import { ChannelId, channelsRead } from './channel.js';
 import { HelloMessageSchema } from './messages.js';
 import { MessageKind, RETICLE_PROTOCOL_VERSION } from './constants/constants.js';

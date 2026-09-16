@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { unreachedRoutes } from '../index.js';
+import { unreachedRoutes } from '@/index.js';
 
 /**
  * The third coverage number, and the one that answers a different question.

@@ -9,23 +9,23 @@ import {
   UiLibrary,
   installCommand,
   installCommandParts,
-} from '../detect/detect.js';
-import { installFailureHint } from '../diagnose/install-hint.js';
-import { installRetries } from '../diagnose/install-retries.js';
-import { claudeAddCommand, mcpManual } from '../register/mcp.js';
+} from '@/detect/detect.js';
+import { installFailureHint } from '@/diagnose/install-hint.js';
+import { installRetries } from '@/diagnose/install-retries.js';
+import { claudeAddCommand, mcpManual } from '@/register/mcp.js';
 import {
   mergeClientConfig,
   ClientMergeStatus,
   clientSnippet,
   clientSpec,
   McpClient,
-} from '../register/mcp-clients.js';
+} from '@/register/mcp-clients.js';
 import {
   CLAUDE_COMMAND_PATH,
   CURSOR_COMMAND_PATH,
   SLASH_COMMAND_BODY,
   SLASH_COMMAND_SIGNATURE,
-} from '../register/slash-command.js';
+} from '@/register/slash-command.js';
 import {
   mergeMarkedInstruction,
   reticleMdFile,
@@ -36,7 +36,7 @@ import {
   AGENTS_MD_PATH,
   RETICLE_MD_PATH,
   CURSOR_RULE_PATH,
-} from '../project/agent-rules.js';
+} from '@/project/agent-rules.js';
 import { cspStep } from './plan-framework.js';
 import { frameworkSteps } from './framework-adapter.js';
 import { FRAMEWORK_ADAPTERS, RETICLE_BROWSER_SDK, RETICLE_REACT_KIT } from './framework-adapter.js';
@@ -56,10 +56,10 @@ export {
   type PlanInput,
 } from './plan-types.js';
 import { join } from 'node:path';
-import { reticleConfigContent } from '../patch/snippets.js';
-import { configWithInstallSource } from '../project/install-source-config.js';
+import { reticleConfigContent } from '@/patch/snippets.js';
+import { configWithInstallSource } from '@/project/install-source-config.js';
 import { containerisedStep, uiLibraryStep, webGlCanvasStep, windowsMcpNoteStep } from './notices.js';
-import { existingConfigProblem, projectIdOf, RETICLE_CONFIG_FILE } from '../detect/existing-config.js';
+import { existingConfigProblem, projectIdOf, RETICLE_CONFIG_FILE } from '@/detect/existing-config.js';
 
 // Re-exported: it moved to the module that reads it, and every existing importer says `plan.js`.
 export { RETICLE_CONFIG_FILE };

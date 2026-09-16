@@ -1,10 +1,10 @@
 import { ActionType, isGlobalPress, pressKeyFromArgs } from '@reticlehq/core';
 import { asSyntheticInput } from './synthetic/synthetic-input.js';
-import { nativeSetTimeout } from '../timers/native/native-timers.js';
+import { nativeSetTimeout } from '@/timers/native/native-timers.js';
 
 /** Native, so a page that patched setTimeout cannot stretch or stall a hold. */
 const sleep = (ms: number): Promise<void> => new Promise((r) => nativeSetTimeout(r, ms));
-import { isHtmlElement } from '../dom/realm.js';
+import { isHtmlElement } from '@/dom/realm.js';
 
 function asString(value: unknown, fallback = ''): string {
   return 'string' === typeof value ? value : fallback;

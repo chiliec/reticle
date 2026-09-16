@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { CDP_NO_PROVIDER_REASON, CDP_NO_PROVIDER_RECOMMENDATION } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import { sessionIdShape } from '../../surface/tools/tool-kit.js';
-import { delayMsSchema, httpStatusSchema } from '../../surface/tools/args/numeric-bounds.js';
+import { sessionIdShape } from '@/surface/tools/tool-kit.js';
+import { delayMsSchema, httpStatusSchema } from '@/surface/tools/args/numeric-bounds.js';
 import { asString } from '@reticlehq/core';
 import type { RealInputProvider } from './real-input.js';
 import type { MockRule } from './network-mock.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
 
 /** A provider that can install network mocks — narrows the optional capability so callers branch once. */
 type MockCapable = RealInputProvider & {

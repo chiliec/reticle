@@ -9,16 +9,16 @@ import {
   type CommandResult,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { TOOLS, type ToolDef, type ToolDeps } from '../tools.js';
+import { TOOLS, type ToolDef, type ToolDeps } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import { BaselineStore } from '../../../memory/project/baselines.js';
-import { createNodeFileSystem } from '../../../memory/project/fs/fs-port.js';
-import { RecordingStore } from '../../../language/flows/recording/tape/recordings.js';
-import { FlowStore } from '../../../language/flows/flows.js';
-import { ProjectStore } from '../../../memory/project/project-store.js';
-import { AnnotationStore } from '../../../language/flows/stores/annotation-store.js';
-import type { SessionManager } from '../../../portal/session/session-manager.js';
-import { createFakeSession } from '../../../portal/session/fake-session.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { AnnotationStore } from '@/language/flows/stores/annotation-store.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
+import { createFakeSession } from '@/portal/session/fake-session.js';
 
 /**
  * A green verdict must never imply more coverage than the SDK actually had.

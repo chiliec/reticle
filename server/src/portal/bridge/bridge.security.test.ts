@@ -10,7 +10,7 @@ import {
 import { BlindSpotKind } from '@reticlehq/core';
 import { Bridge } from './bridge.js';
 import { WS_CLOSE_REASON } from './bridge.js';
-import { SessionManager } from '../session/session-manager.js';
+import { SessionManager } from '@/portal/session/session-manager.js';
 
 const bridges: Bridge[] = [];
 const sockets: WebSocket[] = [];

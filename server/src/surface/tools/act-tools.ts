@@ -7,13 +7,13 @@
  * re-exported through this list, which made a cycle out of nothing: that file needs `actCommand` from
  * here, and a registry is the right place to collect a definition from.
  */
-import type { Session } from '../../portal/session/session.js';
+import type { Session } from '@/portal/session/session.js';
 import { z } from 'zod';
 import { aliasParam } from './args/alias-args.js';
-import { resolveSessionWithin } from '../../portal/session/timing/resolve-within.js';
-import { WALL_CLOCK } from '../../portal/session/timing/wall-clock.js';
+import { resolveSessionWithin } from '@/portal/session/timing/resolve-within.js';
+import { WALL_CLOCK } from '@/portal/session/timing/wall-clock.js';
 import { timeoutMsSchema } from './args/numeric-bounds.js';
-import { captureAct } from '../../language/flows/replay.js';
+import { captureAct } from '@/language/flows/replay.js';
 
 /**
  * The pathname of a session's live url, or undefined when it has none yet.
@@ -46,18 +46,18 @@ import { ReticleTool } from '@reticlehq/core';
 import { buildReactionReport, summarizeReaction } from '@reticlehq/engine/question/reaction.js';
 import { parsePredicate } from '@reticlehq/engine/question/predicate/predicate-parse.js';
 import { bodyClauseRefusal } from '@reticlehq/engine/evidence/body-capture-remedy.js';
-import { causalSummary } from '../../judgement/capsule/causal-summary.js';
+import { causalSummary } from '@/judgement/capsule/causal-summary.js';
 import { findContradictions } from '@reticlehq/engine/disagreement/contradictions.js';
 import { crashedRuleNotes } from '@reticlehq/engine/disagreement/contradiction-folds.js';
 import { gapsForAction } from '@reticlehq/engine/evidence/instrumentation-gaps.js';
 import { noteSessionGaps } from '@reticlehq/engine/evidence/gap-ledger.js';
 import { isChangeUndeclared } from '@reticlehq/engine/evidence/undeclared-change.js';
-import { intentDebt, openSessionIntents } from '../../memory/intent/open-intents.js';
+import { intentDebt, openSessionIntents } from '@/memory/intent/open-intents.js';
 import {
   dischargeInlineIntent,
   inlineVerdictId,
   linkInlineIntent,
-} from '../../memory/intent/inline-intent.js';
+} from '@/memory/intent/inline-intent.js';
 import { declaresState } from '@reticlehq/engine/question/predicate/predicate-asks.js';
 import { isStateUnwatched } from '@reticlehq/engine/evidence/blind-spots.js';
 import {
@@ -78,7 +78,7 @@ import {
 } from '@reticlehq/engine/evidence/already-true.js';
 import { describeWaitTarget, namedNetIsInFlight } from '@reticlehq/engine/evidence/unsettled.js';
 import { saveFailedAssertCapsule } from './act-capsule.js';
-import { blastRadius, buildDivergenceCapsule } from '../../judgement/capsule/capsule.js';
+import { blastRadius, buildDivergenceCapsule } from '@/judgement/capsule/capsule.js';
 import { predicateToExpectedLinks } from '@reticlehq/engine/question/predicate/predicate-to-links.js';
 import { buildHonestyBlock } from '@reticlehq/engine/evidence/honesty.js';
 import {
@@ -97,13 +97,13 @@ import {
   provenExpectedLinks,
   PredicateSchema,
 } from '@reticlehq/engine/question/predicate/predicate.js';
-import { healthEnvelope, refuseIfThrottled } from '../../portal/session/session-health.js';
+import { healthEnvelope, refuseIfThrottled } from '@/portal/session/session-health.js';
 import {
   pausedShortCircuit,
   pausedOutputShape,
   withControl,
   PAUSED_NO_VERDICT,
-} from '../../portal/session/control-envelope.js';
+} from '@/portal/session/control-envelope.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
 import { sourceOf } from './tools-helpers.js';
 import { dispatchAct, preflightAct } from './act/act-preflight.js';

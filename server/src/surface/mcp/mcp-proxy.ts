@@ -20,12 +20,12 @@ import { SseFrameParser } from './sse-frame-parser.js';
 export { SseFrameParser, type SseFrame } from './sse-frame-parser.js';
 export { probeDaemon, waitForDaemon } from './proxy/proxy-daemon-probe.js';
 import { probeDaemon } from './proxy/proxy-daemon-probe.js';
-import { SERVER_VERSION } from '../../command/version/identity/server-version.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
 import { buildServerInstructions } from './server-instructions.js';
-import { hasProjectConnectedBefore } from '../../memory/recall/prior/connection-memory.js';
-import { reticleStateHome } from '../../command/daemon/daemon.js';
-import { readProjectId } from '../../command/cli/ports/resolve/cli-port.js';
-import { PEER_VERSION_PARAM, PEER_CONTRACT_PARAM } from '../../command/version/peer-announce.js';
+import { hasProjectConnectedBefore } from '@/memory/recall/prior/connection-memory.js';
+import { reticleStateHome } from '@/command/daemon/daemon.js';
+import { readProjectId } from '@/command/cli/ports/resolve/cli-port.js';
+import { PEER_VERSION_PARAM, PEER_CONTRACT_PARAM } from '@/command/version/peer-announce.js';
 import {
   onStreamDrop,
   onClientRequest,
@@ -34,14 +34,14 @@ import {
   OnDrop,
   OnRequest,
 } from './proxy/proxy-lifecycle.js';
-import { describePresence, probePresence } from '../../command/daemon/binding/port-presence.js';
-import { flushProxySessionMetrics } from '../../telemetry/proxy-telemetry.js';
+import { describePresence, probePresence } from '@/command/daemon/binding/port-presence.js';
+import { flushProxySessionMetrics } from '@/telemetry/proxy-telemetry.js';
 /**
  * The same `/status` probe `doctor`, `status` and `kill` ask with. Reused rather than re-written:
  * the whole defect this import closes was the proxy answering a DIFFERENT question from every other
  * surface, and a second copy of the probe is how that comes back.
  */
-import { fetchStatus as fetchDaemonStatus } from '../../command/cli/launch/cli-launch.js';
+import { fetchStatus as fetchDaemonStatus } from '@/command/cli/launch/cli-launch.js';
 /**
  * Re-exported so every existing caller (and every spec) keeps importing the proxy's log from the
  * proxy. Where the code lives is a file-size decision; where it is imported from is an API.

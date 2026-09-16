@@ -1,14 +1,14 @@
 import { z } from 'zod';
-import { sessionRoot } from '../../memory/project/session-root.js';
+import { sessionRoot } from '@/memory/project/session-root.js';
 import { asNumber, asString } from '@reticlehq/core';
 import type { FlowFile } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import { countSchema } from '../../surface/tools/args/numeric-bounds.js';
-import { readContract } from '../../memory/project/dir/reticle-dir.js';
+import { countSchema } from '@/surface/tools/args/numeric-bounds.js';
+import { readContract } from '@/memory/project/dir/reticle-dir.js';
 import { buildDomainModel } from './domain-model.js';
-import { proposeInstrumentation } from '../../judgement/oracles/self-instrument.js';
-import { instrumentationGapsForFlows } from '../../judgement/oracles/flow-instrument-gaps.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
+import { proposeInstrumentation } from '@/judgement/oracles/self-instrument.js';
+import { instrumentationGapsForFlows } from '@/judgement/oracles/flow-instrument-gaps.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
 
 /**
  * reticle_domain — the "learn the app before testing it" tool. Synthesizes every saved flow + the

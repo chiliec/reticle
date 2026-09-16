@@ -14,7 +14,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ReticleDir, type AccountState } from '@reticlehq/core';
 import { CloudEnv } from './cloud-sync.js';
-import { SESSION_FILE } from '../../command/cli/cloud-kit.js';
+import { SESSION_FILE } from '@/command/cli/cloud-kit.js';
 
 /** Signed OUT is the safe answer: it shows the way in, where a wrong "signed in" hides it. */
 const SIGNED_OUT: AccountState = { signedIn: false };

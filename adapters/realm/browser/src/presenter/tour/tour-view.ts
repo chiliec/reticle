@@ -14,7 +14,7 @@
  */
 
 import { TOUR_STEPS, TOUR_HANDOFF_PROMPT, TourAnchor, type TourStep } from '@reticlehq/core/tour';
-import { Z_TOUR } from '../chrome/layers.js';
+import { Z_TOUR } from '@/presenter/chrome/layers.js';
 
 /** The slide after the last step: the move somebody makes next, ready to paste. */
 export const HANDOFF_INDEX = TOUR_STEPS.length;

@@ -13,7 +13,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { StepStatus } from '../plan/plan.js';
+import { StepStatus } from '@/plan/plan.js';
 import { wasMcpRegistered } from './mcp-registered.js';
 
 describe('wasMcpRegistered', () => {

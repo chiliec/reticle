@@ -9,20 +9,20 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { RETICLE_DEFAULT_PORT } from '@reticlehq/core';
 import type { InitResult } from '@reticlehq/init';
-import { confirmInstall, nodeConfirmDeps } from '../terminal/confirm.js';
-import { writeLicenseKey } from '../license-key.js';
-import { registerOtherAgents, runSetupCommand } from '../setup-command.js';
-import { bridgeOccupied } from '../bringup/bridge-port.js';
-import { relaunchDecision } from '../bringup/relaunch.js';
-import { claudeTranscriptExists, codexSessionFor } from '../terminal/transcripts.js';
-import { probePresence } from '../../daemon/binding/port-presence.js';
-import { probeDaemon } from '../../../surface/mcp/proxy/proxy-daemon-probe.js';
-import { fetchStatus } from '../../cli/launch/cli-launch.js';
+import { confirmInstall, nodeConfirmDeps } from '@/command/setup/terminal/confirm.js';
+import { writeLicenseKey } from '@/command/setup/license-key.js';
+import { registerOtherAgents, runSetupCommand } from '@/command/setup/setup-command.js';
+import { bridgeOccupied } from '@/command/setup/bringup/bridge-port.js';
+import { relaunchDecision } from '@/command/setup/bringup/relaunch.js';
+import { claudeTranscriptExists, codexSessionFor } from '@/command/setup/terminal/transcripts.js';
+import { probePresence } from '@/command/daemon/binding/port-presence.js';
+import { probeDaemon } from '@/surface/mcp/proxy/proxy-daemon-probe.js';
+import { fetchStatus } from '@/command/cli/launch/cli-launch.js';
 import {
   collectEnv,
   DEFAULT_DRIVE_BUDGET_USD,
   DEFAULT_PHASE_TIMEOUT_MS,
-} from '../setup-options.js';
+} from '@/command/setup/setup-options.js';
 
 /** How often the runtime phases look again: fast enough not to be the wait, slow enough to be free. */
 const POLL_MS = 250;

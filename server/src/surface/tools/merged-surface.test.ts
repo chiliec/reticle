@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ReticleTool } from '@reticlehq/core';
 import { TOOL_SURFACE } from './tool-surface.js';
-import { advertisedTools } from '../mcp/mcp.js';
+import { advertisedTools } from '@/surface/mcp/mcp.js';
 import { SURFACE_MERGE_PLANS, MERGED_TOOLS, TOOLS } from './tools.js';
 
 /**

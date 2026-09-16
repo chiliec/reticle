@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { ServiceRealm, type ServiceCall, type ServiceRealmPorts } from './service-realm.js';
-import { ResumeStrategy, resumeStrategy } from '../vocabulary/determinism.js';
-import { adjudicate } from '../spi/adjudicator.js';
-import { ChannelId, Grade } from '../vocabulary/channel.js';
-import { Declaration } from '../vocabulary/intent.js';
-import { CloseCondition, RefusalReason } from '../vocabulary/realm-surface.js';
-import { ProvenanceClass } from '../vocabulary/evidence.js';
-import { evaluate, MeasureOp, PredicateKind } from '../vocabulary/predicate.js';
-import { Verdict, reviseVerdict } from '../vocabulary/verdict.js';
-import { profileFromChannels, Profile } from '../registry.js';
+import { ResumeStrategy, resumeStrategy } from '@/vocabulary/determinism.js';
+import { adjudicate } from '@/spi/adjudicator.js';
+import { ChannelId, Grade } from '@/vocabulary/channel.js';
+import { Declaration } from '@/vocabulary/intent.js';
+import { CloseCondition, RefusalReason } from '@/vocabulary/realm-surface.js';
+import { ProvenanceClass } from '@/vocabulary/evidence.js';
+import { evaluate, MeasureOp, PredicateKind } from '@/vocabulary/predicate.js';
+import { Verdict, reviseVerdict } from '@/vocabulary/verdict.js';
+import { profileFromChannels, Profile } from '@/registry.js';
 
 /**
  * A realm with no screen, driven end to end through the same adjudicator the browser uses.

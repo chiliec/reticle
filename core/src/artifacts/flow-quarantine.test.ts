@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FLOW_FILE_VERSION, FlowStatus, isQuarantined, type FlowFile } from '../index.js';
+import { FLOW_FILE_VERSION, FlowStatus, isQuarantined, type FlowFile } from '@/index.js';
 
 /**
  * A quarantine that does not say why, who and since when does not get to remove coverage.

@@ -2,7 +2,7 @@
  * Read / record / replay tools — baselines + diff, recordings + replay, narrate, clock, state,
  * explore. Split out of tools.ts; assembled back via...READ_TOOLS.
  */
-import { resolveAnnotateTarget } from '../../language/flows/annotate-notes/annotate-target.js';
+import { resolveAnnotateTarget } from '@/language/flows/annotate-notes/annotate-target.js';
 import { z } from 'zod';
 import {
   EventType,
@@ -13,21 +13,21 @@ import {
 } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
 import { advanceMsSchema, depthSchema } from './args/numeric-bounds.js';
-import { proposeConsequences } from '../../judgement/oracles/propose-consequences.js';
-import type { CompiledProgram } from '../../language/flows/recording/tape/recordings.js';
+import { proposeConsequences } from '@/judgement/oracles/propose-consequences.js';
+import type { CompiledProgram } from '@/language/flows/recording/tape/recordings.js';
 import {
   recordingBacktrackWarning,
   routesFromRecording,
-} from '../../language/flows/recording/recording-backtrack.js';
-import { replayProgram } from '../../language/flows/replay.js';
-import { diffLines } from '../../memory/project/baselines.js';
-import { selectPath, capDepth, projectComponentState } from '../../portal/session/state-select.js';
-import { costHint } from '../../portal/session/output-budget.js';
+} from '@/language/flows/recording/recording-backtrack.js';
+import { replayProgram } from '@/language/flows/replay.js';
+import { diffLines } from '@/memory/project/baselines.js';
+import { selectPath, capDepth, projectComponentState } from '@/portal/session/state-select.js';
+import { costHint } from '@/portal/session/output-budget.js';
 import { buildReactionReport, summarizeReaction } from '@reticlehq/engine/question/reaction.js';
 import { asNumber, asString } from '@reticlehq/core';
 import { parseInteractive } from './tools-helpers.js';
 import { type ToolDef, sessionIdShape, commandOrThrow, snapshotTree } from './tool-kit.js';
-import { bufferEnvelope } from '../../portal/session/session-health.js';
+import { bufferEnvelope } from '@/portal/session/session-health.js';
 import { routeOfUrl } from '@reticlehq/engine/question/predicate/predicate-route.js';
 
 /** The route part of a session URL. A host belongs to the machine, not to the journey. */

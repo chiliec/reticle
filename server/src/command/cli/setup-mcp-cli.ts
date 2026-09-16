@@ -3,9 +3,9 @@ import { dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { probeCli } from '@reticlehq/init';
 import { installClosing, tutorialShownSteps } from './tutorial.js';
-import { setupMcp, knownClientLabels, type SetupMcpIo } from '../setup/setup-mcp.js';
-import { reportInstallSteps } from '../setup/setup-install.js';
-import { registerOtherAgents } from '../setup/setup-command.js';
+import { setupMcp, knownClientLabels, type SetupMcpIo } from '@/command/setup/setup-mcp.js';
+import { reportInstallSteps } from '@/command/setup/setup-install.js';
+import { registerOtherAgents } from '@/command/setup/setup-command.js';
 import type { OnboardingStep } from '@reticlehq/core/telemetry';
 
 /**

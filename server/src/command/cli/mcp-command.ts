@@ -8,34 +8,34 @@
  * different projects silently sharing one daemon, one identity and one blast radius.
  */
 
-import { log } from '../../log.js';
-import { isAlive, spawnDaemon, reticleStateHome } from '../daemon/daemon.js';
+import { log } from '@/log.js';
+import { isAlive, spawnDaemon, reticleStateHome } from '@/command/daemon/daemon.js';
 import {
   PortPresence,
   probePresence,
   presenceIsUsable,
   describePresence,
-} from '../daemon/binding/port-presence.js';
+} from '@/command/daemon/binding/port-presence.js';
 import {
   waitForDaemon,
   startMcpProxy,
   probeDaemon,
   proxyLog,
   setProxyLogPort,
-} from '../../surface/mcp/mcp-proxy.js';
-import { installProxyResilience } from '../daemon/daemon-resilience.js';
+} from '@/surface/mcp/mcp-proxy.js';
+import { installProxyResilience } from '@/command/daemon/daemon-resilience.js';
 import { readProjectId } from './ports/resolve/cli-port.js';
-import { resolveMcpPort, daemonProjectAt } from '../daemon/daemon-resolve.js';
+import { resolveMcpPort, daemonProjectAt } from '@/command/daemon/daemon-resolve.js';
 import { daemonSpawnArgs } from './daemon-start-options.js';
-import { WakeAction, decideWake } from '../daemon/wake-decision.js';
-import { pickDaemonPortToBind } from '../daemon/binding/free-port.js';
+import { WakeAction, decideWake } from '@/command/daemon/wake-decision.js';
+import { pickDaemonPortToBind } from '@/command/daemon/binding/free-port.js';
 import { fetchStatus } from './launch/cli-launch.js';
-import { migrateApprovals } from '../setup/approval-migration.js';
+import { migrateApprovals } from '@/command/setup/approval-migration.js';
 import { ReticleEnv } from '@reticlehq/core';
-import { agentIo } from '../setup/agent-io.js';
-import { SERVER_VERSION } from '../version/identity/server-version.js';
+import { agentIo } from '@/command/setup/agent-io.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
 import { homedir } from 'node:os';
-import type { PlatformPaths } from '../setup/agent-configs.js';
+import type { PlatformPaths } from '@/command/setup/agent-configs.js';
 
 /**
  * MCP proxy mode: ensures the daemon is running, then bridges Claude Code's

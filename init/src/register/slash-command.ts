@@ -12,7 +12,7 @@
  * two-minute first impression and an afternoon.
  */
 
-import { DEV_SERVER_POLICY } from '../project/agent-rules.js';
+import { DEV_SERVER_POLICY } from '@/project/agent-rules.js';
 
 /** Claude Code reads project commands from `.claude/commands/<name>.md`. */
 export const CLAUDE_COMMAND_PATH = '.claude/commands/reticle.md';

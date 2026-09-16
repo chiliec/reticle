@@ -1,6 +1,6 @@
 import type { FlowReplayResult } from '@reticlehq/core';
 import { asString } from '@reticlehq/core';
-import type { ToolDeps } from '../../surface/tools/tool-kit.js';
+import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 import { flowsForSession } from './flow-store-for-session.js';
 
 /**

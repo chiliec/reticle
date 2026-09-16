@@ -3,7 +3,7 @@ import type { WebSocket } from 'ws';
 import { RETICLE_PROTOCOL_VERSION, MessageKind, type HelloMessage } from '@reticlehq/core';
 import { Session } from './session.js';
 import { SessionManager } from './session-manager.js';
-import { decideOpen, summarizeStatus } from '../../command/cli/launch/cli-launch.js';
+import { decideOpen, summarizeStatus } from '@/command/cli/launch/cli-launch.js';
 
 /**
  * A tab that is attached and answers nothing must stop being reported as a usable tab.

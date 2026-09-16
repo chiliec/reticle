@@ -1,8 +1,8 @@
 import { FLOW_MUTATE_TOOL } from './flow-mutate-tools.js';
-import { seedSchema } from '../../surface/tools/args/numeric-bounds.js';
+import { seedSchema } from '@/surface/tools/args/numeric-bounds.js';
 import { z } from 'zod';
 import { emptyFlowRefusal } from './empty-flow.js';
-import { aliasParam } from '../../surface/tools/args/alias-args.js';
+import { aliasParam } from '@/surface/tools/args/alias-args.js';
 import {
   FlowErrorCode,
   RecordedSaveError,
@@ -14,24 +14,24 @@ import type { FlowFile } from '@reticlehq/core';
 import { recordSuiteFlakes } from './suite/suite-flakes.js';
 import { ReticleTool } from '@reticlehq/core';
 import { asNumber, asString, mutationTargetsFor, perturbationFor } from '@reticlehq/core';
-import { workerCountSchema } from '../../surface/tools/args/numeric-bounds.js';
-import { log } from '../../log.js';
-import { cloudFetch, syncFlowToCloud, SyncOutcome } from '../../memory/cloud/cloud-sync.js';
+import { workerCountSchema } from '@/surface/tools/args/numeric-bounds.js';
+import { log } from '@/log.js';
+import { cloudFetch, syncFlowToCloud, SyncOutcome } from '@/memory/cloud/cloud-sync.js';
 import { mapWithConcurrency, resolveConcurrency } from './suite/parallel-suite.js';
 import {
   acquireLeasedSession,
   sessionPerturbationPort,
   suiteFixtureSeed,
-} from '../../surface/tools/lease-tools.js';
+} from '@/surface/tools/lease-tools.js';
 import { homedir } from 'node:os';
-import { resolveProjectCloud } from '../../memory/cloud/cloud-config.js';
+import { resolveProjectCloud } from '@/memory/cloud/cloud-config.js';
 import { buildSuiteVerdict } from './decision.js';
 import { classifyFlowAssertions, flattenSteps } from './flow-classify.js';
 import { recordingBacktrackWarning } from './recording/recording-backtrack.js';
-import { isValidFlowName, flowPath } from '../../memory/project/dir/reticle-dir.js';
+import { isValidFlowName, flowPath } from '@/memory/project/dir/reticle-dir.js';
 import type { SuiteVerdict } from '@reticlehq/core';
 import { type FlowAnnotations } from './flows.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
 import { flowsForSession } from './flow-store-for-session.js';
 import { resolveSuiteSelection } from './suite-selection.js';
 import {
@@ -43,7 +43,7 @@ import {
 import {
   persistAndSyncVerificationRun,
   type TimedReplay,
-} from '../../judgement/runs/verification-sync.js';
+} from '@/judgement/runs/verification-sync.js';
 import { runServerVerify } from './suite/server-verify.js';
 import { healFlow } from './heal-run.js';
 

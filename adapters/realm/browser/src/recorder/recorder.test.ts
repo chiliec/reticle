@@ -17,9 +17,9 @@ import {
   type Annotation,
   type RecorderHandle,
 } from './recorder.js';
-import { buildSnapshot } from '../dom/snapshot.js';
-import { isReticleOverlay } from '../dom/dom-ignore.js';
-import { registerCapabilities } from '../registry/capabilities.js';
+import { buildSnapshot } from '@/dom/snapshot.js';
+import { isReticleOverlay } from '@/dom/dom-ignore.js';
+import { registerCapabilities } from '@/registry/capabilities.js';
 
 const NOW = 1000;
 

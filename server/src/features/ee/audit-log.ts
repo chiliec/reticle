@@ -4,7 +4,11 @@
  * stub — the real audit sink is the hosted control plane. It exists now to prove the gate.
  */
 
-import { assertEnterprise, EnterpriseFeature, type GateContext } from '../license/license.js';
+import {
+  assertEnterprise,
+  EnterpriseFeature,
+  type GateContext,
+} from '@/features/license/license.js';
 
 interface AuditEvent {
   actor: string;

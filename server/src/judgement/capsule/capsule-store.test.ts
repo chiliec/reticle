@@ -1,11 +1,11 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ActionType, AnchorKind, type FlowStep } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
 import {
   CapsuleStore,
   capsuleId,

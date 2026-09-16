@@ -1,4 +1,4 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -13,8 +13,8 @@ import {
   FlowFileSchema,
   QueryBy,
 } from '@reticlehq/core';
-import { createNodeFileSystem, type FileSystemPort } from '../../memory/project/fs/fs-port.js';
-import { flowPath, reticleDirPaths } from '../../memory/project/dir/reticle-dir.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { flowPath, reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
 import { anchorForStep, FlowStore, recordedStepToFlowStep } from './flows.js';
 import type { CompiledProgram, RecordedStep } from './recording/tape/recordings.js';
 

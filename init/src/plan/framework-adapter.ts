@@ -19,7 +19,7 @@
  * `framework-adapter.test.ts` asserts the seam between the two halves.
  */
 
-import { Framework } from '../detect/detect.js';
+import { Framework } from '@/detect/detect.js';
 import { StepTitle } from './connect-steps.js';
 import {
   VITE_PLUGIN_DETAIL,

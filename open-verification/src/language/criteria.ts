@@ -13,7 +13,7 @@
  * it could never have failed.
  */
 
-import type { ChannelId } from '../vocabulary/channel.js';
+import type { ChannelId } from '@/vocabulary/channel.js';
 import type { ProgramStep } from './typecheck.js';
 
 /** One thing a user wants to be true, in the same terms the protocol already speaks. */

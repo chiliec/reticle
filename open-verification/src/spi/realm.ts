@@ -6,14 +6,14 @@ import {
   type Window,
   CloseCondition,
   RefusalReason,
-} from '../vocabulary/realm-surface.js';
-import { type ChannelId } from '../vocabulary/channel.js';
+} from '@/vocabulary/realm-surface.js';
+import { type ChannelId } from '@/vocabulary/channel.js';
 import { Witness } from './witness.js';
-import type { FixtureRef } from '../vocabulary/fixture.js';
-import type { Reversal } from '../vocabulary/mutation.js';
-import type { DeterminismProfile } from '../vocabulary/determinism.js';
-import { type Observation } from '../vocabulary/evidence.js';
-import type { Anomaly } from '../vocabulary/verdict.js';
+import type { FixtureRef } from '@/vocabulary/fixture.js';
+import type { Reversal } from '@/vocabulary/mutation.js';
+import type { DeterminismProfile } from '@/vocabulary/determinism.js';
+import { type Observation } from '@/vocabulary/evidence.js';
+import type { Anomaly } from '@/vocabulary/verdict.js';
 
 /**
  * What you extend to make a new kind of environment verifiable.

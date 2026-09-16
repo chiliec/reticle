@@ -8,16 +8,16 @@
 
 import type { Browser } from 'playwright';
 import { BrowserLaunchKind } from '@reticlehq/core/telemetry';
-import { chromiumLaunchOptions } from '../../chromium-launch-options.js';
-import { getSessionMetrics } from '../../telemetry/session-metrics.js';
-import { classifyConnectFailure } from '../../telemetry/connect-failure.js';
+import { chromiumLaunchOptions } from '@/chromium-launch-options.js';
+import { getSessionMetrics } from '@/telemetry/session-metrics.js';
+import { classifyConnectFailure } from '@/telemetry/connect-failure.js';
 import {
   chromiumInstallCommand,
   chromiumInstallDepsCommand,
   bundledPlaywrightVersion,
-} from '../../command/cli/doctor/browser/chromium-hint.js';
+} from '@/command/cli/doctor/browser/chromium-hint.js';
 import type { Launcher, PooledBrowser, PooledContext, PooledPage } from './browser-pool.js';
-import { installNetworkMocks } from '../input/network-mock.js';
+import { installNetworkMocks } from '@/portal/input/network-mock.js';
 
 /**
  * How a leased tab navigates. Pure, and exported, because the decision in it is worth a test while

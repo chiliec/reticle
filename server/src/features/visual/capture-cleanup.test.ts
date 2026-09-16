@@ -3,7 +3,7 @@ import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RETICLE_CAPTURE_FILE_PREFIX } from '@reticlehq/core';
-import { start } from '../../index.js';
+import { start } from '@/index.js';
 import { cleanupCaptureDirectories, trackCaptureDirectory } from './capture-cleanup.js';
 
 const made = new Set<string>();

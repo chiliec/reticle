@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import { generateKeyPairSync } from 'node:crypto';
-import { copyFileSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { copyFileSync, readFileSync, rmSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /**
  * The one release step nothing could see fail until release day.
@@ -139,22 +139,36 @@ describe('the issuer key can actually be stamped into the built server', () => {
     ).toBe(0);
   });
 
+  /*
+   * Stamps a private COPY, never the real build.
+   *
+   * This used to stamp `server/dist/.../license.js` in place and restore it in a `finally`, which is
+   * a mutation of a build output that `turbo` may be rewriting at the same moment: `spec-runner`
+   * depends on `@reticlehq/server`, so `server:build` is scheduled CONCURRENTLY with
+   * `server:test:guards`. Whichever writer lost, a real key was left stamped in the tree — and since
+   * `tsc -b` is incremental and does not rewrite an unchanged file, nothing ever put it back. Every
+   * later run then failed with "already stamped", for a reason unrelated to the change under test.
+   *
+   * A `finally` cannot fix that: the hazard is the shared file, not the cleanup. So the script takes
+   * its target from the environment and this points it somewhere only this test can see.
+   */
   it('bakes a real key into the real path', () => {
-    const backup = `${TARGET}.stamp-test-backup`;
-    copyFileSync(TARGET, backup);
+    // BESIDE the real file, not in a temp dir. After stamping, the script `import()`s the module to
+    // prove the stamp took against the real thing rather than the string it just wrote — so the copy
+    // has to sit where its own imports still resolve. In `os.tmpdir()` it cannot even find `zod`.
+    const copy = join(dirname(TARGET), 'license.stamp-check.js');
+    copyFileSync(TARGET, copy);
     try {
       const { publicKey } = generateKeyPairSync('ed25519');
       const pem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
-      const { out, code } = run({ RETICLE_ISSUER_PUBLIC_KEY: pem });
+      const { out, code } = run({ RETICLE_ISSUER_PUBLIC_KEY: pem, RETICLE_STAMP_TARGET: copy });
       expect(code, out).toBe(0);
       expect(out).toContain('issuer key baked');
-      expect(readFileSync(TARGET, 'utf8')).toContain('BEGIN PUBLIC KEY');
+      expect(readFileSync(copy, 'utf8')).toContain('BEGIN PUBLIC KEY');
+      // And the real artifact was never touched, which is the property that was actually broken.
+      expect(readFileSync(TARGET, 'utf8')).toContain("BAKED_ISSUER_PUBLIC_KEY_PEM = ''");
     } finally {
-      // Put the unstamped build back, so a later `pnpm pack` cannot ship a throwaway key.
-      writeFileSync(TARGET, readFileSync(backup, 'utf8'));
-      // `rmSync`, not `execFileSync('rm')`: there is no `rm` on a Windows runner, so the cleanup
-      // threw INSIDE a finally block and replaced whatever the test was reporting.
-      rmSync(backup, { force: true });
+      rmSync(copy, { force: true });
     }
   });
 

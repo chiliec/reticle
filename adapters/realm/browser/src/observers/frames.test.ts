@@ -1,7 +1,7 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { sameOriginFrameBodies, observeSameOriginFrames } from './frames.js';
 import { countClosedShadowRoots } from './blind-spots.js';
-import { installShadowRegistry } from '../dom/shadow-registry.js';
+import { installShadowRegistry } from '@/dom/shadow-registry.js';
 
 /**
  * A frame's document is a separate node tree, so the top document's MutationObserver never saw it.

@@ -10,10 +10,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { advertisedTools } from '../mcp/mcp.js';
+import { advertisedTools } from '@/surface/mcp/mcp.js';
 import { ADVERTISE_ALL_ENV, TOOL_PROFILE_ENV, TOOL_SURFACE } from './tool-surface.js';
 import { TOOLS } from './tools.js';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 const REPO = REPO_ROOT;
 const read = (rel: string): string => readFileSync(join(REPO, rel), 'utf8');

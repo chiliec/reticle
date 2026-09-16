@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ConsequenceKind, PresenceKind, isConsequenceKind, isPresenceKind } from './consequence.js';
-import { flowExpectHasConsequence, flowExpectIsPresenceOnly } from '../artifacts/flow-types.js';
-import type { FlowExpect } from '../artifacts/flow-types.js';
+import { flowExpectHasConsequence, flowExpectIsPresenceOnly } from '@/artifacts/flow-types.js';
+import type { FlowExpect } from '@/artifacts/flow-types.js';
 
 describe('consequence classification (the moat rule, single source)', () => {
   it('signal/net/state are consequences; element/text are presence', () => {

@@ -1,20 +1,20 @@
 import { z } from 'zod';
 import { ProjectReadError, RunStatus, type RunRecord } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import { countSchema } from '../../surface/tools/args/numeric-bounds.js';
-import { sessionIdShape } from '../../surface/tools/tool-kit.js';
+import { countSchema } from '@/surface/tools/args/numeric-bounds.js';
+import { sessionIdShape } from '@/surface/tools/tool-kit.js';
 import { asNumber, asString } from '@reticlehq/core';
 import {
   cloudFetch,
   fetchProjectRegressionFromCloud,
   resolveCloudConfig,
-} from '../cloud/cloud-sync.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
-import { RunStore } from '../../judgement/runs/artifact/run-store.js';
+} from '@/memory/cloud/cloud-sync.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
+import { RunStore } from '@/judgement/runs/artifact/run-store.js';
 import {
   diffRuns as diffVerificationRuns,
   type RunDiff as VerificationRunDiff,
-} from '../../judgement/runs/artifact/run-diff.js';
+} from '@/judgement/runs/artifact/run-diff.js';
 
 /** The diff between the two most-recent runs for a name — the "did it behave like last time?" answer. */
 interface RunDiff {

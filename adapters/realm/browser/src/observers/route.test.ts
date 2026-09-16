@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { EventType } from '@reticlehq/core';
 import { installRoute } from './route.js';
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 import type { Emit, Teardown } from './types.js';
 
 interface Emitted {

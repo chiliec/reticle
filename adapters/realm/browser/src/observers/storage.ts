@@ -1,5 +1,5 @@
 import { EventType, REDACTED_VALUE, StorageArea } from '@reticlehq/core';
-import { isSensitiveKey, scrubKnownSecrets } from '../security/serialization.js';
+import { isSensitiveKey, scrubKnownSecrets } from '@/security/serialization.js';
 import { observeSafely, observeValue, type Emit, type Teardown } from './types.js';
 
 /** The three readable client-side storage areas. httpOnly cookies are invisible to JS by design. */

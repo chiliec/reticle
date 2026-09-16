@@ -8,7 +8,7 @@
  * lighter per-flow RunRecord that feeds regression memory is synced separately in flow-replay-run.ts.
  * Both are best-effort + opt-in: no creds → the artifact still lands on disk, nothing leaves the machine.
  */
-import { mcpClientIdentity } from '../../surface/mcp/peer/client-identity.js';
+import { mcpClientIdentity } from '@/surface/mcp/peer/client-identity.js';
 import {
   RunAgentKind,
   RunFramework,
@@ -25,10 +25,10 @@ import {
 import { mapReplayToFlowResult } from './artifact/replay-mapping.js';
 import { defaultRunId } from './default-run-id.js';
 import { RunStore } from './artifact/run-store.js';
-import { cloudFetch, syncRunToCloud, SyncOutcome } from '../../memory/cloud/cloud-sync.js';
-import { resolveProjectCloud } from '../../memory/cloud/cloud-config.js';
-import { log } from '../../log.js';
-import type { ToolDeps } from '../../surface/tools/tool-kit.js';
+import { cloudFetch, syncRunToCloud, SyncOutcome } from '@/memory/cloud/cloud-sync.js';
+import { resolveProjectCloud } from '@/memory/cloud/cloud-config.js';
+import { log } from '@/log.js';
+import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 
 /** A replay plus the wall-clock time it took — the shape the verify handler already collects. */
 /** The author of record when no MCP peer introduced itself — a CLI run, or a client that skipped the handshake. */

@@ -1,13 +1,13 @@
 import { execFile } from 'node:child_process';
-import { NodePlatform } from '../../machine/platform.js';
+import { NodePlatform } from '@/machine/platform.js';
 import { existsSync } from 'node:fs';
 import { platform } from 'node:os';
 import { dirname, join } from 'node:path';
 import { loadManifest, saveManifest } from './update-checker.js';
-import { RETICLE_NPM_PACKAGE, SERVER_VERSION } from '../version/identity/server-version.js';
-import { log } from '../../log.js';
+import { RETICLE_NPM_PACKAGE, SERVER_VERSION } from '@/command/version/identity/server-version.js';
+import { log } from '@/log.js';
 import { TelemetryEventKind } from '@reticlehq/core/telemetry';
-import { getTelemetry } from '../../telemetry/telemetry.js';
+import { getTelemetry } from '@/telemetry/telemetry.js';
 import { wasNudged } from './nudge-credit.js';
 
 /** Which way the installed version moved. A rollback means a release hurt someone enough to retreat. */

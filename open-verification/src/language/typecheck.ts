@@ -19,7 +19,7 @@
  * of Reticle's TypeScript.
  */
 
-import type { ChannelId } from '../vocabulary/channel.js';
+import type { ChannelId } from '@/vocabulary/channel.js';
 
 export const TypeErrorKind = {
   /** The realm cannot do this. Checked against `capabilities()`. */

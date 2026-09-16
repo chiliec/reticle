@@ -11,7 +11,7 @@
  * compile error and `plan-framework.test.ts` pins that no builder has drifted back to a literal.
  */
 
-import { CSP_STEP_TITLE } from '../diagnose/csp-check.js';
+import { CSP_STEP_TITLE } from '@/diagnose/csp-check.js';
 
 /** Every fixed title a plan step can carry. The one spelling; nothing writes a title inline. */
 export const StepTitle = {

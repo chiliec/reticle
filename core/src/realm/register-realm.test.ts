@@ -7,7 +7,7 @@ import {
   knownRuntimes,
   resetRegisteredRealms,
 } from './registry.js';
-import { AppRuntime } from '../telemetry-feedback.js';
+import { AppRuntime } from '@/telemetry-feedback.js';
 
 /**
  * A domain can add itself without editing this package.

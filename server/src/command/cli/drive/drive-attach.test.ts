@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PortPresence, describePresence } from '../../daemon/binding/port-presence.js';
+import { PortPresence, describePresence } from '@/command/daemon/binding/port-presence.js';
 import {
   DriveMode,
   decideDriveMode,

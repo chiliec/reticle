@@ -11,7 +11,7 @@ import {
   LICENSE_KEY_ENV,
   LICENSE_PUBLIC_KEY_ENV,
   signLicenseKey,
-} from '../features/license/license.js';
+} from '@/features/license/license.js';
 
 const NOW = 1_700_000_000_000;
 const { publicKey, privateKey } = generateKeyPairSync('ed25519');

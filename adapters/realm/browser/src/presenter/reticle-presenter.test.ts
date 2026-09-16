@@ -37,7 +37,7 @@ vi.mock('../transport/transport.js', () => {
 });
 
 // Imported after the mock is registered.
-const { Reticle } = await import('../reticle.js');
+const { Reticle } = await import('@/reticle.js');
 
 const cmd = (name: string, args: Record<string, unknown> = {}): CommandMessage => ({
   kind: MessageKind.COMMAND,

@@ -22,9 +22,9 @@ import {
   isVisible,
 } from './a11y.js';
 import { isIgnored, isReticleOverlay } from './dom-ignore.js';
-import { isSensitiveKey } from '../security/serialization.js';
-import { declaredTestids } from '../registry/capabilities.js';
-import { identifyComponent } from '../registry/stores/adapters.js';
+import { isSensitiveKey } from '@/security/serialization.js';
+import { declaredTestids } from '@/registry/capabilities.js';
+import { identifyComponent } from '@/registry/stores/adapters.js';
 import { refs } from './addressing/refs.js';
 
 const TESTID_ATTR = 'data-testid';

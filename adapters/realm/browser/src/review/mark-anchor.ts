@@ -3,10 +3,10 @@ import {
   AnchorStrategy,
   synthesizeAnchor,
   type AnchorInput,
-} from '../dom/addressing/auto-anchor.js';
-import { getAccessibleName, getRole } from '../dom/a11y.js';
-import { identifyComponent } from '../registry/stores/adapters.js';
-import { sourceFor } from '../dom/addressing/source.js';
+} from '@/dom/addressing/auto-anchor.js';
+import { getAccessibleName, getRole } from '@/dom/a11y.js';
+import { identifyComponent } from '@/registry/stores/adapters.js';
+import { sourceFor } from '@/dom/addressing/source.js';
 
 /** Attribute names — defined locally per the recorder/query convention (no shared free string). */
 const TESTID_ATTR = 'data-testid';

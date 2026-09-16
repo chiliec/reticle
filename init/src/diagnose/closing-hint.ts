@@ -7,9 +7,9 @@
  * install, a wrong sentence loses a user quietly.
  */
 
-import { StepStatus } from '../plan/plan.js';
-import { wasMcpRegistered } from '../register/mcp-registered.js';
-import { CLI } from '../project/agent-rules.js';
+import { StepStatus } from '@/plan/plan.js';
+import { wasMcpRegistered } from '@/register/mcp-registered.js';
+import { CLI } from '@/project/agent-rules.js';
 
 /**
  * The standing ask, printed at the end of every `init`.

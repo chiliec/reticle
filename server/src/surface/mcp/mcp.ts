@@ -3,26 +3,26 @@ import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { isPredicateParam } from '@reticlehq/engine/question/predicate/predicate-eval.js';
 import { isToonable, resultToToon, MCP_SERVER_NAME } from '@reticlehq/core';
-import { tableForSurface, type ToolDeps } from '../tools/tools.js';
-import type { ToolDef } from '../tools/tools.js';
+import { tableForSurface, type ToolDeps } from '@/surface/tools/tools.js';
+import type { ToolDef } from '@/surface/tools/tools.js';
 import {
   filterTools,
   describeToolSurface,
   TOOL_SURFACE,
   type ToolSurface,
-} from '../tools/tool-surface.js';
+} from '@/surface/tools/tool-surface.js';
 import { ReticleTool } from '@reticlehq/core';
 import { SHARED_PARAM_SHORT } from './shared-params.js';
-import { buildDynamicTools } from '../tools/dynamic-tools.js';
-import { runTool, SESSION_BOUND_TOOLS } from '../tools/invoke-tool.js';
-import { sessionEnvelopeShape, newSnapshotCache } from '../tools/tool-kit.js';
-import { buildErrorPayload } from '../tools/error-recovery.js';
-import { takeVersionSkewOnto } from '../../command/version/version-nudge.js';
+import { buildDynamicTools } from '@/surface/tools/dynamic-tools.js';
+import { runTool, SESSION_BOUND_TOOLS } from '@/surface/tools/invoke-tool.js';
+import { sessionEnvelopeShape, newSnapshotCache } from '@/surface/tools/tool-kit.js';
+import { buildErrorPayload } from '@/surface/tools/error-recovery.js';
+import { takeVersionSkewOnto } from '@/command/version/version-nudge.js';
 import { resultIsError } from './faults/mcp-is-error.js';
 import { consumerVerdictRefusal, reservedVerdictKeysIn } from './consumer-verdict-guard.js';
 import { buildServerInstructions } from './server-instructions.js';
-import { unadvertisedToolHelp } from '../tools/unadvertised-help.js';
-import { liveCallText, liveCallValues } from '../tools/live-call-text.js';
+import { unadvertisedToolHelp } from '@/surface/tools/unadvertised-help.js';
+import { liveCallText, liveCallValues } from '@/surface/tools/live-call-text.js';
 
 /** The JSON-RPC method the SDK registers its tool dispatcher under. */
 export const CALL_TOOL_METHOD = 'tools/call';
@@ -39,10 +39,10 @@ export const CALL_TOOL_METHOD = 'tools/call';
  * resolved. The old behaviour, a bare `return`, gave neither.
  */
 const SDK_SHAPE_MISSING = 'sdk_internal_missing';
-import { log } from '../../log.js';
-import { SERVER_VERSION } from '../../command/version/identity/server-version.js';
-import { setMcpClientNameHook } from '../../telemetry/feedback-context.js';
-import { getSessionMetrics } from '../../telemetry/session-metrics.js';
+import { log } from '@/log.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
+import { setMcpClientNameHook } from '@/telemetry/feedback-context.js';
+import { getSessionMetrics } from '@/telemetry/session-metrics.js';
 import { parsePredicate } from '@reticlehq/engine/question/predicate/predicate-parse.js';
 
 /**

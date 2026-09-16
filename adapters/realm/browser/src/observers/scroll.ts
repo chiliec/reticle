@@ -1,6 +1,6 @@
 import { EventType, ScrollDirection } from '@reticlehq/core';
-import { refs } from '../dom/addressing/refs.js';
-import { nativeSetTimeout, nativeClearTimeout } from '../timers/native/native-timers.js';
+import { refs } from '@/dom/addressing/refs.js';
+import { nativeSetTimeout, nativeClearTimeout } from '@/timers/native/native-timers.js';
 import type { Emit, Teardown } from './types.js';
 
 const THROTTLE_MS = 100;

@@ -1,4 +1,4 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -12,14 +12,14 @@ import {
   RunTrigger,
 } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import type { ToolDeps } from '../../surface/tools/tools.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import { FlowStore } from '../../language/flows/flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
-import { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { AnnotationStore } from '@/language/flows/stores/annotation-store.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
 import { RUN_TOOLS } from './run-tools.js';
 import { RunStore } from './artifact/run-store.js';
 import {

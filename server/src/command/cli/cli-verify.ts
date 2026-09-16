@@ -16,12 +16,12 @@ import {
   exploreApp,
   harnessAvailable,
   MSG_NO_HARNESS_KEY,
-} from '../../surface/tools/harness-explore.js';
-import { resolveSuiteSelection } from '../../language/flows/suite-selection.js';
+} from '@/surface/tools/harness-explore.js';
+import { resolveSuiteSelection } from '@/language/flows/suite-selection.js';
 import {
   readOrCreatePairingTokenSync,
   defaultPairingTokenDir,
-} from '../../portal/bridge/pairing-token.js';
+} from '@/portal/bridge/pairing-token.js';
 import { randomUUID } from 'node:crypto';
 import {
   RETICLE_DEFAULT_PORT,
@@ -37,9 +37,9 @@ import {
   VerifyPhase,
   type ReticleVerificationRun,
 } from '@reticlehq/core';
-import { start, type RunningServer } from '../../index.js';
-import { probePresence, PortPresence } from '../daemon/binding/port-presence.js';
-import { probeDaemon } from '../../surface/mcp/mcp-proxy.js';
+import { start, type RunningServer } from '@/index.js';
+import { probePresence, PortPresence } from '@/command/daemon/binding/port-presence.js';
+import { probeDaemon } from '@/surface/mcp/mcp-proxy.js';
 import { fetchStatus } from './launch/cli-launch.js';
 import {
   cloudFetch,
@@ -48,19 +48,19 @@ import {
   syncProgressToCloud,
   syncRunToCloud,
   SyncOutcome,
-} from '../../memory/cloud/cloud-sync.js';
-import { ReticleRunner, type VerifyProgressListener } from '../../judgement/runs/reticle-runner.js';
-import { createRunnerPort } from '../../judgement/runs/runner-port.js';
-import { RunStore } from '../../judgement/runs/artifact/run-store.js';
-import { renderRunReport } from '../../judgement/runs/artifact/render-report.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import { FlowStore } from '../../language/flows/flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
-import { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
-import type { ToolDeps } from '../../surface/tools/tool-kit.js';
+} from '@/memory/cloud/cloud-sync.js';
+import { ReticleRunner, type VerifyProgressListener } from '@/judgement/runs/reticle-runner.js';
+import { createRunnerPort } from '@/judgement/runs/runner-port.js';
+import { RunStore } from '@/judgement/runs/artifact/run-store.js';
+import { renderRunReport } from '@/judgement/runs/artifact/render-report.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { AnnotationStore } from '@/language/flows/stores/annotation-store.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
+import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 
 const EXIT_PASS = 0;
 const EXIT_FAIL = 1;

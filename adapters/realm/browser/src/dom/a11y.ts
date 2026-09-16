@@ -2,7 +2,7 @@ import { ElementState, REDACTED_VALUE, type ElementDescriptor } from '@reticlehq
 import { isButton, isHtmlElement, isImage, isInput, isSelect, isTextArea } from './realm.js';
 import { refs } from './addressing/refs.js';
 import { inspectChart } from './chart.js';
-import { isSensitiveKey } from '../security/serialization.js';
+import { isSensitiveKey } from '@/security/serialization.js';
 import { formatSource, sourceFromDom } from './addressing/source.js';
 
 /**

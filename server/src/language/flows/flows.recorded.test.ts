@@ -1,4 +1,4 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -14,17 +14,17 @@ import {
   type FlowFile,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { createNodeFileSystem, type FileSystemPort } from '../../memory/project/fs/fs-port.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
 import { FlowStore } from './flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
 import { AnnotationStore } from './stores/annotation-store.js';
 import { FLOW_TOOLS } from './flow-tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import { BaselineStore } from '../../memory/project/baselines.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
 import { RecordingStore } from './recording/tape/recordings.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
 
 const FROZEN = 1234;
 const clock = { now: (): number => FROZEN };

@@ -4,9 +4,9 @@ import {
   resolveDaemonForProject,
   splitBrainNote,
   wrongDaemonNote,
-} from '../daemon/daemon-resolve.js';
-import { isAlive, reticleStateHome } from '../daemon/daemon.js';
-import { hasProjectConnectedBefore } from '../../memory/recall/prior/connection-memory.js';
+} from '@/command/daemon/daemon-resolve.js';
+import { isAlive, reticleStateHome } from '@/command/daemon/daemon.js';
+import { hasProjectConnectedBefore } from '@/memory/recall/prior/connection-memory.js';
 
 /**
  * The two optional blocks `status` adds to its payload, out of cli.ts because that file hit the

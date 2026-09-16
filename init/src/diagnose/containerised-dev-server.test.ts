@@ -13,9 +13,9 @@
  * second when it happens; this exists to say both before either does.
  */
 import { describe, expect, it } from 'vitest';
-import { buildPlan, StepStatus, type PlanInput } from '../plan/plan.js';
+import { buildPlan, StepStatus, type PlanInput } from '@/plan/plan.js';
 import { CONTAINER_MARKERS, containerisedDevServerNote } from './containerised-dev-server.js';
-import { Framework, PackageManager, UiLibrary } from '../detect/detect.js';
+import { Framework, PackageManager, UiLibrary } from '@/detect/detect.js';
 
 const INPUT: PlanInput = {
   detection: {

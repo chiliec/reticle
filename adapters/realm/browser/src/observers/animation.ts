@@ -1,6 +1,6 @@
 import { EventType } from '@reticlehq/core';
-import { refs } from '../dom/addressing/refs.js';
-import { isReticleOverlay } from '../dom/dom-ignore.js';
+import { refs } from '@/dom/addressing/refs.js';
+import { isReticleOverlay } from '@/dom/dom-ignore.js';
 import type { Emit, Teardown } from './types.js';
 
 /** Observe CSS animations + transitions and emit anim.start / anim.end. */

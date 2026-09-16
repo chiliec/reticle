@@ -20,9 +20,9 @@
  * frame.
  */
 import { ActionType, InputModeReason, ReticleCommand, TRANSPORT_LIMITS } from '@reticlehq/core';
-import type { Session } from '../../portal/session/session.js';
-import type { ElementBox, RealInputArgs } from '../../portal/input/real-input.js';
-import { boxCenter, isPointerAction } from '../../portal/input/real-input.js';
+import type { Session } from '@/portal/session/session.js';
+import type { ElementBox, RealInputArgs } from '@/portal/input/real-input.js';
+import { boxCenter, isPointerAction } from '@/portal/input/real-input.js';
 import { assertDragNotDestructive, assertNotDestructive } from './act/act-danger.js';
 import { NATIVE_INPUT_ARG } from '@reticlehq/core';
 import { asRecord, asString } from '@reticlehq/core';
@@ -30,7 +30,7 @@ import { type ToolDeps, commandOrThrow } from './tool-kit.js';
 import { asBox } from './act/act-helpers.js';
 import { isAbsolute, join, relative, extname, basename, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { RETICLE_CONFIG_BASENAME } from '../../command/cli/ports/resolve/cli-port.js';
+import { RETICLE_CONFIG_BASENAME } from '@/command/cli/ports/resolve/cli-port.js';
 
 /**
  * Minimal extension → MIME-type table for the file types agents most commonly upload.

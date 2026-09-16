@@ -2,8 +2,13 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "baseUrl": "."
   },
-  "references": [{ "path": "../open-verification" }],
+  "references": [
+    {
+      "path": "../open-verification"
+    }
+  ],
   "include": ["src/**/*"]
 }

@@ -2,7 +2,7 @@ import type { EnvelopeStore } from './envelope-store.js';
 import { addSegmentToEnvelope, emptyEnvelope } from './envelope.js';
 import { buildDeviationReport, type DeviationReport } from './deviation-report.js';
 import type { SegmentRollup } from './rollups.js';
-import { withFileLock } from '../project/file-lock.js';
+import { withFileLock } from '@/memory/project/file-lock.js';
 
 /**
  * The accumulate-and-compare loop behind the push default. Given the segments a drive/replay produced:

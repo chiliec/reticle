@@ -3,8 +3,8 @@
 // We do NOT patch requestAnimationFrame/microtasks/MessageChannel — React's scheduler relies
 // on those, and freezing them would stall the page. Opt-in + reversible.
 
-import { requireCapturedMethod } from '../util/captured-method.js';
-import { captureMethod } from '../patching/capture-method.js';
+import { requireCapturedMethod } from '@/util/captured-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 
 interface Task {
   id: number;

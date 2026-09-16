@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { markStallClock, resetStallClock, STALL_AFTER_MS, stallUptime } from './stall-clock.js';
-import * as appInstrumented from '../../telemetry/app-instrumented.js';
+import * as appInstrumented from '@/telemetry/app-instrumented.js';
 
 /**
  * What survived the removal of `instrumentation_stalled`. The event went; the clock stayed, because

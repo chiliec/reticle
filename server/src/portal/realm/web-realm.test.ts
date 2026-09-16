@@ -13,8 +13,8 @@ import {
 } from 'open-verification';
 import { AppRuntime, ChannelId, MessageKind, ReticleCommand } from '@reticlehq/core';
 import { WebRealm } from './web-realm.js';
-import { createFakeSession } from '../session/fake-session.js';
-import type { Session } from '../session/session.js';
+import { createFakeSession } from '@/portal/session/fake-session.js';
+import type { Session } from '@/portal/session/session.js';
 
 /**
  * Reticle's own realms, scored against the specification Reticle publishes.

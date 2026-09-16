@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocket } from 'ws';
 import { RETICLE_WS_PATH } from '@reticlehq/core';
 import { Bridge } from './bridge.js';
-import { SessionManager } from '../session/session-manager.js';
+import { SessionManager } from '@/portal/session/session-manager.js';
 
 const bridges: Bridge[] = [];
 

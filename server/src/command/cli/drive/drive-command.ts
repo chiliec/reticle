@@ -7,13 +7,13 @@
  * drive-attach.ts, which is where the reasoning for attaching is written down.
  */
 
-import { start, type StartOptions } from '../../../index.js';
-import { log } from '../../../log.js';
-import { probePresence, describePresence } from '../../daemon/binding/port-presence.js';
-import { probeDaemon } from '../../../surface/mcp/mcp-proxy.js';
-import { readPid } from '../../daemon/daemon.js';
-import { fetchStatus } from '../launch/cli-launch.js';
-import { captureLookup, findPortHolder } from '../ports/port-holder.js';
+import { start, type StartOptions } from '@/index.js';
+import { log } from '@/log.js';
+import { probePresence, describePresence } from '@/command/daemon/binding/port-presence.js';
+import { probeDaemon } from '@/surface/mcp/mcp-proxy.js';
+import { readPid } from '@/command/daemon/daemon.js';
+import { fetchStatus } from '@/command/cli/launch/cli-launch.js';
+import { captureLookup, findPortHolder } from '@/command/cli/ports/port-holder.js';
 import {
   DriveMode,
   decideDriveMode,

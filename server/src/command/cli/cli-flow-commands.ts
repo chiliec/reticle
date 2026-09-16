@@ -9,23 +9,23 @@
 import { GateExit } from './answers/gate-exit.js';
 import { gateHookMessage, GATE_SKIP_ENV } from './answers/gate-hook-message.js';
 import { readProjectId } from './ports/resolve/cli-port.js';
-import { changedFilesSince, type ChangedFiles } from '../../language/flows/change/git-changed.js';
+import { changedFilesSince, type ChangedFiles } from '@/language/flows/change/git-changed.js';
 import { join } from 'node:path';
 import { ReticleDir, RunFlowStatus } from '@reticlehq/core';
-import { FlowStore } from '../../language/flows/flows.js';
-import { RunStore } from '../../judgement/runs/artifact/run-store.js';
-import { createNodeFileSystem, type FileSystemPort } from '../../memory/project/fs/fs-port.js';
-import { affectedSavedFlows, type NamedFlow } from '../../language/flows/change/flow-sources.js';
-import { gateDecision } from '../../language/flows/change/gate.js';
-import { FlakeStore } from '../../language/flows/stores/flake-store.js';
-import { formatBuddyStatus } from '../../language/flows/buddy-status.js';
-import { CapsuleStore } from '../../judgement/capsule/capsule-store.js';
-import { AssertionTiersStore } from '../../language/flows/stores/assertion-tiers-store.js';
-import { detectDowngrades } from '../../judgement/outcome/assertion-integrity.js';
-import { computeCoverage, flowCoverageReport } from '../../language/flows/suite/coverage.js';
-import { createWatchBatcher } from '../../language/flows/change/watch-batcher.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { RunStore } from '@/judgement/runs/artifact/run-store.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { affectedSavedFlows, type NamedFlow } from '@/language/flows/change/flow-sources.js';
+import { gateDecision } from '@/language/flows/change/gate.js';
+import { FlakeStore } from '@/language/flows/stores/flake-store.js';
+import { formatBuddyStatus } from '@/language/flows/buddy-status.js';
+import { CapsuleStore } from '@/judgement/capsule/capsule-store.js';
+import { AssertionTiersStore } from '@/language/flows/stores/assertion-tiers-store.js';
+import { detectDowngrades } from '@/judgement/outcome/assertion-integrity.js';
+import { computeCoverage, flowCoverageReport } from '@/language/flows/suite/coverage.js';
+import { createWatchBatcher } from '@/language/flows/change/watch-batcher.js';
 import { watch } from 'node:fs';
-import { log } from '../../log.js';
+import { log } from '@/log.js';
 /** Load the {name, steps} of every saved flow for the active project. */
 /** Explicit files plus, when --since is given, the git-changed files since that ref. */
 /**

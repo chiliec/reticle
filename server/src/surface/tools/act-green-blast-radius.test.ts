@@ -6,13 +6,13 @@ import {
   type CommandResult,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { LastAct } from '../../portal/session/last-act.js';
+import { LastAct } from '@/portal/session/last-act.js';
 import { TOOLS, type ToolDeps } from './tools.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 
 /**
  * A verdict that PASSED is the only place the blast radius is news.

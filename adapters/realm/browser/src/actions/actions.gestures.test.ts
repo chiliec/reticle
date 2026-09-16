@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ActionType } from '@reticlehq/core';
 import { executeAction } from './actions.js';
-import { refs } from '../dom/addressing/refs.js';
+import { refs } from '@/dom/addressing/refs.js';
 
 /**
  * The gestures a web app actually receives, and which of them Reticle could not produce.

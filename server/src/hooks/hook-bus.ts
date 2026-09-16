@@ -28,7 +28,7 @@
  */
 
 import { HookPayloadSchema, type HookEventName, type HookPayload } from '@reticlehq/core/hooks';
-import { log } from '../log.js';
+import { log } from '@/log.js';
 
 /** What a listener is handed. Never awaited — see the rule above. */
 export type HookListener = (payload: HookPayload) => void;

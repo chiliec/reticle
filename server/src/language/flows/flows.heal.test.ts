@@ -1,4 +1,4 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -27,19 +27,19 @@ import {
 import { FLOW_TOOLS } from './flow-tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import { FlowStore } from './flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
 import { replayFlow } from './flow-replay.js';
 import { waitForPredicate } from '@reticlehq/engine/question/predicate/predicate.js';
 import { AnnotationStore } from './stores/annotation-store.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
 import { RecordingStore } from './recording/tape/recordings.js';
 import { asString } from '@reticlehq/core';
-import { flowPath } from '../../memory/project/dir/reticle-dir.js';
-import type { FileSystemPort } from '../../memory/project/fs/fs-port.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import { flowPath } from '@/memory/project/dir/reticle-dir.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
 
 const FROZEN = 1234;
 const clock = { now: (): number => FROZEN };

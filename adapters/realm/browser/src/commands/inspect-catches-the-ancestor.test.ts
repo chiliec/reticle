@@ -2,7 +2,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { ReticleCommand } from '@reticlehq/core';
 import { createCommandRegistry } from './commands.js';
-import { refs } from '../dom/addressing/refs.js';
+import { refs } from '@/dom/addressing/refs.js';
 
 /**
  * The regression that beat us, caught — without a pixel.

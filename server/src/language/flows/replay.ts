@@ -7,13 +7,10 @@ import {
 } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
 import { formatStepAddress } from 'open-verification';
-import {
-  predicateToExpect,
-  enforcedOnReplay,
-} from '../../judgement/outcome/predicate-to-expect.js';
+import { predicateToExpect, enforcedOnReplay } from '@/judgement/outcome/predicate-to-expect.js';
 import { PredicateSchema } from '@reticlehq/engine/question/predicate/predicate.js';
 import type { RecordedStep, CompiledProgram } from './recording/tape/recordings.js';
-import type { Session } from '../../portal/session/session.js';
+import type { Session } from '@/portal/session/session.js';
 import { asRecord, asString } from '@reticlehq/core';
 
 /**

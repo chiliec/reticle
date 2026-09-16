@@ -10,10 +10,10 @@ import {
   type IntentFile,
   type IntentSurface,
 } from '@reticlehq/core/artifacts';
-import type { FileSystemPort } from '../project/fs/fs-port.js';
-import { reticleDirPaths } from '../project/dir/reticle-dir.js';
-import { withFileLock } from '../project/file-lock.js';
-import type { Clock } from '../../machine/clock.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
+import { withFileLock } from '@/memory/project/file-lock.js';
+import type { Clock } from '@/machine/clock.js';
 
 /**
  * The intent ledger on disk — `.reticle/intent.json`, git-checked and meant to be read in review.

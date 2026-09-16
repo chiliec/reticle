@@ -1,5 +1,5 @@
 import { EventType } from '@reticlehq/core';
-import { getAccessibleName, getRole } from '../dom/a11y.js';
+import { getAccessibleName, getRole } from '@/dom/a11y.js';
 import type { Emit, Teardown } from './types.js';
 
 /** A human-legible label for a focused element, or undefined for body/none. Pure; exported for testing. */

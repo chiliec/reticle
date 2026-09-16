@@ -5,9 +5,9 @@ import {
   MCP_PROXY_HTTP_AGENT_OPTIONS,
   postToSession,
   shouldRetryUnsentPost,
-} from '../mcp-proxy.js';
-import { daemonPollDelayMs } from '../proxy/proxy-daemon-probe.js';
-import { getSessionMetrics, resetSessionMetrics } from '../../../telemetry/session-metrics.js';
+} from '@/surface/mcp/mcp-proxy.js';
+import { daemonPollDelayMs } from '@/surface/mcp/proxy/proxy-daemon-probe.js';
+import { getSessionMetrics, resetSessionMetrics } from '@/telemetry/session-metrics.js';
 
 const noBuffers = Object.assign(new Error('no buffer space'), { code: 'ENOBUFS' });
 

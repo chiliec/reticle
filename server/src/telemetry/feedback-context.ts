@@ -9,10 +9,7 @@
  * holds to. Detection is entirely best-effort: an unreadable package.json or an SDK too old to report
  * its runtime yields `undefined`, never a throw and never a guess.
  */
-import {
-  mcpClientIdentity,
-  setMcpClientIdentityHook,
-} from '../surface/mcp/peer/client-identity.js';
+import { mcpClientIdentity, setMcpClientIdentityHook } from '@/surface/mcp/peer/client-identity.js';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import {

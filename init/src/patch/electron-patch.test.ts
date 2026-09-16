@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PatchKind } from './patch-kind.js';
-import { ELECTRON_CAPTURE_FIX, PRELOAD_REQUIRE } from '../diagnose/desktop-doctor.js';
+import { ELECTRON_CAPTURE_FIX, PRELOAD_REQUIRE } from '@/diagnose/desktop-doctor.js';
 import { patchElectronMain, patchElectronPreload } from './electron-patch.js';
 
 const ESM_PRELOAD = `import { contextBridge } from 'electron'

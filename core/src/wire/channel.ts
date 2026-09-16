@@ -4,7 +4,7 @@ import {
   Independence,
   disagreementCanConvict as protocolRule,
 } from 'open-verification';
-import { PredicateKind } from '../verdict/consequence.js';
+import { PredicateKind } from '@/verdict/consequence.js';
 
 /**
  * The sources of truth a verdict can be built from.

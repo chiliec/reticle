@@ -12,7 +12,7 @@ import {
   CAPTURE_REQUIRE,
   ELECTRON_CAPTURE_FIX,
   PRELOAD_REQUIRE,
-} from '../diagnose/desktop-doctor.js';
+} from '@/diagnose/desktop-doctor.js';
 import { PatchKind, type SourcePatch } from './patch-kind.js';
 
 const ESM_PRELOAD_EXT = /\.(?:ts|mts|mjs)$/i;

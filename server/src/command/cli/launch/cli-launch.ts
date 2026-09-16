@@ -1,12 +1,12 @@
 import * as http from 'node:http';
-import { NodePlatform } from '../../../machine/platform.js';
+import { NodePlatform } from '@/machine/platform.js';
 import { spawn } from 'node:child_process';
 import { isOpaqueOrigin, LOOPBACK_HOST, STATUS_PATH } from '@reticlehq/core';
-import { daemonFix, describeSkew } from '../../version/version-skew.js';
+import { daemonFix, describeSkew } from '@/command/version/version-skew.js';
 import { CONTRACT_FINGERPRINT } from '@reticlehq/core';
-import { SERVER_VERSION } from '../../version/identity/server-version.js';
-import { log } from '../../../log.js';
-import { loopbackAgent } from '../../../surface/loopback-agent.js';
+import { SERVER_VERSION } from '@/command/version/identity/server-version.js';
+import { log } from '@/log.js';
+import { loopbackAgent } from '@/surface/loopback-agent.js';
 
 /**
  * CLI launch + status helpers — the daemon-introspection (`reticle status`) and the one-command

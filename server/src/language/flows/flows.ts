@@ -27,18 +27,18 @@ import { ReticleTool } from '@reticlehq/core';
 import { asRecord, asString } from '@reticlehq/core';
 import { applyHealChanges } from './heal.js';
 import { flowIntentGap, linkFlowIntent } from './flow-intent.js';
-import { IntentStore } from '../../memory/intent/intent-store.js';
+import { IntentStore } from '@/memory/intent/intent-store.js';
 import type { CompiledProgram, RecordedStep } from './recording/tape/recordings.js';
-import type { FileSystemPort } from '../../memory/project/fs/fs-port.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
 import {
   flowDir,
   flowParentDir,
   flowPath,
   reticleDirPaths,
   isValidFlowName,
-} from '../../memory/project/dir/reticle-dir.js';
+} from '@/memory/project/dir/reticle-dir.js';
 import { describeFlowZodFailure, parseFlowFileText } from './flow-expect-grammar.js';
-import type { Clock } from '../../machine/clock.js';
+import type { Clock } from '@/machine/clock.js';
 
 /**
  * The anchor for a DEGRADED step (no resolvable testid). A volatile eXX ref is NEVER persisted —

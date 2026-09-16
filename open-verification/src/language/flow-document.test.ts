@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FlowSchema, OVP_FLOW_GRAMMAR_VERSION } from '../index.js';
+import { FlowSchema, OVP_FLOW_GRAMMAR_VERSION } from '@/index.js';
 
 /**
  * The OVP Flow Document: the grammar, named and versioned.

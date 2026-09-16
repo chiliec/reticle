@@ -6,9 +6,9 @@
  * four had to import them back out of the module that calls them.
  */
 
-import type { Detection, Framework, UiLibrary } from '../detect/detect.js';
-import type { FoundStore } from '../detect/capabilities.js';
-import type { McpClient } from '../register/mcp-clients.js';
+import type { Detection, Framework, UiLibrary } from '@/detect/detect.js';
+import type { FoundStore } from '@/detect/capabilities.js';
+import type { McpClient } from '@/register/mcp-clients.js';
 
 /** Exported so the init telemetry can tell an MCP-registration failure from a dependency install. */
 export const MCP_TARGET = 'global (claude user scope)';

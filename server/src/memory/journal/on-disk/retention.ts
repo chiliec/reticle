@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import type { FileSystemPort } from '../../project/fs/fs-port.js';
-import { reticleDirPaths, visualDir } from '../../project/dir/reticle-dir.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { reticleDirPaths, visualDir } from '@/memory/project/dir/reticle-dir.js';
 
 /** Keep at most this many session journals on disk; older ones are pruned by recency. */
 export const DEFAULT_SESSION_RETENTION = 20;

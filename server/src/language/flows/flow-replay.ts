@@ -1,6 +1,6 @@
 import { mayResumeByReplayingPrefix, StepEffect } from '@reticlehq/core';
 import { Surface, formatStepAddress } from 'open-verification';
-import { span } from '../../trace.js';
+import { span } from '@/trace.js';
 import { anchorLabel, expectElementDrift, resolveTestid, testidDrift } from './flow-anchor.js';
 export {
   anchorLabel,

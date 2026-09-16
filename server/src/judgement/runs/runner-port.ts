@@ -5,8 +5,8 @@
  * verdict logic, so this layer carries no decisions.
  */
 
-import { replayNamedFlow } from '../../language/flows/flow-tools.js';
-import type { ToolDeps } from '../../surface/tools/tool-kit.js';
+import { replayNamedFlow } from '@/language/flows/flow-tools.js';
+import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 import type { RunnerPort } from './reticle-runner.js';
 import { defaultRunId } from './default-run-id.js';
 export { defaultRunId } from './default-run-id.js';

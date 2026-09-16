@@ -6,7 +6,7 @@
  * recipe and the reasoning behind that refusal are a unit.
  */
 
-import { UiLibrary } from '../detect/detect.js';
+import { UiLibrary } from '@/detect/detect.js';
 import { connectArg, sdkImport, UNVERIFIED_TANSTACK_START_NOTE } from './snippets.js';
 
 /** TanStack Start's document module — the file that SSRs `<html>`. */

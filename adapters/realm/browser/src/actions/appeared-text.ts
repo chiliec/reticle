@@ -1,4 +1,4 @@
-import { isIgnored } from '../dom/dom-ignore.js';
+import { isIgnored } from '@/dom/dom-ignore.js';
 
 /** Cap on the reported text. Enough for an error message, far short of a re-rendered page. */
 const APPEARED_MAX = 200;

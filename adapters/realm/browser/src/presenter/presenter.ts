@@ -8,10 +8,10 @@ import {
   isSessionState,
   type PresenterTone,
 } from '@reticlehq/core';
-import { refs } from '../dom/addressing/refs.js';
-import { unreachableStripText } from '../transport/unreachable-message.js';
+import { refs } from '@/dom/addressing/refs.js';
+import { unreachableStripText } from '@/transport/unreachable-message.js';
 import { actionVerb } from './chrome/presenter-verbs.js';
-import { nativeSetTimeout, nativeClearTimeout, nativeNow } from '../timers/native/native-timers.js';
+import { nativeSetTimeout, nativeClearTimeout, nativeNow } from '@/timers/native/native-timers.js';
 import {
   LOG_KIND,
   CHIP_LABEL,
@@ -73,7 +73,7 @@ import {
   syncPageBlocker,
   type PresenterSettings,
 } from './presenter-settings.js';
-import { Annotator, type AnnotatorChrome } from '../review/annotator.js';
+import { Annotator, type AnnotatorChrome } from '@/review/annotator.js';
 // Re-export the config surface so the public import path (`./presenter.js`) is unchanged.
 export { GlowPhase } from './presenter-config.js';
 export type { PresenterOptions } from './presenter-config.js';

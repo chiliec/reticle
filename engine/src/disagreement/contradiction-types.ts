@@ -1,6 +1,6 @@
 import type { Contradiction, ContradictionKind, ReticleEvent } from '@reticlehq/core';
-import type { NoteFn } from '../window/engine-host.js';
-import type { DeclaredNetFailure } from '../question/declared.js';
+import type { NoteFn } from '@/window/engine-host.js';
+import type { DeclaredNetFailure } from '@/question/declared.js';
 
 /**
  * What a contradiction IS, separated from the rules that find one.

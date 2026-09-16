@@ -1,10 +1,10 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { ReticleTool } from '@reticlehq/core';
 import { EventType, ReticleCommand, SessionState } from '@reticlehq/core';
-import { RECONCILE_TOOLS } from '../../surface/tools/reconcile-tools.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
-import type { Session } from '../session/session.js';
-import type { SessionManager } from '../session/session-manager.js';
+import { RECONCILE_TOOLS } from '@/surface/tools/reconcile-tools.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 import { witnessDisagreement } from '@reticlehq/engine/disagreement/witness-disagreement.js';
 
 /**

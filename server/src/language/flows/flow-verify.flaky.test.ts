@@ -1,10 +1,10 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ReplayStatus } from '@reticlehq/core';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
 import { FlakeStore } from './stores/flake-store.js';
 import { FLOW_TOOLS } from './flow-tools.js';
 import { ReticleTool } from '@reticlehq/core';

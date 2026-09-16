@@ -1,18 +1,18 @@
-import { type Claim, Declaration } from '../vocabulary/intent.js';
+import { type Claim, Declaration } from '@/vocabulary/intent.js';
 import {
   type ChannelDescriptor,
   disagreementCanConvict,
   Grade,
   Independence,
-} from '../vocabulary/channel.js';
+} from '@/vocabulary/channel.js';
 import {
   canSupportConsequence,
   type Coverage,
   type Evidence,
   impeachingSpots,
-} from '../vocabulary/evidence.js';
-import { type Window, closedCleanly } from '../vocabulary/realm-surface.js';
-import { type Anomaly, AnomalyTier, Verdict } from '../vocabulary/verdict.js';
+} from '@/vocabulary/evidence.js';
+import { type Window, closedCleanly } from '@/vocabulary/realm-surface.js';
+import { type Anomaly, AnomalyTier, Verdict } from '@/vocabulary/verdict.js';
 
 /**
  * Turning evidence into a verdict, without knowing what kind of world it came from.

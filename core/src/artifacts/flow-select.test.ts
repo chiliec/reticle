@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FLOW_FILE_VERSION, FlowStatus, selectFlows, type FlowFile } from '../index.js';
+import { FLOW_FILE_VERSION, FlowStatus, selectFlows, type FlowFile } from '@/index.js';
 
 /**
  * Choosing which flows a run actually replays.

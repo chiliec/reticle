@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ChannelId } from '../vocabulary/channel.js';
+import { ChannelId } from '@/vocabulary/channel.js';
 import { typecheckProgram, TypeErrorKind } from './typecheck.js';
 
 /**

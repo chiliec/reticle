@@ -9,8 +9,8 @@ import {
 } from './constants/constants.js';
 import { HumanControlKind, MarkAnchorStrategy } from './constants/session-constants.js';
 import { MAX_WIRE_REDACT_KEYS, MAX_WIRE_REDACT_KEY_LENGTH } from './redaction.js';
-import { DOCUMENT_ID_LENGTH } from '../identity/document-identity.js';
-import { NO_EDITS_OBSERVED } from '../identity/edit-epoch.js';
+import { DOCUMENT_ID_LENGTH } from '@/identity/document-identity.js';
+import { NO_EDITS_OBSERVED } from '@/identity/edit-epoch.js';
 import { PlatformProfile } from './platform.js';
 import { ChannelId } from './channel.js';
 

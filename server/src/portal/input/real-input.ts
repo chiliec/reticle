@@ -11,11 +11,11 @@
  */
 import type { Browser, Page } from 'playwright';
 import { stampedDriveUrl } from './drive-url-stamp.js';
-import { chromiumLaunchOptions } from '../../chromium-launch-options.js';
-import { gotoOptions } from '../pool/playwright-launcher.js';
+import { chromiumLaunchOptions } from '@/chromium-launch-options.js';
+import { gotoOptions } from '@/portal/pool/playwright-launcher.js';
 import { BrowserLaunchKind } from '@reticlehq/core/telemetry';
-import { getSessionMetrics } from '../../telemetry/session-metrics.js';
-import { classifyConnectFailure } from '../../telemetry/connect-failure.js';
+import { getSessionMetrics } from '@/telemetry/session-metrics.js';
+import { classifyConnectFailure } from '@/telemetry/connect-failure.js';
 import { ActionType, DriveErrorCode, DRIVE_PLAYWRIGHT_MISSING_MSG } from '@reticlehq/core';
 import { installNetworkMocks, type MockRule } from './network-mock.js';
 import { attachNetworkDetail, type NetworkDetail } from './network-detail.js';

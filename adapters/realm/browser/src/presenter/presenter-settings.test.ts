@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { Presenter } from './presenter.js';
 import { SETTINGS_ATTR, SETTINGS_STORAGE_KEY } from './presenter-config.js';
-import { Annotator } from '../review/annotator.js';
+import { Annotator } from '@/review/annotator.js';
 import { loadPresenterSettings } from './presenter-settings.js';
 
 afterEach(() => {

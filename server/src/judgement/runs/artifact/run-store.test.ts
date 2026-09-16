@@ -1,4 +1,4 @@
-import { removeTempDir } from '../../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { asRunId, RunReadError, type ReticleVerificationRun } from '@reticlehq/core';
 import { buildVerificationRun, type VerificationRunInput } from './build-verification-run.js';
 import { RunStore } from './run-store.js';
-import { createNodeFileSystem, type FileSystemPort } from '../../../memory/project/fs/fs-port.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
 import { RunAgentKind, RunFramework, RunProfile, RunTrigger } from '@reticlehq/core';
 
 const baseInput = (runId: string): VerificationRunInput => ({

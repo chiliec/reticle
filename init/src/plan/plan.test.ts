@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { buildPlan, frameworkPackages, StepStatus, type PlanInput } from './plan.js';
-import { Framework, PackageManager, UiLibrary, type Detection } from '../detect/detect.js';
-import { NodePlatform } from '../detect/platform.js';
-import { cursorRuleFile } from '../project/agent-rules.js';
-import { McpClient } from '../register/mcp-clients.js';
+import { Framework, PackageManager, UiLibrary, type Detection } from '@/detect/detect.js';
+import { NodePlatform } from '@/detect/platform.js';
+import { cursorRuleFile } from '@/project/agent-rules.js';
+import { McpClient } from '@/register/mcp-clients.js';
 
 const CLAUDE_STEP = 'MCP server (Claude, global)';
 const CURSOR_STEP = 'MCP server (Cursor)';

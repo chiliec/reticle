@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PredicateKind } from '@reticlehq/core';
 import { predicateToExpect, enforcedOnReplay } from './predicate-to-expect.js';
-import { successToPredicate } from '../../language/flows/flow-success.js';
+import { successToPredicate } from '@/language/flows/flow-success.js';
 import type { Predicate } from '@reticlehq/engine/question/predicate/predicate.js';
 
 /**

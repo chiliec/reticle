@@ -5,11 +5,11 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { MessageKind, RETICLE_PROTOCOL_VERSION } from './constants/constants.js';
 import { CHANNEL_INDEPENDENCE, ChannelId } from './channel.js';
-import { VerdictStatus } from '../verdict/verification-run.js';
-import { Verified } from '../verdict/verified-constants.js';
-import { ContradictionKind } from '../verdict/findings.js';
+import { VerdictStatus } from '@/verdict/verification-run.js';
+import { Verified } from '@/verdict/verified-constants.js';
+import { ContradictionKind } from '@/verdict/findings.js';
 import { AnomalyKind } from 'open-verification';
-import { RefusalReason } from '../telemetry-refusal.js';
+import { RefusalReason } from '@/telemetry-refusal.js';
 
 /**
  * The written specification must describe the contract this code actually enforces.

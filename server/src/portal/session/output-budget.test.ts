@@ -9,11 +9,11 @@ import {
   sizeCost,
   withSizeCost,
 } from './output-budget.js';
-import { TOOLS } from '../../surface/tools/tools.js';
+import { TOOLS } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import type { Session } from './session.js';
 import type { SessionManager } from './session-manager.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
 
 function ev(t: number): ReticleEvent {
   return { t, type: EventType.DOM_ADDED, sessionId: 's', data: { i: t } };

@@ -5,7 +5,7 @@
  * arbitrary cut: it is prose about one step's failure modes, and the only thing it needs is which
  * package manager was used.
  */
-import { PackageManager } from '../detect/detect.js';
+import { PackageManager } from '@/detect/detect.js';
 
 /**
  * Every package manager fetches, so every one of them can fail for a reason that is nothing to do

@@ -1,6 +1,6 @@
 import { SessionState } from '@reticlehq/core';
 import { LOG_KIND, LOG_RESULT, type LogKind, type LogResult } from './chrome/presenter-log.js';
-import { getCapabilities, type Capabilities } from '../registry/capabilities.js';
+import { getCapabilities, type Capabilities } from '@/registry/capabilities.js';
 
 /** The in-page run-state export (Copy/Export buttons). The full event ring-buffer is server-side. */
 export interface PresenterRunState {

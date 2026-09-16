@@ -8,7 +8,7 @@ import {
   netUrlFields,
 } from './network.js';
 import type { Emit, Teardown } from './types.js';
-import { requireCapturedMethod } from '../util/captured-method.js';
+import { requireCapturedMethod } from '@/util/captured-method.js';
 
 interface Emitted {
   type: EventType;

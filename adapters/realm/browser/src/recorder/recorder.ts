@@ -13,10 +13,10 @@ import {
   type FlowStep,
 } from '@reticlehq/core';
 import { REDACTED_VALUE } from '@reticlehq/core';
-import { sourceFromDom } from '../dom/addressing/source.js';
-import { getAccessibleName, getRole, isSensitiveField } from '../dom/a11y.js';
-import { isReticleOverlay } from '../dom/dom-ignore.js';
-import { getCapabilities } from '../registry/capabilities.js';
+import { sourceFromDom } from '@/dom/addressing/source.js';
+import { getAccessibleName, getRole, isSensitiveField } from '@/dom/a11y.js';
+import { isReticleOverlay } from '@/dom/dom-ignore.js';
+import { getCapabilities } from '@/registry/capabilities.js';
 import { TOOLBAR_CSS, BTN_CSS, NAME_CSS, STATUS_CSS, MENU_CSS } from './recorder-styles.js';
 
 /**

@@ -12,7 +12,7 @@
  */
 
 import { isDangerousActionText } from '@reticlehq/core';
-import { getAccessibleName } from '../dom/a11y.js';
+import { getAccessibleName } from '@/dom/a11y.js';
 
 /**
  * Input types whose `value` IS the visible label rather than data the user put there.

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { freezeClock, advanceClock, resetClock, isClockFrozen } from './clock.js';
-import { requireCapturedMethod } from '../util/captured-method.js';
+import { requireCapturedMethod } from '@/util/captured-method.js';
 
 afterEach(() => {
   resetClock();

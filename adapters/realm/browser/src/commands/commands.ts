@@ -12,30 +12,30 @@ import {
   type ElementQuery,
   type ElementState,
 } from '@reticlehq/core';
-import { buildSnapshot } from '../dom/snapshot.js';
-import { paintContextOf } from '../dom/paint-context.js';
-import { matchQuery, runQuery } from '../dom/query.js';
+import { buildSnapshot } from '@/dom/snapshot.js';
+import { paintContextOf } from '@/dom/paint-context.js';
+import { matchQuery, runQuery } from '@/dom/query.js';
 import {
   executeAction,
   executeSequence,
   dispatchWebMcp,
   type ActionStep,
-} from '../actions/actions.js';
-import { describe } from '../dom/a11y.js';
-import { documentHasSourceStamps, sourceFor, formatSource } from '../dom/addressing/source.js';
-import { themeReport } from '../dom/theme.js';
-import { refs } from '../dom/addressing/refs.js';
-import { editEpoch } from '../edit-epoch.js';
-import { isButton, isInput } from '../dom/realm.js';
-import { hitTestOccluder } from '../dom/occlusion.js';
-import { readStorage } from '../observers/storage.js';
-import { captureDesktopWindow } from '../dom/desktop-capture.js';
-import { identifyComponent, readComponentState } from '../registry/stores/adapters.js';
-import { readStoresWithTruncation, readStoresRaw, storeNames } from '../registry/stores.js';
-import { sanitizeWithReport } from '../security/serialization.js';
-import { getCapabilities } from '../registry/capabilities.js';
-import { freezeClock, advanceClock, resetClock, isClockFrozen } from '../timers/clock.js';
-import { scrollContainer } from '../actions/scroll.js';
+} from '@/actions/actions.js';
+import { describe } from '@/dom/a11y.js';
+import { documentHasSourceStamps, sourceFor, formatSource } from '@/dom/addressing/source.js';
+import { themeReport } from '@/dom/theme.js';
+import { refs } from '@/dom/addressing/refs.js';
+import { editEpoch } from '@/edit-epoch.js';
+import { isButton, isInput } from '@/dom/realm.js';
+import { hitTestOccluder } from '@/dom/occlusion.js';
+import { readStorage } from '@/observers/storage.js';
+import { captureDesktopWindow } from '@/dom/desktop-capture.js';
+import { identifyComponent, readComponentState } from '@/registry/stores/adapters.js';
+import { readStoresWithTruncation, readStoresRaw, storeNames } from '@/registry/stores.js';
+import { sanitizeWithReport } from '@/security/serialization.js';
+import { getCapabilities } from '@/registry/capabilities.js';
+import { freezeClock, advanceClock, resetClock, isClockFrozen } from '@/timers/clock.js';
+import { scrollContainer } from '@/actions/scroll.js';
 
 export type CommandHandler = (args: Record<string, unknown>) => unknown;
 

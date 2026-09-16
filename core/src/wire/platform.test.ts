@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { AppRuntime } from '../telemetry-feedback.js';
+import { AppRuntime } from '@/telemetry-feedback.js';
 import { PlatformProfile } from './platform.js';
-import { profileOfRuntime } from '../realm/registry.js';
+import { profileOfRuntime } from '@/realm/registry.js';
 import { HelloMessageSchema } from './messages.js';
 import { MessageKind, RETICLE_PROTOCOL_VERSION } from './constants/constants.js';
 

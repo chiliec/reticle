@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Surface } from 'open-verification';
-import { AppRuntime } from '../telemetry-feedback.js';
+import { AppRuntime } from '@/telemetry-feedback.js';
 import { realmOf, surfaceOf, REALMS } from './registry.js';
 
 /**

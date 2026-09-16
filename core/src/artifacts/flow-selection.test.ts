@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FLOW_FILE_VERSION, FlowFileSchema, FlowStatus } from '../index.js';
+import { FLOW_FILE_VERSION, FlowFileSchema, FlowStatus } from '@/index.js';
 
 /**
  * A suite needs to name a subset, and needs to stop running a flow that has failed every time.

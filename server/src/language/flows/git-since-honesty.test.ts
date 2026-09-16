@@ -24,7 +24,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { changedFilesSince } from './change/git-changed.js';
-import { resolveChangedFiles } from '../../command/cli/cli-flow-commands.js';
+import { resolveChangedFiles } from '@/command/cli/cli-flow-commands.js';
 
 describe('changedFilesSince reports failure instead of inventing an empty diff', () => {
   it('says it FAILED when the directory is not a git repository', async () => {

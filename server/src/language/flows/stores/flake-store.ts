@@ -1,13 +1,13 @@
 import { dirname } from 'node:path';
-import type { FileSystemPort } from '../../../memory/project/fs/fs-port.js';
-import { reticleDirPaths } from '../../../memory/project/dir/reticle-dir.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
+import { reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
 import {
   FlakeFileSchema,
   emptyRecord,
   isFlaky,
   recordOutcome,
   type FlakeLedger,
-} from '../recording/flake.js';
+} from '@/language/flows/recording/flake.js';
 
 const FLAKE_FILE_VERSION = 1;
 

@@ -7,7 +7,7 @@ import {
   readStoresWithTruncation,
   registerStore,
   unregisterStore,
-} from '../registry/stores.js';
+} from '@/registry/stores.js';
 
 /**
  * Conformance half of the lossy-transform invariant, for the transforms that live in the browser SDK.

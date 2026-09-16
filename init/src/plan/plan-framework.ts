@@ -5,14 +5,14 @@
  */
 
 import { bridgeWsUrl } from '@reticlehq/core';
-import { patchViteConfig, VitePatchKind, VITE_IMPORT } from '../patch/vite-config.js';
-import { patchNextConfig, patchRootLayout, patchPagesApp } from '../patch/next-patch.js';
+import { patchViteConfig, VitePatchKind, VITE_IMPORT } from '@/patch/vite-config.js';
+import { patchNextConfig, patchRootLayout, patchPagesApp } from '@/patch/next-patch.js';
 import {
   ASTRO_ENV_DTS_PATH,
   patchAstroConfig,
   patchAstroEnvDts,
   patchAstroLayout,
-} from '../patch/astro-patch.js';
+} from '@/patch/astro-patch.js';
 import {
   CRA_DEV_MODULE_IMPORT,
   CRA_ENV_PATH,
@@ -22,8 +22,8 @@ import {
   craDevModulePath,
   craEnvPatch,
   craImportPatch,
-} from '../patch/cra.js';
-import { PatchKind, type SourcePatch } from '../patch/patch-kind.js';
+} from '@/patch/cra.js';
+import { PatchKind, type SourcePatch } from '@/patch/patch-kind.js';
 import {
   viteManual,
   NEXT_LAYOUT_MANUAL,
@@ -48,15 +48,15 @@ import {
   REACT_ROUTER_ENTRY_PATH,
   UNVERIFIED_TANSTACK_START_NOTE,
   htmlManual,
-} from '../patch/snippets.js';
-import { hasOptOut, OPT_OUT_MARKER } from '../detect/declared/init-opt-out.js';
+} from '@/patch/snippets.js';
+import { hasOptOut, OPT_OUT_MARKER } from '@/detect/declared/init-opt-out.js';
 import { StepStatus, type PlanInput, type Step } from './plan-types.js';
 import { RETICLE_DEFAULT_PORT } from '@reticlehq/core';
-import { CSP_STEP_TITLE } from '../diagnose/csp-check.js';
+import { CSP_STEP_TITLE } from '@/diagnose/csp-check.js';
 import { StepTitle } from './connect-steps.js';
-import { tanstackStartManual, TANSTACK_START_ROOT_PATH } from '../patch/tanstack-start.js';
-import { diagnoseWebCsp } from '../diagnose/csp-doctor.js';
-import { patchNuxtConfig } from '../patch/nuxt-patch.js';
+import { tanstackStartManual, TANSTACK_START_ROOT_PATH } from '@/patch/tanstack-start.js';
+import { diagnoseWebCsp } from '@/diagnose/csp-doctor.js';
+import { patchNuxtConfig } from '@/patch/nuxt-patch.js';
 
 /** What adding `reticle()` to a Vite config buys, which differs by framework. */
 export const VITE_PLUGIN_DETAIL = {

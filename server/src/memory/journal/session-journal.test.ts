@@ -1,4 +1,4 @@
-import { removeTempDir } from '../../machine/temp-dir.js';
+import { removeTempDir } from '@/machine/temp-dir.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,7 +9,7 @@ import {
   type JournalAction,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { createNodeFileSystem, type FileSystemPort } from '../project/fs/fs-port.js';
+import { createNodeFileSystem, type FileSystemPort } from '@/memory/project/fs/fs-port.js';
 import { SessionJournal } from './session-journal.js';
 
 function evt(seq: number, over: Partial<ReticleEvent> = {}): ReticleEvent {

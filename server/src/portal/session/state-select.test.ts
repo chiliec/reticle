@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { selectPath, capDepth } from './state-select.js';
-import { TOOLS } from '../../surface/tools/tools.js';
+import { TOOLS } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import { SessionState, type CommandResult } from '@reticlehq/core';
 import type { Session } from './session.js';
 import type { SessionManager } from './session-manager.js';
-import type { ToolDeps } from '../../surface/tools/tools.js';
+import type { ToolDeps } from '@/surface/tools/tools.js';
 
 describe('selectPath', () => {
   const root = { captionCache: { v3: [{ text: 'hi' }, { text: 'yo' }] }, count: 2 };

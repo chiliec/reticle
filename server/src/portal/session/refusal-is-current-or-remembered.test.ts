@@ -15,7 +15,7 @@
 import { describe, it, expect } from 'vitest';
 import type { WebSocket } from 'ws';
 import { RETICLE_PROTOCOL_VERSION, MessageKind, type HelloMessage } from '@reticlehq/core';
-import { WS_CLOSE_REASON } from '../bridge/bridge.js';
+import { WS_CLOSE_REASON } from '@/portal/bridge/bridge.js';
 import { Session } from './session.js';
 import { SessionManager } from './session-manager.js';
 

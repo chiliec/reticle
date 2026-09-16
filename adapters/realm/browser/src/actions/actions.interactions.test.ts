@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { EventType } from '@reticlehq/core';
-import { createCommandRegistry } from '../commands/commands.js';
+import { createCommandRegistry } from '@/commands/commands.js';
 import { executeAction } from './actions.js';
-import { installScroll } from '../observers/scroll.js';
-import { installOverlay } from '../presenter/chrome/overlay.js';
-import { refs } from '../dom/addressing/refs.js';
+import { installScroll } from '@/observers/scroll.js';
+import { installOverlay } from '@/presenter/chrome/overlay.js';
+import { refs } from '@/dom/addressing/refs.js';
 
 describe('drag', () => {
   it('fires a pointer/mouse drag from source to target (async, yields frames)', async () => {

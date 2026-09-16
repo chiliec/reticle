@@ -16,7 +16,7 @@ vi.mock('../transport/transport.js', () => {
   return { Transport: FakeTransport };
 });
 
-const { Reticle } = await import('../reticle.js');
+const { Reticle } = await import('@/reticle.js');
 
 const recorderRoot = (): Element | null =>
   document.querySelector('[data-reticle-overlay] [data-reticle-action="record"]');

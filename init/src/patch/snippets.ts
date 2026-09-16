@@ -10,9 +10,9 @@ import {
   RETICLE_CLIENT_HOST,
   RETICLE_WS_PATH,
 } from '@reticlehq/core';
-import { UiLibrary } from '../detect/detect.js';
-import type { FoundStore } from '../detect/capabilities.js';
-import { RETICLE_VERSION } from '../version.js';
+import { UiLibrary } from '@/detect/detect.js';
+import type { FoundStore } from '@/detect/capabilities.js';
+import { RETICLE_VERSION } from '@/version.js';
 
 /**
  * The SDK as one import a plain page can actually resolve.

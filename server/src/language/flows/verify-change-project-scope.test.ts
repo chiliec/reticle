@@ -23,11 +23,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loadNamedFlows, resolveChangedFiles } from '../../command/cli/cli-flow-commands.js';
+import { loadNamedFlows, resolveChangedFiles } from '@/command/cli/cli-flow-commands.js';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
 import { FlowStore } from './flows.js';
 import type { CompiledProgram } from './recording/tape/recordings.js';
 

@@ -7,8 +7,8 @@ import {
   VisualReason,
 } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import { sessionIdShape } from '../../surface/tools/tool-kit.js';
-import { ratioSchema } from '../../surface/tools/args/numeric-bounds.js';
+import { sessionIdShape } from '@/surface/tools/tool-kit.js';
+import { ratioSchema } from '@/surface/tools/args/numeric-bounds.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
 import { diffPng, type VisualRect } from './visual-diff.js';
 import { VisualStore } from './visual-store.js';
@@ -16,12 +16,8 @@ import { trackCaptureDirectory } from './capture-cleanup.js';
 import { readFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname } from 'node:path';
-import type {
-  ElementBox,
-  RealInputProvider,
-  ScreenshotOpts,
-} from '../../portal/input/real-input.js';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
+import type { ElementBox, RealInputProvider, ScreenshotOpts } from '@/portal/input/real-input.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
 
 const rectShape = z.object({
   x: z.number(),

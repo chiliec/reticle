@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { TOOLS } from './tools.js';
 import { CORE_TOOL_NAMES, TOOL_SURFACE } from './tool-surface.js';
-import { advertisedConfig, advertisedTools } from '../mcp/mcp.js';
+import { advertisedConfig, advertisedTools } from '@/surface/mcp/mcp.js';
 import { ReticleTool } from '@reticlehq/core';
 
 /**

@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import { sessionRoot, sessionProjectId } from '../../memory/project/session-root.js';
-import { verdictForSuite } from '../../judgement/outcome/verify-change-verdict.js';
-import { attributedFailures } from '../../judgement/outcome/attributed-failure.js';
+import { sessionRoot, sessionProjectId } from '@/memory/project/session-root.js';
+import { verdictForSuite } from '@/judgement/outcome/verify-change-verdict.js';
+import { attributedFailures } from '@/judgement/outcome/attributed-failure.js';
 import { Verified } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
-import type { ToolDef, ToolDeps } from '../../surface/tools/tool-kit.js';
+import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
-import { workerCountSchema } from '../../surface/tools/args/numeric-bounds.js';
-import { loadNamedFlows, resolveChangedFiles } from '../../command/cli/cli-flow-commands.js';
+import { workerCountSchema } from '@/surface/tools/args/numeric-bounds.js';
+import { loadNamedFlows, resolveChangedFiles } from '@/command/cli/cli-flow-commands.js';
 import { affectedSavedFlows } from './change/flow-sources.js';
 import { FLOW_TOOLS } from './flow-tools.js';
 import { findContradictions } from '@reticlehq/engine/disagreement/contradictions.js';
-import { parseControls } from '../../surface/tools/coverage-tools.js';
+import { parseControls } from '@/surface/tools/coverage-tools.js';
 import { ReticleCommand, SnapshotMode } from '@reticlehq/core';
 
 /**

@@ -4,7 +4,7 @@ import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCb);
 import { basename, dirname, join } from 'node:path';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /**
  * The advice tool must be able to answer about every directory somebody would ask it about.

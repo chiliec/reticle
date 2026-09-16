@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { mutationTargetsFor } from '../index.js';
-import type { FlowFile } from '../index.js';
+import { mutationTargetsFor } from '@/index.js';
+import type { FlowFile } from '@/index.js';
 
 /**
  * What to break, chosen from what the flow itself claims to depend on.

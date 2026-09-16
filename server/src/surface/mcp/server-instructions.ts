@@ -1,6 +1,6 @@
 import { ReticleTool } from '@reticlehq/core';
 import { SHARED_PARAM_GUIDANCE } from './shared-params.js';
-import { defaultAdvertisedNames } from '../tools/tool-surface.js';
+import { defaultAdvertisedNames } from '@/surface/tools/tool-surface.js';
 import { surfaceVocabulary, listOf, type SurfaceVocabulary } from './surface-vocabulary.js';
 /**
  * What every connected agent is told, before it has asked anything.

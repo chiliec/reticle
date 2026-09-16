@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createMcpServer } from './mcp.js';
-import { TOOLS } from '../tools/tools.js';
-import type { ToolDeps, ToolDef } from '../tools/tools.js';
+import { TOOLS } from '@/surface/tools/tools.js';
+import type { ToolDeps, ToolDef } from '@/surface/tools/tools.js';
 
 /**
  * The guard, proved through the real transport rather than in isolation.

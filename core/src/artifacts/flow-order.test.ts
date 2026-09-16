@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FLOW_FILE_VERSION, orderFlows, type FlowFile } from '../index.js';
+import { FLOW_FILE_VERSION, orderFlows, type FlowFile } from '@/index.js';
 
 /**
  * Some journeys only make sense after another one.

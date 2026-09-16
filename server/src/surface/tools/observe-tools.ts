@@ -28,8 +28,8 @@ import {
   waitForPredicate,
   PredicateSchema,
 } from '@reticlehq/engine/question/predicate/predicate.js';
-import { resolveSessionWithin } from '../../portal/session/timing/resolve-within.js';
-import { WALL_CLOCK } from '../../portal/session/timing/wall-clock.js';
+import { resolveSessionWithin } from '@/portal/session/timing/resolve-within.js';
+import { WALL_CLOCK } from '@/portal/session/timing/wall-clock.js';
 import { parsePredicate } from '@reticlehq/engine/question/predicate/predicate-parse.js';
 import {
   matchNet,
@@ -49,12 +49,12 @@ import {
   withSizeCost,
   DEFAULT_OBSERVE_EVENT_LIMIT,
   DEFAULT_QUERY_LIMIT,
-} from '../../portal/session/output-budget.js';
+} from '@/portal/session/output-budget.js';
 import {
   annotateStarvedFailure,
   healthEnvelope,
   bufferEnvelope,
-} from '../../portal/session/session-health.js';
+} from '@/portal/session/session-health.js';
 import {
   assertsDerivedIpcStatus,
   DERIVED_IPC_STATUS_ADVICE,
@@ -64,17 +64,17 @@ import {
 import { assertVerdict } from './assert/assert-verdict.js';
 import { assertionSource } from './assert/assert-source.js';
 import { isChangeUndeclared } from '@reticlehq/engine/evidence/undeclared-change.js';
-import { openSessionIntents } from '../../memory/intent/open-intents.js';
+import { openSessionIntents } from '@/memory/intent/open-intents.js';
 import {
   dischargeInlineIntent,
   inlineVerdictId,
   linkInlineIntent,
-} from '../../memory/intent/inline-intent.js';
+} from '@/memory/intent/inline-intent.js';
 import { bodiesNotCaptured } from '@reticlehq/engine/evidence/uncaptured-bodies.js';
 import { bodyIsEvidence, type BodyMode } from '@reticlehq/engine/window/body-relevance.js';
 import { foldAssetNoise } from '@reticlehq/engine/window/asset-noise.js';
 import { bodyClauseRefusal } from '@reticlehq/engine/evidence/body-capture-remedy.js';
-import { withControl } from '../../portal/session/control-envelope.js';
+import { withControl } from '@/portal/session/control-envelope.js';
 import { asNumber, asRecord, asString } from '@reticlehq/core';
 import { type ToolDef, intentArg, sessionIdShape, commandOrThrow } from './tool-kit.js';
 import { gradeOfPredicate } from './assert/assert-grade.js';

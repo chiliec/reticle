@@ -1,14 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { SnapshotMode } from '@reticlehq/core';
-import { Bridge } from '../../portal/bridge/bridge.js';
+import { Bridge } from '@/portal/bridge/bridge.js';
 import type { ToolDeps } from './tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import {
-  FakeBrowser,
-  callTool,
-  makeDeps,
-  waitUntil,
-} from '../../portal/bridge/bridge.test-harness.js';
+import { FakeBrowser, callTool, makeDeps, waitUntil } from '@/portal/bridge/bridge.test-harness.js';
 
 /**
  * `{ tree: "", nodes: 0 }` is a claim about the app, and on a hidden page it is the wrong one (#672).

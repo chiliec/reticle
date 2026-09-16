@@ -1,4 +1,4 @@
-import { healthEnvelope } from '../../portal/session/session-health.js';
+import { healthEnvelope } from '@/portal/session/session-health.js';
 import { verifyNextBaton, SUPPRESS_VERIFY_NEXT_ENV } from './verify-next-baton.js';
 import {
   type BrowserBrand,
@@ -7,38 +7,42 @@ import {
   TRANSPORT_LIMITS,
   fingerprintFinding,
 } from '@reticlehq/core';
-import { getSessionMetrics } from '../../telemetry/session-metrics.js';
-import { getTelemetry } from '../../telemetry/telemetry.js';
-import { takeUpdateNudge } from '../../command/update/update-nudge.js';
-import { takeVersionSkew } from '../../command/version/version-nudge.js';
-import { rewriteClosedAsSkew } from '../../command/version/version-skew.js';
-import { noteToolCall } from '../../command/daemon/lifetime/daemon-usefulness.js';
-import { bugsInResult, routeOf } from '../../telemetry/bug-found.js';
-import { noteToolServed, reportToolRefused } from '../../telemetry/tool-refused.js';
+import { getSessionMetrics } from '@/telemetry/session-metrics.js';
+import { getTelemetry } from '@/telemetry/telemetry.js';
+import { takeUpdateNudge } from '@/command/update/update-nudge.js';
+import { takeVersionSkew } from '@/command/version/version-nudge.js';
+import { rewriteClosedAsSkew } from '@/command/version/version-skew.js';
+import { noteToolCall } from '@/command/daemon/lifetime/daemon-usefulness.js';
+import { bugsInResult, routeOf } from '@/telemetry/bug-found.js';
+import { noteToolServed, reportToolRefused } from '@/telemetry/tool-refused.js';
 import { buildErrorPayload, refusalReasonFor } from './error-recovery.js';
-import { resultIsError } from '../mcp/faults/mcp-is-error.js';
-import { verificationOf } from '../../telemetry/verification-of.js';
-import { emitBugFoundHook, emitVerdictHook } from '../../hooks/hook-emit.js';
-import { reportOnboardingStep } from '../../telemetry/onboarding-funnel.js';
-import { noteFirstVerdict, noteOnboardingFirst } from '../../telemetry/onboarding-firsts.js';
+import { resultIsError } from '@/surface/mcp/faults/mcp-is-error.js';
+import { verificationOf } from '@/telemetry/verification-of.js';
+import { emitBugFoundHook, emitVerdictHook } from '@/hooks/hook-emit.js';
+import { reportOnboardingStep } from '@/telemetry/onboarding-funnel.js';
+import { noteFirstVerdict, noteOnboardingFirst } from '@/telemetry/onboarding-firsts.js';
 import { OnboardingPhase, OnboardingStepStatus } from '@reticlehq/core/telemetry';
 import { asString } from '@reticlehq/core';
 import { sessionIdFromArgs, spentRefFromArgs } from './tools-helpers.js';
 import { EnvelopeKey } from './tool-kit.js';
 import { ReticleTool } from '@reticlehq/core';
 import { takeFeedbackPrompt } from './feedback-tools.js';
-import { takeFeedbackUndelivered } from '../../telemetry/feedback-delivery.js';
-import type { Session } from '../../portal/session/session.js';
-import { noteRefsMinted, wrongTabRefusal } from '../../portal/session/facts/ref-provenance.js';
-import { CAPTURED_TOOLS, noteCapturedCall, noteToolDispatched } from '../tools/feature-capture.js';
-import { span } from '../../trace.js';
+import { takeFeedbackUndelivered } from '@/telemetry/feedback-delivery.js';
+import type { Session } from '@/portal/session/session.js';
+import { noteRefsMinted, wrongTabRefusal } from '@/portal/session/facts/ref-provenance.js';
+import {
+  CAPTURED_TOOLS,
+  noteCapturedCall,
+  noteToolDispatched,
+} from '@/surface/tools/feature-capture.js';
+import { span } from '@/trace.js';
 import {
   defectForToolResult,
   deltaForToolResult,
   impactSnapshot,
   initImpact,
   recordImpact,
-} from '../../memory/impact/impact-recorder.js';
+} from '@/memory/impact/impact-recorder.js';
 import { type FrictionKind, frictionOf, inviteFor } from './feedback-invite.js';
 import type { ToolDef, ToolDeps } from './tool-kit.js';
 

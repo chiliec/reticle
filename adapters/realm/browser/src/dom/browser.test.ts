@@ -3,8 +3,8 @@ import { ElementState, REDACTED_VALUE, SnapshotMode } from '@reticlehq/core';
 import { getAccessibleName, getRole, getStates } from './a11y.js';
 import { buildSnapshot } from './snapshot.js';
 import { ATTR_VALUE_MAX, matchQuery, runQuery } from './query.js';
-import { registerCapabilities } from '../registry/capabilities.js';
-import { executeAction } from '../actions/actions.js';
+import { registerCapabilities } from '@/registry/capabilities.js';
+import { executeAction } from '@/actions/actions.js';
 import { refs } from './addressing/refs.js';
 
 function render(html: string): void {

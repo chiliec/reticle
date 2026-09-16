@@ -14,7 +14,7 @@
 
 import { RETICLE_DEFAULT_PORT, bridgeWsUrl } from '@reticlehq/core';
 import { PatchKind, type SourcePatch } from './patch-kind.js';
-import { UiLibrary } from '../detect/detect.js';
+import { UiLibrary } from '@/detect/detect.js';
 import { registerCapabilitiesCall, sdkImport } from './snippets.js';
 import { patchViteOwningConfig, type ViteOwningConfig } from './vite-owning-config.js';
 

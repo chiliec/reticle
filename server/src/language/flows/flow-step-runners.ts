@@ -18,8 +18,8 @@ import {
 } from '@reticlehq/core';
 import { ReticleTool } from '@reticlehq/core';
 import { replayActionArgs } from './replay.js';
-import { isStaleRefError } from '../../surface/tools/act/act-sequence-retry.js';
-import { waitForReaction } from '../../surface/tools/act/react-grace.js';
+import { isStaleRefError } from '@/surface/tools/act/act-sequence-retry.js';
+import { waitForReaction } from '@/surface/tools/act/react-grace.js';
 import { anchorFieldName } from './flows.js';
 import type { FlowReplaySession, Sleep } from './flow-replay-types.js';
 import {
@@ -31,7 +31,7 @@ import {
   testidDrift,
 } from './flow-anchor.js';
 import { nearestRoleName, type RoleCandidate } from './role-anchor-nearest.js';
-import { roleDriftReason } from '../../judgement/outcome/role-drift-reason.js';
+import { roleDriftReason } from '@/judgement/outcome/role-drift-reason.js';
 
 /** Query args for a NAMED role anchor — the handle that identifies an instance, not a JSX site. */
 function roleQueryArgs(

@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { CROSS_STEP_ADDRESS, FlowStepTool } from './flow-step-tool.js';
 import { StepEffect } from './step-effect.js';
 export { CROSS_STEP_ADDRESS, FlowStepTool } from './flow-step-tool.js';
-import { ActionType } from '../wire/constants/constants.js';
-import type { Contradiction } from '../verdict/findings.js';
-import { CONSEQUENCE_KINDS } from '../verdict/consequence.js';
+import { ActionType } from '@/wire/constants/constants.js';
+import type { Contradiction } from '@/verdict/findings.js';
+import { CONSEQUENCE_KINDS } from '@/verdict/consequence.js';
 // Its own directory's constants, which this file had been reaching through `wire/constants/constants.js`
 // to get -- the clearest cost of that re-export: artifacts went out to wire to fetch a symbol
 // that had been sitting next door the whole time.

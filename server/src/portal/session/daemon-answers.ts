@@ -1,5 +1,5 @@
-import { log } from '../../log.js';
-import { bindSpanContext } from '../../trace.js';
+import { log } from '@/log.js';
+import { bindSpanContext } from '@/trace.js';
 
 /**
  * What the daemon answers when the rules that decide a verdict ask it for something.

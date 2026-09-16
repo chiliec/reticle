@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { TOOLS, type ToolDef, type ToolDeps } from './tools.js';
 import { runTool } from './invoke-tool.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import { FlowStore } from '../../language/flows/flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
-import { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { AnnotationStore } from '@/language/flows/stores/annotation-store.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 
 /**
  * A consumer embedding this engine may carry its own dependencies on the deps bag.

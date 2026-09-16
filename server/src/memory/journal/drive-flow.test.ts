@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { driveFlowsFrom, driveFlowName, carriesAnAssertion } from './drive-flow.js';
 import { ReticleTool } from '@reticlehq/core';
-import type { RecordedStep } from '../../language/flows/recording/tape/recordings.js';
+import type { RecordedStep } from '@/language/flows/recording/tape/recordings.js';
 
 const step = (expectIt: boolean, route?: string): RecordedStep => ({
   tool: ReticleTool.ACT,

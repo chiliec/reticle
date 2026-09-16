@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PackageManager } from '../detect/detect.js';
+import { PackageManager } from '@/detect/detect.js';
 import { installFailureHint } from './install-hint.js';
 
 describe('installFailureHint', () => {

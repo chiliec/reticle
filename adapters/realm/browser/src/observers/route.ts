@@ -1,6 +1,6 @@
 import { EventType } from '@reticlehq/core';
 import { observeSafely, type Emit, type Teardown } from './types.js';
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 
 function snapshotLocation(): { pathname: string; search: string; hash: string; href: string } {
   return {

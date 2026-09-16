@@ -8,7 +8,7 @@ import {
   MAX_TRACKED_ROOTS,
   SWEEP_EVERY,
 } from './shadow-registry.js';
-import { captureMethod } from '../patching/capture-method.js';
+import { captureMethod } from '@/patching/capture-method.js';
 
 /**
  * A closed shadow root is unreadable AFTER the fact — `el.shadowRoot` is null forever — but

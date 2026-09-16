@@ -11,9 +11,9 @@
  * consultation and a manager can see which flows are actually being pulled and by whom — the
  * question the fetch counters exist to answer and could not while nothing was reading.
  */
-import { cloudFetch } from '../cloud/cloud-sync.js';
-import { resolveProjectCloud } from '../cloud/cloud-config.js';
-import type { FileSystemPort } from '../project/fs/fs-port.js';
+import { cloudFetch } from '@/memory/cloud/cloud-sync.js';
+import { resolveProjectCloud } from '@/memory/cloud/cloud-config.js';
+import type { FileSystemPort } from '@/memory/project/fs/fs-port.js';
 
 /** Named so a read from the tool surface is distinguishable from the CLI's and from replay's. */
 const MCP_AGENT_ID = 'reticle-mcp';

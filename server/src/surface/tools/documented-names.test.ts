@@ -16,7 +16,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ReticleTool, FlowStepTool } from '@reticlehq/core';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 import { CORE_TOOL_NAMES, defaultAdvertisedNames } from './tool-surface.js';
 
 const REPO = REPO_ROOT;

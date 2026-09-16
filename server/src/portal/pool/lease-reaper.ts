@@ -8,7 +8,7 @@
  */
 
 import type { BrowserPool } from './browser-pool.js';
-import { log } from '../../log.js';
+import { log } from '@/log.js';
 
 /** How often the reaper sweeps for expired leases. */
 const LEASE_REAP_INTERVAL_MS = 30_000;

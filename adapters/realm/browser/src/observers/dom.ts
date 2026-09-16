@@ -1,6 +1,6 @@
 import { EventType, TruncationChannel } from '@reticlehq/core';
-import { getAccessibleName, getRole, isVisible } from '../dom/a11y.js';
-import { refs } from '../dom/addressing/refs.js';
+import { getAccessibleName, getRole, isVisible } from '@/dom/a11y.js';
+import { refs } from '@/dom/addressing/refs.js';
 
 /**
  * A STABLE identity for the region a mutation happened in. Ambient learning cannot key on the element
@@ -14,10 +14,10 @@ function regionKeyOf(target: Node): string | undefined {
   const labelled = el.closest('[data-testid]');
   return labelled?.getAttribute('data-testid') ?? refs.refFor(el);
 }
-import { isReticleOverlay } from '../dom/dom-ignore.js';
+import { isReticleOverlay } from '@/dom/dom-ignore.js';
 import type { Emit, Teardown } from './types.js';
-import { capturedRoots, installShadowRegistry, onShadowRoot } from '../dom/shadow-registry.js';
-import { isElement } from '../dom/realm.js';
+import { capturedRoots, installShadowRegistry, onShadowRoot } from '@/dom/shadow-registry.js';
+import { isElement } from '@/dom/realm.js';
 import { observeSameOriginFrames } from './frames.js';
 
 const WATCHED_ATTRS = [

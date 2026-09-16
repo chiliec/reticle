@@ -10,7 +10,7 @@
  * same artifact byte-for-byte.
  */
 
-import { reportRunTelemetry } from '../../telemetry/run-telemetry.js';
+import { reportRunTelemetry } from '@/telemetry/run-telemetry.js';
 import {
   boundFlowName,
   RunFlowStatus,

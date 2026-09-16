@@ -35,7 +35,7 @@ import {
 } from '@reticlehq/core';
 import { startMcpProxy } from './mcp-proxy.js';
 import { resetOutageReporting } from './faults/mcp-outage.js';
-import { getTelemetry } from '../../telemetry/telemetry.js';
+import { getTelemetry } from '@/telemetry/telemetry.js';
 
 const SESSION_PATH = '/session/honesty';
 const SSE_HEADERS = { 'content-type': 'text/event-stream' } as const;

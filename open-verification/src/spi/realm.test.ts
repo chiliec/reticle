@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Realm } from './realm.js';
-import { CHANNEL_DEFAULTS, ChannelId } from '../vocabulary/channel.js';
-import { CloseCondition, RefusalReason } from '../vocabulary/realm-surface.js';
-import type { Action, ActionReceipt, Capability, Window } from '../vocabulary/realm-surface.js';
-import type { Coverage, Observation } from '../vocabulary/evidence.js';
-import { ResumeStrategy, resumeStrategy } from '../vocabulary/determinism.js';
-import type { SubjectRef } from '../vocabulary/subject.js';
+import { CHANNEL_DEFAULTS, ChannelId } from '@/vocabulary/channel.js';
+import { CloseCondition, RefusalReason } from '@/vocabulary/realm-surface.js';
+import type { Action, ActionReceipt, Capability, Window } from '@/vocabulary/realm-surface.js';
+import type { Coverage, Observation } from '@/vocabulary/evidence.js';
+import { ResumeStrategy, resumeStrategy } from '@/vocabulary/determinism.js';
+import type { SubjectRef } from '@/vocabulary/subject.js';
 
 /**
  * That the base class actually holds the rules, rather than describing them.

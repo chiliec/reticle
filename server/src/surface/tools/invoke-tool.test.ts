@@ -3,17 +3,17 @@ import { SessionState, UNSCRIPTABLE_TAB_RECOMMENDATION, TRANSPORT_LIMITS } from 
 import { TOOLS, MERGED_TOOLS, type ToolDef, type ToolDeps } from './tools.js';
 import { ReticleTool } from '@reticlehq/core';
 import { EnvelopeKey } from './tool-kit.js';
-import { getSessionMetrics, resetSessionMetrics } from '../../telemetry/session-metrics.js';
+import { getSessionMetrics, resetSessionMetrics } from '@/telemetry/session-metrics.js';
 import { buildDynamicTools } from './dynamic-tools.js';
 import { runTool, SESSION_BOUND_TOOLS, SESSION_EXEMPT_TOOLS } from './invoke-tool.js';
-import { BaselineStore } from '../../memory/project/baselines.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import { FlowStore } from '../../language/flows/flows.js';
-import { ProjectStore } from '../../memory/project/project-store.js';
-import { AnnotationStore } from '../../language/flows/stores/annotation-store.js';
-import { createNodeFileSystem } from '../../memory/project/fs/fs-port.js';
-import type { Session } from '../../portal/session/session.js';
-import type { SessionManager } from '../../portal/session/session-manager.js';
+import { BaselineStore } from '@/memory/project/baselines.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { FlowStore } from '@/language/flows/flows.js';
+import { ProjectStore } from '@/memory/project/project-store.js';
+import { AnnotationStore } from '@/language/flows/stores/annotation-store.js';
+import { createNodeFileSystem } from '@/memory/project/fs/fs-port.js';
+import type { Session } from '@/portal/session/session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
 
 const ROOT = '/tmp/reticle-invoke-test/.reticle';
 const now = (): number => 0;

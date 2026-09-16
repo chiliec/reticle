@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { deriveProjectId, packageName, slugifyPackageName, shortHash } from './project-id.js';
-import { reticleConfigContent, nextReticleDevFile, htmlManual } from '../patch/snippets.js';
+import { reticleConfigContent, nextReticleDevFile, htmlManual } from '@/patch/snippets.js';
 
 describe('deriveProjectId (init)', () => {
   it('slug of package name + 8-hex root hash', () => {

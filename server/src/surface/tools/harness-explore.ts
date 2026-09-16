@@ -10,13 +10,13 @@
 
 import { ReticleEnv } from '@reticlehq/core';
 import type { ToolDeps } from './tool-kit.js';
-import { harnessDriver, harnessOptionsFromEnv } from '../../features/harness/driver.js';
+import { harnessDriver, harnessOptionsFromEnv } from '@/features/harness/driver.js';
 import {
   DEFAULT_MAX_STEPS,
   runHarness,
   type HarnessResult,
   type ModelDriver,
-} from '../../features/harness/harness.js';
+} from '@/features/harness/harness.js';
 import { reticleToolset } from './harness-toolset.js';
 
 export interface ExploreOptions {

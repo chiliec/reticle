@@ -16,11 +16,11 @@
  * observing is the base. Everything the adjudicator needs is here; `perform` is not part of it.
  */
 
-import type { ChannelDescriptor, ChannelId } from '../vocabulary/channel.js';
-import type { Coverage, Observation, BlindSpot } from '../vocabulary/evidence.js';
-import type { Window } from '../vocabulary/realm-surface.js';
-import type { SubjectRef } from '../vocabulary/subject.js';
-import { AnomalyKind, AnomalyTier, type Anomaly } from '../vocabulary/verdict.js';
+import type { ChannelDescriptor, ChannelId } from '@/vocabulary/channel.js';
+import type { Coverage, Observation, BlindSpot } from '@/vocabulary/evidence.js';
+import type { Window } from '@/vocabulary/realm-surface.js';
+import type { SubjectRef } from '@/vocabulary/subject.js';
+import { AnomalyKind, AnomalyTier, type Anomaly } from '@/vocabulary/verdict.js';
 
 export abstract class Witness {
   /** What is being looked at, and what would invalidate evidence about it. */

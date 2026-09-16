@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { directories, mutualPairs, nameCollisions } from '../../../../scripts/directory-reach.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /**
  * Why a guard that reads `git ls-files` can disagree with the editor in front of you.

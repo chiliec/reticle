@@ -10,13 +10,13 @@
  * must never fail the run that found it.
  */
 import { ActionType, AnchorKind } from '@reticlehq/core';
-import { CapsuleStore, capsuleId, CAPSULE_VERSION } from '../../judgement/capsule/capsule-store.js';
-import type { ExpectedLink } from '../../judgement/capsule/divergence.js';
-import type { DivergenceCapsule } from '../../judgement/capsule/capsule.js';
+import { CapsuleStore, capsuleId, CAPSULE_VERSION } from '@/judgement/capsule/capsule-store.js';
+import type { ExpectedLink } from '@/judgement/capsule/divergence.js';
+import type { DivergenceCapsule } from '@/judgement/capsule/capsule.js';
 import { ReticleTool } from '@reticlehq/core';
 import { asRecord, asString } from '@reticlehq/core';
 import type { ToolDeps } from './tool-kit.js';
-import { sessionRoot } from '../../memory/project/session-root.js';
+import { sessionRoot } from '@/memory/project/session-root.js';
 
 interface CapsuleSaveInputs {
   deps: ToolDeps;

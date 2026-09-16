@@ -21,7 +21,7 @@ import {
 import { dirname, join } from 'node:path';
 import { ReticleDir } from '@reticlehq/core';
 import type { CloudSyncState, PulledIssues, SyncSink, SyncSource } from './sync-cycle.js';
-import { subjectFor } from '../intent/intent-subject.js';
+import { subjectFor } from '@/memory/intent/intent-subject.js';
 
 const JSON_SUFFIX = '.json';
 

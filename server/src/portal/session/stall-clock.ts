@@ -16,7 +16,7 @@
  * It lives under `session/` rather than `telemetry/` now, beside the two files that read it. The old
  * home is why the removal looked like it would take the diagnosis with it.
  */
-import { appEverConnected } from '../../telemetry/app-instrumented.js';
+import { appEverConnected } from '@/telemetry/app-instrumented.js';
 
 /**
  * When a run with nothing connected is worth mentioning to a human.

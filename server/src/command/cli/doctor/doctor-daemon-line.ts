@@ -14,7 +14,7 @@
  * at the call site.
  */
 
-import { describeSkew } from '../../version/version-skew.js';
+import { describeSkew } from '@/command/version/version-skew.js';
 import { DoctorRow, doctorRow } from './doctor-rows.js';
 
 /** The fields of `/status` this line cares about. Both optional — an old daemon reports neither. */

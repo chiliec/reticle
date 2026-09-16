@@ -17,7 +17,7 @@ import {
   setIgnoreSelectors,
   setPresenterVisible,
 } from './dom-ignore.js';
-import { getCapabilities } from '../registry/capabilities.js';
+import { getCapabilities } from '@/registry/capabilities.js';
 
 const el = (html: string): Element => {
   const host = document.createElement('div');

@@ -14,10 +14,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { resolveToolSurface, TOOL_SURFACE, type ToolSurface } from './tool-surface.js';
-import { advertisedTools } from '../mcp/mcp.js';
+import { advertisedTools } from '@/surface/mcp/mcp.js';
 import { TOOLS } from './tools.js';
 import { buildDynamicTools } from './dynamic-tools.js';
-import { REPO_ROOT } from '../../machine/repo-root.js';
+import { REPO_ROOT } from '@/machine/repo-root.js';
 
 /** The advertised size of each surface. Update WITH the surface, never after it. */
 const EXPECTED_SIZE: Record<ToolSurface, number> = {

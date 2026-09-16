@@ -66,7 +66,7 @@ describe('createReticleEmitter — an app emits without importing the SDK', () =
   });
 
   it('works when the reticle singleton is present but never connected', async () => {
-    const { reticle } = await import('../index.js');
+    const { reticle } = await import('@/index.js');
     expect(reticle.connected).toBe(false);
     const e = createReticleEmitter();
     expect(() => e.signal('x', {})).not.toThrow();

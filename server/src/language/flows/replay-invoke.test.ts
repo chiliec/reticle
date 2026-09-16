@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { replayProgram } from './replay.js';
 import { INVOKE_TOOL, type CompiledProgram } from './recording/tape/recordings.js';
-import type { Session } from '../../portal/session/session.js';
+import type { Session } from '@/portal/session/session.js';
 
 /**
  * Replaying a composite.

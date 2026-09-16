@@ -5,9 +5,9 @@ import {
   setActiveRedactionPolicy,
 } from '@reticlehq/core';
 import { sanitizeForTransport } from './serialization.js';
-import { readStorage } from '../observers/storage.js';
-import { nativeWarn } from '../timers/console/native-console.js';
-import { reticle } from '../index.js';
+import { readStorage } from '@/observers/storage.js';
+import { nativeWarn } from '@/timers/console/native-console.js';
+import { reticle } from '@/index.js';
 
 // The SDK's own diagnostics deliberately go through the console reference captured at module load,
 // so they never become CONSOLE_WARN events the agent then reads back as app output. That also means

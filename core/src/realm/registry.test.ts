@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppRuntime } from '../telemetry-feedback.js';
+import { AppRuntime } from '@/telemetry-feedback.js';
 import { REALMS, isKnownRealm, realmOf, realmOfProject } from './registry.js';
 
 /**

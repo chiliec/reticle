@@ -29,10 +29,25 @@ import { dirname, resolve } from 'node:path';
 
 // Resolved from this file, not the cwd: the stamp runs from server (prepack) as well as from
 // the repo root, and a cwd-relative path would silently miss in one of them.
-const TARGET = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  '../server/dist/features/license/license.js',
-);
+/**
+ * Overridable so a TEST can stamp a COPY instead of the real build.
+ *
+ * The guard for this script used to stamp `server/dist/.../license.js` in place and restore it in a
+ * `finally`. That mutates a build output while `turbo` may be rebuilding it: `spec-runner` depends on
+ * `@reticlehq/server`, so `server:build` is scheduled CONCURRENTLY with `server:test:guards` (both
+ * tasks declare only `^build`, which is upstream packages and not their own). Whichever writer lost
+ * left a real key stamped into the tree — and because `tsc -b` is incremental and would not rewrite
+ * an unchanged file, nothing put it back. The next run then failed with "already stamped", forever,
+ * for a reason that had nothing to do with the change under test.
+ *
+ * Latent for as long as a no-op build wrote nothing. It stopped being latent when `tsc-alias` joined
+ * the build, because that walks the whole `dist` and rewrites every emitted file on every run.
+ *
+ * Production never sets this: prepack stamps the real artifact, which is the point.
+ */
+const TARGET =
+  process.env['RETICLE_STAMP_TARGET'] ??
+  resolve(dirname(fileURLToPath(import.meta.url)), '../server/dist/features/license/license.js');
 /** Must match the declaration in license.ts verbatim. A rename here fails loudly rather than no-oping. */
 const EMPTY_DECLARATION = "const BAKED_ISSUER_PUBLIC_KEY_PEM = '';";
 

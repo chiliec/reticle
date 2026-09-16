@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { advertisedTools } from '../mcp/mcp.js';
+import { advertisedTools } from '@/surface/mcp/mcp.js';
 import { TOOLS } from './tools.js';
 import {
   CORE_TOOL_NAMES,
@@ -12,8 +12,8 @@ import {
   resolveToolSurface,
 } from './tool-surface.js';
 import { ReticleTool } from '@reticlehq/core';
-import { PAUSE_HINT } from '../../portal/session/control-envelope.js';
-import { buildSessionLease } from '../../portal/session/presence/session-lease.js';
+import { PAUSE_HINT } from '@/portal/session/control-envelope.js';
+import { buildSessionLease } from '@/portal/session/presence/session-lease.js';
 
 describe('tool profiles', () => {
   const original = process.env[TOOL_PROFILE_ENV];

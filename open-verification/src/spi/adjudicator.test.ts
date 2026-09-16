@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { adjudicate, couldEverProve, Ground, type AdjudicationInput } from './adjudicator.js';
-import { CHANNEL_DEFAULTS, ChannelId, Grade, Independence } from '../vocabulary/channel.js';
-import { Declaration } from '../vocabulary/intent.js';
-import { CloseCondition } from '../vocabulary/realm-surface.js';
-import { AnomalyTier, Verdict } from '../vocabulary/verdict.js';
-import { ProvenanceClass } from '../vocabulary/evidence.js';
+import { CHANNEL_DEFAULTS, ChannelId, Grade, Independence } from '@/vocabulary/channel.js';
+import { Declaration } from '@/vocabulary/intent.js';
+import { CloseCondition } from '@/vocabulary/realm-surface.js';
+import { AnomalyTier, Verdict } from '@/vocabulary/verdict.js';
+import { ProvenanceClass } from '@/vocabulary/evidence.js';
 
 /**
  * The rules, exercised as rules.

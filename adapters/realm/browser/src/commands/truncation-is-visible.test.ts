@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest';
 import { createCommandRegistry } from './commands.js';
-import { refs } from '../dom/addressing/refs.js';
+import { refs } from '@/dom/addressing/refs.js';
 import { ReticleCommand } from '@reticlehq/core';
 
 /**

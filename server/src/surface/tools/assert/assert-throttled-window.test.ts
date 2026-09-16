@@ -12,10 +12,10 @@
  * starvation in its own failureReason; a healthy tab's failure says exactly what it said before.
  */
 import { describe, expect, it } from 'vitest';
-import { TOOLS, type ToolDef, type ToolDeps } from '../tools.js';
+import { TOOLS, type ToolDef, type ToolDeps } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
-import type { SessionManager } from '../../../portal/session/session-manager.js';
-import { createFakeSession } from '../../../portal/session/fake-session.js';
+import type { SessionManager } from '@/portal/session/session-manager.js';
+import { createFakeSession } from '@/portal/session/fake-session.js';
 
 function depsWithThrottle(throttled: boolean): ToolDeps {
   const session = createFakeSession({

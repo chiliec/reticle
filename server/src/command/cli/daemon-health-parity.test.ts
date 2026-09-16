@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { LOOPBACK_HOST } from '@reticlehq/core';
 import { expect, it, vi } from 'vitest';
-import { handleStatus } from '../cli.js';
-import { STATE_DIR_ENV, writePid } from '../daemon/daemon.js';
+import { handleStatus } from '@/command/cli.js';
+import { STATE_DIR_ENV, writePid } from '@/command/daemon/daemon.js';
 import { handleDoctor } from './cli-doctor.js';
 
 async function reserveThenReleasePort(): Promise<number> {

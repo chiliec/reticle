@@ -1,7 +1,7 @@
 import { EventType, TRANSPORT_LIMITS } from '@reticlehq/core';
 import { observeSafely, type Emit, type Teardown } from './types.js';
-import { safeStringify } from '../security/serialization.js';
-import { requireCapturedMethod } from '../util/captured-method.js';
+import { safeStringify } from '@/security/serialization.js';
+import { requireCapturedMethod } from '@/util/captured-method.js';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'info' | 'debug';
 

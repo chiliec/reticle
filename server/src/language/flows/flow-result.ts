@@ -1,5 +1,5 @@
 import { FlowErrorCode } from '@reticlehq/core';
-import { isValidFlowName } from '../../memory/project/dir/reticle-dir.js';
+import { isValidFlowName } from '@/memory/project/dir/reticle-dir.js';
 
 /** Discriminated result so callers never branch on free strings. */
 export type FlowResult<T> =

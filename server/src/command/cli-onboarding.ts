@@ -1,5 +1,5 @@
 import type { OnboardingStep } from '@reticlehq/core/telemetry';
-import { reportOnboardingStep } from '../telemetry/onboarding-funnel.js';
+import { reportOnboardingStep } from '@/telemetry/onboarding-funnel.js';
 import { tutorialShownSteps } from './cli/tutorial.js';
 
 /**

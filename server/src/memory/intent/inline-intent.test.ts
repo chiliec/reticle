@@ -13,13 +13,13 @@ import {
   type InstrumentationGap,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { createMemoryFs } from '../project/memory-fs.js';
+import { createMemoryFs } from '@/memory/project/memory-fs.js';
 import { IntentStore } from './intent-store.js';
-import { LastAct } from '../../portal/session/last-act.js';
-import { RecordingStore } from '../../language/flows/recording/tape/recordings.js';
-import { Session } from '../../portal/session/session.js';
-import { type SessionManager } from '../../portal/session/session-manager.js';
-import { TOOLS, type ToolDef, type ToolDeps } from '../../surface/tools/tools.js';
+import { LastAct } from '@/portal/session/last-act.js';
+import { RecordingStore } from '@/language/flows/recording/tape/recordings.js';
+import { Session } from '@/portal/session/session.js';
+import { type SessionManager } from '@/portal/session/session-manager.js';
+import { TOOLS, type ToolDef, type ToolDeps } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
 
 /**

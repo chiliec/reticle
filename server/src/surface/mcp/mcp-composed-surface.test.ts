@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createMcpServer } from './mcp.js';
 import { advertisedTools } from './mcp.js';
-import { TOOL_SURFACE } from '../tools/tool-surface.js';
-import { TOOLS, type ToolDef, type ToolDeps } from '../tools/tools.js';
+import { TOOL_SURFACE } from '@/surface/tools/tool-surface.js';
+import { TOOLS, type ToolDef, type ToolDeps } from '@/surface/tools/tools.js';
 import { ReticleTool } from '@reticlehq/core';
 
 /**

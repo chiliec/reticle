@@ -40,8 +40,8 @@ import {
   Surface,
   type SubjectRef,
 } from 'open-verification';
-import { AppRuntime } from '../telemetry-feedback.js';
-import { PlatformProfile } from '../wire/platform.js';
+import { AppRuntime } from '@/telemetry-feedback.js';
+import { PlatformProfile } from '@/wire/platform.js';
 
 /** What Reticle needs to know about a realm that it cannot work out by looking. */
 export interface RealmTraits {

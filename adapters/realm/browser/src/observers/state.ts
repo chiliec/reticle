@@ -4,8 +4,8 @@ import {
   onStoreRegistered,
   type StoreGetter,
   type StoreSubscribe,
-} from '../registry/stores.js';
-import { isSensitiveKey, sanitizeForTransport } from '../security/serialization.js';
+} from '@/registry/stores.js';
+import { isSensitiveKey, sanitizeForTransport } from '@/security/serialization.js';
 import { observeSafely, type Emit, type Teardown } from './types.js';
 
 interface StateChange {

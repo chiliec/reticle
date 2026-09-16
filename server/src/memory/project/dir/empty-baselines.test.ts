@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ReticleDir } from '@reticlehq/core';
-import { createMemoryFs } from '../memory-fs.js';
+import { createMemoryFs } from '@/memory/project/memory-fs.js';
 import { ensureReticleDir, reticleDirPaths } from './reticle-dir.js';
 
 /**
@@ -34,7 +34,7 @@ describe('the directory nothing could write to', () => {
     const { fs } = createMemoryFs();
     const root = '/repo/app/.reticle';
     const { ensureWorkspaceGitignore } =
-      await import('../../journal/on-disk/workspace-gitignore.js');
+      await import('@/memory/journal/on-disk/workspace-gitignore.js');
     await ensureWorkspaceGitignore(fs, root);
     const written = await fs.readFile(`${root}/.gitignore`);
     expect(written).not.toContain(ReticleDir.BASELINES_SUBDIR);

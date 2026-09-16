@@ -10,25 +10,25 @@
  * Attach-only: the pool drives a browser against an already-running dev server — it never starts one.
  */
 
-import type { RealInputProvider } from '../../portal/input/real-input.js';
+import type { RealInputProvider } from '@/portal/input/real-input.js';
 import {
   fixturePortFor,
   seedFromStorageState,
   type StorageFixturePort,
-} from '../../portal/input/storage-fixture.js';
-import { mutationPortFor, type NetworkMutationPort } from '../../portal/input/network-mutation.js';
+} from '@/portal/input/storage-fixture.js';
+import { mutationPortFor, type NetworkMutationPort } from '@/portal/input/network-mutation.js';
 import type { Perturbation } from '@reticlehq/core';
 import { z } from 'zod';
 import { leaseNotConnectedHint, type LeaseEvidence } from './lease-hint.js';
 import { probeSdkMarker } from './gaps/sdk-marker-probe.js';
-import { readProjectFramework, readProjectId } from '../../command/cli/ports/resolve/cli-port.js';
-import { hasAnyAppConnectedBefore } from '../../memory/recall/prior/connection-memory.js';
+import { readProjectFramework, readProjectId } from '@/command/cli/ports/resolve/cli-port.js';
+import { hasAnyAppConnectedBefore } from '@/memory/recall/prior/connection-memory.js';
 import {
   AGENT_DRIVING_ELSEWHERE,
   AGENT_DRIVING_HERE_AGAIN,
   watchersToNotify,
-} from '../../portal/session/lease-visibility.js';
-import { reticleStateHome } from '../../command/daemon/daemon.js';
+} from '@/portal/session/lease-visibility.js';
+import { reticleStateHome } from '@/command/daemon/daemon.js';
 import {
   LeaseNotReadyReason,
   REDACTED_VALUE,
@@ -42,7 +42,7 @@ import {
 import { ReticleTool } from '@reticlehq/core';
 import type { ToolDef, ToolDeps } from './tool-kit.js';
 import { asString } from '@reticlehq/core';
-import { chromiumHint } from '../../command/cli/doctor/browser/chromium-hint.js';
+import { chromiumHint } from '@/command/cli/doctor/browser/chromium-hint.js';
 
 /**
  * Everything the daemon already knows about why a leased tab might not have dialled in.

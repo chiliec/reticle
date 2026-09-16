@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { IntentState } from '@reticlehq/core/artifacts';
-import { createMemoryFs } from '../project/memory-fs.js';
+import { createMemoryFs } from '@/memory/project/memory-fs.js';
 import { IntentStore } from './intent-store.js';
 
 const ROOT = '/repo/apps/web/.reticle';

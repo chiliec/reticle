@@ -11,7 +11,7 @@
  * `headless` and `driveUrl` are independent: the flag governs the shared browser POOL (leases,
  * replay, the spec runner), which exists whether or not a drive URL was named.
  */
-import type { StartOptions } from '../../index.js';
+import type { StartOptions } from '@/index.js';
 import {
   DAEMON_INNER_COMMAND,
   DRIVE_FLAG,

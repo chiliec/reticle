@@ -8,9 +8,9 @@ import {
   type HelloMessage,
   type ReticleEvent,
 } from '@reticlehq/core';
-import { nativeSetTimeout, nativeNow } from '../timers/native/native-timers.js';
-import { nativeWarn } from '../timers/console/native-console.js';
-import { safeStringify } from '../security/serialization.js';
+import { nativeSetTimeout, nativeNow } from '@/timers/native/native-timers.js';
+import { nativeWarn } from '@/timers/console/native-console.js';
+import { safeStringify } from '@/security/serialization.js';
 
 export interface CommandOutcome {
   ok: boolean;

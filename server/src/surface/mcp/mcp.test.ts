@@ -9,11 +9,11 @@ import {
   installFriendlyArgErrors,
   withSessionEnvelope,
 } from './mcp.js';
-import { TOOL_SURFACE } from '../tools/tool-surface.js';
-import { TOOLS, type ToolDeps } from '../tools/tools.js';
-import { SESSION_BOUND_TOOLS } from '../tools/invoke-tool.js';
+import { TOOL_SURFACE } from '@/surface/tools/tool-surface.js';
+import { TOOLS, type ToolDeps } from '@/surface/tools/tools.js';
+import { SESSION_BOUND_TOOLS } from '@/surface/tools/invoke-tool.js';
 import { ReticleTool } from '@reticlehq/core';
-import { getSessionMetrics, resetSessionMetrics } from '../../telemetry/session-metrics.js';
+import { getSessionMetrics, resetSessionMetrics } from '@/telemetry/session-metrics.js';
 
 describe('withSessionEnvelope — spliced fields survive structuredContent validation', () => {
   // `warning` rides with `session` from healthEnvelope on a throttled tab — it is spliced by runTool
