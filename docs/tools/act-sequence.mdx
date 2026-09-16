@@ -4,6 +4,13 @@ description: Run several actions in order in one round trip. Fill, fill, submit.
 icon: layer-group
 ---
 
+<Warning>
+  **reticle_act_sequence is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_act { steps: [...] }`** instead: the same call, routed on the steps array. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_act_sequence` runs several actions in order in a single round trip. Reach for it whenever a journey needs more than one step, such as fill, fill, submit, and then prove the outcome once with [`reticle_act_and_wait`](/tools/act-and-wait), because a sequence itself produces no verdict.
 
 A login is three actions. Driving it one call at a time costs three round trips and three turns of context. `reticle_act_sequence` does it in one.

@@ -4,6 +4,13 @@ description: A semantic accessibility snapshot of the page or a subtree, in thre
 icon: camera
 ---
 
+<Warning>
+  **reticle_snapshot is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_look { action: "page" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_snapshot` is how an agent gets its bearings. It returns the page as semantic structure, not pixels and not raw HTML, and it comes in three sizes so you can pay for only what you need.
 
 ## Three modes, three prices

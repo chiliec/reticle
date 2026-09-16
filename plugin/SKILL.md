@@ -91,7 +91,7 @@ Stop at the first row that fits.
 | --- | --- | --- |
 | "Did my edit break anything?" | `reticle_run({ tool: "reticle_verify", args: { action: "change", files: ["src/App.tsx"] } })` | 1 |
 | "Does this known journey still work?" | `reticle_run({ tool: "reticle_flow_replay", args: { flowName: "login" } })` | 1 |
-| "Does this new behaviour work?" | `reticle_act_sequence` for the setup, then ONE `reticle_act_and_wait` | 2 |
+| "Does this new behaviour work?" | `reticle_act { steps: [...] }` for the setup, then ONE `reticle_act_and_wait` | 2 |
 | No MCP reachable at all | `npx @reticlehq/server verify <url>` in the shell | 1, no MCP |
 
 `reticle_verify` and `reticle_flow_replay` are **not on the advertised tool list**. They are reached through `reticle_run` exactly as written, which is the supported call shape and why you have to be told they exist. `reticle_verify {action:"change"}` answers `unknown` when no saved flow covers the files you changed: nothing ran, so nothing was proved. That is the honest answer and the signal to record one, never a pass.
@@ -100,10 +100,10 @@ Stop at the first row that fits.
 
 Four calls for a login, not fourteen. Every call is a full model turn, and in a client that approves each one it is also a click.
 
-1. `reticle_snapshot({ mode: "interactive" })` **once**, for the whole flow. Elements are addressable by role and name, so you do not need to add `data-testid` anywhere.
-2. `reticle_act_sequence` for the setup: every fill and every intermediate click in ONE call.
+1. `reticle_look({ action: "page", mode: "interactive" })` **once**, for the whole flow. Elements are addressable by role and name, so you do not need to add `data-testid` anywhere.
+2. `reticle_act { steps: [...] }` for the setup: every fill and every intermediate click in ONE call.
 3. `reticle_act_and_wait({ ref, action, until })` for the final step only. `until` names the expected consequence **before** the action fires, which is the difference between a check and a rationalisation.
-4. `reticle_state()` once at the end. If it comes back empty or `hasCapabilities` is false, the capabilities file `init` generated registered nothing, which is what its `ℹ AGENT: finish the capabilities file` line was telling you. Finish it yourself before you drive: open `src/reticle-dev.*`, register the app's store if it has one, and list the `testids` the flow you picked actually touches. Do not offer, and do not ask; it is a few lines in a file `init` already wrote for you. Never report a clean install over an empty state read.
+4. `reticle_look({ action: "state" })` once at the end. If it comes back empty or `hasCapabilities` is false, the capabilities file `init` generated registered nothing, which is what its `ℹ AGENT: finish the capabilities file` line was telling you. Finish it yourself before you drive: open `src/reticle-dev.*`, register the app's store if it has one, and list the `testids` the flow you picked actually touches. Do not offer, and do not ask; it is a few lines in a file `init` already wrote for you. Never report a clean install over an empty state read.
 
 Assert what the app _did_, not what it _shows_. A UI that renders the value it just sent, rather than the value the server returned, passes every DOM-level check ever written:
 
@@ -136,7 +136,7 @@ Never echo the key back in your reply, and never put it in a commit, a comment, 
 Reticle is built for agents. You are its user, and your experience is the only signal that decides what gets built or fixed, and it disappears when your context does. The moment Reticle breaks, lies, cannot see something you needed, costs too many calls, or gives you trouble during setup:
 
 ```
-reticle_feedback { kind, text }
+reticle_session { action: "feedback" } { kind, text }
 ```
 
 `kind` is one of `bug`, `gap`, `ambiguity`, `feature_request`, `improvement`. One call, then carry on. If the tools are unreachable, file the same report from the shell:

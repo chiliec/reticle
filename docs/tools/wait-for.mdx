@@ -4,6 +4,13 @@ description: Block until a predicate holds. Or return immediately if it is alrea
 icon: hourglass
 ---
 
+<Warning>
+  **reticle_wait_for is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_assert { action: "wait" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_wait_for` blocks until a predicate holds, or returns straight away if it is already satisfied in the recent event buffer. Reach for it when you are waiting on something you did not cause. It reads and waits; it does not produce a verdict, so finish with [`reticle_assert`](/tools/assert).
 
 It takes the same predicate grammar as [`reticle_act_and_wait`](/tools/act-and-wait), without the action. Use it when the thing you are waiting for was triggered by something other than your own click. A timer, a websocket push, a background refresh.

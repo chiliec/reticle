@@ -4,6 +4,13 @@ description: Find elements by Testing-Library semantics. Role, text, label, plac
 icon: magnifying-glass
 ---
 
+<Warning>
+  **reticle_query is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_look { action: "find" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_query` answers "where is the thing I mean?" without dumping the whole page into your context window. It queries the way a testing library does. By role, label, text, testid. So your agent binds to meaning rather than to DOM structure that a refactor will move.
 
 ## Example

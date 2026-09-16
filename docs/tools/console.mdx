@@ -4,6 +4,13 @@ description: The console log, filtered by level, and an empty result that tells 
 icon: terminal
 ---
 
+<Warning>
+  **reticle_console is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_observe { action: "console" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_console` returns the app's console log, filtered by level, and tells you whether an empty result is a real reading or a missing one. Reach for it as the fast triage read after something goes wrong, and assert `{ "kind": "console", "absent": true }` when you want a clean console to be part of the pass.
 
 ```json

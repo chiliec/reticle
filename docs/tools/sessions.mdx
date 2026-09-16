@@ -4,6 +4,13 @@ description: List every connected browser tab, with the health fields that tell 
 icon: list-check
 ---
 
+<Warning>
+  **reticle_sessions is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_session { action: "list" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_sessions` lists every browser tab currently connected to the Reticle daemon, with the health fields that decide whether it can actually be driven. Reach for it first when a tool says no session is connected, and after every [`reticle_navigate`](/tools/navigate) that came back `confirmed: false`.
 
 ```json

@@ -5,21 +5,24 @@ description: The tools your agent sees every turn, the many more it can reach on
 icon: wrench
 ---
 
-Reticle ships 46 tools plus two meta-tools. On the default profile your agent is shown **19** of them: 17 that do the work, plus `reticle_tools` and `reticle_run`, which reach the other 29 on demand. Only `reticle_act_and_wait` and `reticle_assert` produce a verdict.
+Reticle's table holds 45 tools. Your agent is shown **nine**: `reticle_act`, `reticle_act_and_wait`, `reticle_assert`, `reticle_look`, `reticle_navigate`, `reticle_observe`, `reticle_session`, `reticle_tools` and `reticle_verify`. Only `reticle_act_and_wait` and `reticle_assert` produce a verdict.
+
+Most of the rest were not removed. They were **merged**. `reticle_snapshot` is `reticle_look { action: "page" }`; `reticle_console` is `reticle_observe { action: "console" }`. One tool, one action argument, same work. Calling a retired name returns the call that replaced it, and `reticle_tools` prints the whole mapping.
 
 That is not a limitation, it's the design. MCP re-sends every advertised tool definition to the model on **every single turn**, so the tool list is not a menu you pay for once. It's rent.
 
 A wider surface costs tokens on every message. Less obviously, it makes the model wander: give it fifty ways to look at a page and it will try several before doing anything useful.
 
-The other 29 are one call away, never unreachable. `reticle_tools` lists them and `reticle_run` invokes them.
+What the nine do **not** reach are the specialised tools: `reticle_screenshot`, `reticle_visual_diff`, `reticle_storage`, `reticle_network_mock`, `reticle_clock`. There is no dispatch hatch on this surface by design, so those need a daemon started with `RETICLE_ADVERTISE_ALL_TOOLS=1`.
 
 <Note>
-  Measured off the real wire on 2026-08-16, by reading `tools/list` from a fresh daemon: the default
-  surface is **19 tools at 22,023 bytes**, against **48 tools at 134,992 bytes** when
-  `RETICLE_ADVERTISE_ALL_TOOLS` is set. That is 6.1x more, charged on every message.
+  Measured off the real wire on 2026-09-16, by reading `tools/list` from a fresh daemon: the default
+  surface is **9 tools at 17,663 bytes**, against **30 tools at 126,954 bytes** when
+  `RETICLE_ADVERTISE_ALL_TOOLS` is set, 7.2x more and charged on every message.
   [`bench/harness/schema-tax.mjs`](/token-efficiency) converts those bytes to tokens by putting
   every server through one tokenizer in a single pass. Re-measure before quoting any of it; the
-  surface grows.
+  surface grows, and the figures this note replaced were a year out of date and described a surface
+  that no longer existed.
 </Note>
 
 ## The default 19

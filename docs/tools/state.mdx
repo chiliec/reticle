@@ -4,6 +4,13 @@ description: Read live framework state directly from the running app. What it be
 icon: database
 ---
 
+<Warning>
+  **reticle_state is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_look { action: "state" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_state` reads live framework state straight out of the running app, without the app broadcasting anything. Reach for it when the DOM looks right and you want to know whether the application actually accepted the change, which is where false greens live.
 
 The DOM tells you what the app _drew_. `reticle_state` tells you what it _believes_. The gap between those two is where false greens live: a row appears in the table, the store never changed, and a reload makes the row vanish.

@@ -4,6 +4,13 @@ description: A filtered log of every request the app made, with bodies, status, 
 icon: satellite-dish
 ---
 
+<Warning>
+  **reticle_network is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_observe { action: "network" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_network` returns a filtered log of every request the app made, with request and response bodies, status, timing, and automatic credential redaction. Reach for it to answer "did that call actually fire, and what came back?", which is the thing a screenshot fundamentally cannot show.
 
 ## Example

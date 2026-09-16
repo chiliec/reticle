@@ -4,7 +4,7 @@ description: 'The full reference and cookbook: every tool, flag, and workflow, w
 icon: book
 ---
 
-Every Reticle drive is the same four steps: **look** (`reticle_snapshot` / `reticle_query`), **act** (`reticle_act` / `reticle_act_sequence`), **observe** (`reticle_observe` / `reticle_network` / `reticle_state`), **assert** (`reticle_assert`). Only `reticle_act_and_wait` and `reticle_assert` produce a verdict, so a run that ends anywhere else proved nothing. This page is the full reference for every tool, predicate, action and flag in that loop.
+Every Reticle drive is the same four steps: **look** (`reticle_look { action: "page" }` / `reticle_look { action: "find" }`), **act** (`reticle_act` / `reticle_act { steps: [...] }`), **observe** (`reticle_observe` / `reticle_observe { action: "network" }` / `reticle_look { action: "state" }`), **assert** (`reticle_assert`). Only `reticle_act_and_wait` and `reticle_assert` produce a verdict, so a run that ends anywhere else proved nothing. This page is the full reference for every tool, predicate, action and flag in that loop.
 
 If you haven't set up Reticle yet, start with [Getting Started](getting-started.md).
 
@@ -67,7 +67,7 @@ Who benefits most: anyone shipping **dashboards, internal tools, SaaS apps**. Be
 
 **The loop: look → act → observe → assert.**
 
-1. **Look** with `reticle_snapshot` (what's on screen) or `reticle_query` (find a specific thing).
+1. **Look** with `reticle_look { action: "page" }` (what's on screen) or `reticle_look { action: "find" }` (find a specific thing).
 2. **Act** with `reticle_act` (click/fill/…). It returns a `since` cursor, a timestamp marker.
 3. **Observe** with `reticle_observe({ since })`: everything the app did _after_ that action.
 4. **Assert** with `reticle_assert({ predicate })`. Verify it, get evidence.
@@ -82,11 +82,11 @@ Who benefits most: anyone shipping **dashboards, internal tools, SaaS apps**. Be
 
 ## 3. The tools: full reference
 
-### `reticle_sessions`
+### `reticle_session { action: "list" }`
 
 List connected tabs. → `{ sessions: [{ sessionId, url, title, lastSeenMs, hidden, focused, throttled }] }`. `lastSeenMs` is the silence since the tab last reported (not time-since-connect); `throttled` is `true` when the tab is hidden or has gone quiet, and a throttled tab silently no-ops timers/rAF/pointer.
 
-### `reticle_snapshot`
+### `reticle_look { action: "page" }`
 
 A semantic, accessibility-tree view of the page.
 
@@ -96,16 +96,16 @@ A semantic, accessibility-tree view of the page.
 - **`cost`** is an estimated size of the result. Re-scope (`mode`/`scope`) before reading if large.
 
 ```jsonc
-reticle_snapshot({ mode: "interactive" })
+reticle_look({ action: "page", mode: "interactive" })
 // - tab "Overview" (ref=e2)
 // - button "Add item" (ref=e5)
 // status: { route: "/dashboard", visibleDialogs: [] }
 
-reticle_snapshot({ diff: true }) // after an action: only the change set
+reticle_look({ action: "page", diff: true }) // after an action: only the change set
 // { mode: "delta", delta: { added: ['- alert "Saved!"'], removed: [], addedCount: 1, removedCount: 0 } }
 ```
 
-### `reticle_query`
+### `reticle_look { action: "find" }`
 
 Find elements (Testing-Library semantics).
 
@@ -113,10 +113,10 @@ Find elements (Testing-Library semantics).
 - **returns:** `{ elements: [{ ref, role, name, value?, states, visible, text? }] }`.
 
 ```jsonc
-reticle_query({ by: "role", value: "button", name: "Save" })   // → ref + descriptor
+reticle_look({ action: "find", by: "role", value: "button", name: "Save" })   // → ref + descriptor
 ```
 
-### `reticle_inspect`
+### `reticle_look { action: "element" }`
 
 Deep detail on one element, including the signals a snapshot/a11y tree omits, so you can tell "present" from "actually usable / on-theme".
 
@@ -124,12 +124,12 @@ Deep detail on one element, including the signals a snapshot/a11y tree omits, so
 - **returns:** descriptor + `tag` + `box` + `occluded` (another element covers its center: a z-index/overlay bug) + `styles { color, backgroundColor, opacity, cursor, display, visibility }` + `theme { colorToken, colorTokens, backgroundToken, backgroundTokens, offTheme, tokenCount, themeScope }` (compliance vs the app's design tokens, where `offTheme:true` flags an off-palette color; the plural fields list every token sharing that colour and the singular ones are `null` when several do, and `themeScope` names the theme active at capture) + `component { componentStack, source?: { file, line, column } }` (with `@reticlehq/react`).
 - Use it to catch present-but-broken UI: `opacity:0` / `box` 0×0 / `occluded:true` (invisible or unclickable), `cursor` not `pointer` (dead control), `offTheme:true` (off-design-token color).
 
-### `reticle_act` / `reticle_act_sequence`
+### `reticle_act` / `reticle_act { steps: [...] }`
 
 Perform one action / several in order.
 
 - **`reticle_act` args:** `ref`, `action`, `args?`, `refuseWhenThrottled?`, `sessionId?`. → `{ since, dispatched, settled, settleReason, result, session, warning? }` where `result = { ok, ref, action, dispatched, settled, settleReason, effect }`. The `session` block `{ lastSeenMs, throttled, focused }` reports tab health on every act; when `throttled` is true a `warning` string is also attached. Pass `refuseWhenThrottled: true` to hard-fail instead of warning (opt-in; default is warn-only so background testing never breaks).
-- **`reticle_act_sequence` args:** `steps: [{ ref | target, action, args? }]`. Each step takes `ref` (from a snapshot/query) or `target` (`{ testid }` / `{ label }` / `{ role, name }` / `{ text }`). That is the same locator `reticle_act` accepts. → `{ since, dispatched, result }` where `result = { ok, count, effects: [...], steps: [...] }` (one `effect` per step; each step carries its own `dispatched`/`settled`/`settleReason`).
+- **`reticle_act { steps: [...] }` args:** `steps: [{ ref | target, action, args? }]`. Each step takes `ref` (from a snapshot/query) or `target` (`{ testid }` / `{ label }` / `{ role, name }` / `{ text }`). That is the same locator `reticle_act` accepts. → `{ since, dispatched, result }` where `result = { ok, count, effects: [...], steps: [...] }` (one `effect` per step; each step carries its own `dispatched`/`settled`/`settleReason`).
 - See [§5](#5-actions-full-list) for the action list.
 
 **Dispatch vs settle.** The action is two phases: the **dispatch** (the synchronous click/fill, which is what can fail) and the **settle** (waiting one animation frame so React's commit lands before we return). The settle is **bounded** (~200ms): in a throttled/background tab `requestAnimationFrame` never fires, so Reticle falls back to a timer and resolves anyway. A settle timeout is therefore **never an error**: `reticle_act` resolves with `settled:false, settleReason:"timeout"` and the dispatch (the click) has still landed. Only a real dispatch failure (stale ref, wrong element type) throws.
@@ -186,7 +186,7 @@ Act, then wait for a predicate: the whole act→observe→assert loop in one hop
 - **args:** `ref`, `action`, `args?`, `until: <predicate>`, `timeout_ms?` (default 4000; 0 = evaluate once), `refuseWhenThrottled?`, `intent?`, `sessionId?`.
 - **returns:** `{ effect, verdict, trace, session, warning? }`. `effect` is the action result (`{ ok, ref, action }`), `verdict` is `{ pass, evidence?, failureReason? }`, `trace` is the reaction report of everything the app did after the action, and `session` is the tab-health block `{ lastSeenMs, throttled, focused }` (with a `warning` when throttled). A failing `verdict` still returns `effect` + `trace` so you can see what _did_ happen. The predicate is automatically floored at this act's cursor, so it only matches events the action actually caused.
 
-### `reticle_wait_for`
+### `reticle_assert { action: "wait" }`
 
 Block until a predicate holds (or time out). Looks both backward (recent buffer) and forward.
 
@@ -198,7 +198,7 @@ Block until a predicate holds (or time out). Looks both backward (recent buffer)
 Verify a predicate; optionally wait for it.
 
 - **args:** `predicate`, `timeout_ms?` (0 = evaluate once), `since?`, `intent?`, `sessionId?`.
-- Same `since` default as `reticle_wait_for`: scoped to your last act so a stale buffered event can't fake a pass; override with an explicit `since`.
+- Same `since` default as `reticle_assert { action: "wait" }`: scoped to your last act so a stale buffered event can't fake a pass; override with an explicit `since`.
 - **returns:** `{ verified, because, pass, evidence, contradictions?, coverage?, failureReason?, session, warning? }`. On failure includes a **near-miss** (e.g. "found the dialog but not visible", or "no button named 'Submit'; saw: Cancel"). The `session` block `{ lastSeenMs, throttled, focused }` reports tab health on every assert; when throttled a `warning` is attached so you never assert against a tab that is silently no-oping.
 - **`intent` declares what the change was FOR, inline.** Pass a sentence in your own words and it lands in `.reticle/intent.json`, the same git-checked ledger `reticle_intent` writes, before the verdict is drawn; a green verdict then marks it proved and names itself as the proof. Pass the **id** of an intent you already declared instead, to point several verdicts at one statement rather than restating it. `reticle_act_and_wait` takes the same argument. Omit it and nothing is written.
 - **Read `verified`, not `pass`.** `pass` says the predicate held; `verified` says whether that means anything. It is `"no"` when a channel contradicts the assertion (a failed write under a green screen, a batch whose body reports per-item failures, a request still in flight), and `"unknown"` when the outcome could not be known yet: a `202 Accepted` that has not reconciled, or a write whose response body was never recorded. `because` names the deciding evidence in one sentence.
@@ -212,12 +212,12 @@ Compare what the API **returned** against what the page **renders**.
 - Catches the class no status code and no assertion can reach: a `USD 7997` amount rendered as `₹79.97`, or a record the API calls `on_hold` displayed as `"pending"`. Both sides agree on the digits; only the meaning differs, so every other channel reports success.
 - Needs response bodies: `connect({ captureNetworkBodies: true })`. When nothing could be compared it says so in `note` rather than returning an empty, clean-looking result over data it never read.
 
-### `reticle_network` / `reticle_console` / `reticle_animations`
+### `reticle_observe { action: "network" }` / `reticle_observe { action: "console" }` / `reticle_animations`
 
 Fast targeted lookups without a full timeline.
 
-- `reticle_network({ since?, method?, urlContains?, status?, bodies? })` → `{ calls }`. Pass `bodies: false` for a body-free listing (method/url/status/timing only); bodies dominate the payload, so the common "did POST /x return 200?" read gets much cheaper.
-- `reticle_console({ level?, since? })` → `{ logs }`
+- `reticle_observe({ action: "network", since?, method?, urlContains?, status?, bodies? })` → `{ calls }`. Pass `bodies: false` for a body-free listing (method/url/status/timing only); bodies dominate the payload, so the common "did POST /x return 200?" read gets much cheaper.
+- `reticle_observe({ action: "console", level?, since? })` → `{ logs }`
 - `reticle_animations()` → running/recent animations.
 
 ### `reticle_capabilities`
@@ -226,7 +226,7 @@ The app-advertised testable surface (registered via `reticle.describe`). Call th
 
 - `reticle_capabilities({ sessionId? })` → `{ testids, signals, stores, flows }`
 
-`reticle_sessions` also surfaces a `hasCapabilities` flag per session so you know when it's worth calling. Returns empty arrays (never errors) if the app advertised nothing.
+`reticle_session { action: "list" }` also surfaces a `hasCapabilities` flag per session so you know when it's worth calling. Returns empty arrays (never errors) if the app advertised nothing.
 
 ### `reticle_domain`
 
@@ -236,23 +236,23 @@ Read the app's domain model **before testing**: a synthesis of every saved flow 
 - **`gaps`** is the point: `declaredUntestedSignals` are intents the app emits that **no flow asserts** (untested behavior); `unassertedFlows` act but verify no consequence. Close them with a flow + a consequence assertion (`reticle_annotate`).
 - **`riskRanked`** orders flow names worst-first by combining run history (`.reticle/project.json`: recently failed/drifted, or passed-with-errors) with assertion quality (a green assertion-free flow is still risky). **Test these first.** Each flow's `risk` carries `{ level, reason, lastStatus? }`.
 
-### `reticle_state`
+### `reticle_look { action: "state" }`
 
 Read live framework/store state directly instead of inferring it from the DOM. See [§17](#17-evidence-of-effect-actawait-state-capabilities-replay).
 
-- `reticle_state({ store?, ref?, path?, depth?, sessionId? })` → `{ stores, component? }`, or `{ store, path, found, value, availableKeys?, storeNames }` when `path`/`depth` is given.
+- `reticle_look({ action: "state", store?, ref?, path?, depth?, sessionId? })` → `{ stores, component? }`, or `{ store, path, found, value, availableKeys?, storeNames }` when `path`/`depth` is given.
 
 Store reads are the reliable path. The `ref` component read is best-effort and bounded: when the component state can't be read it returns `component: { ok: false, reason: "component-state-unavailable" }` rather than hanging.
 
 **Scope big stores so you don't pay for them.** A whole store can be tens of KB. Narrow the read:
 
-- `path` extracts a dot-path sub-tree relative to the named `store` (numeric segments index arrays), e.g. `reticle_state({ store:"workspace", path:"captionCache.v3.0.text" })`.
+- `path` extracts a dot-path sub-tree relative to the named `store` (numeric segments index arrays), e.g. `reticle_look({ action: "state", store:"workspace", path:"captionCache.v3.0.text" })`.
 - `depth` collapses anything deeper than N levels to a compact size marker (`{…7 keys}`, `[Array(120)]`) so you can skim a store's _shape_ before drilling in.
 - A wrong `path` returns `{ found:false, availableKeys:[...] }`, the keys that _were_ present where the walk stopped, so a mistyped path is self-correcting, not a bare `null`.
 
 ### Detecting wasted re-renders (React)
 
-A page can be **thrashing**, committing many React renders a second, while the DOM stays visually identical. The DOM/screenshot tools see an idle page; only a tool inside the runtime sees the commit rate. Reticle exposes it as a registered store you read with `reticle_state`:
+A page can be **thrashing**, committing many React renders a second, while the DOM stays visually identical. The DOM/screenshot tools see an idle page; only a tool inside the runtime sees the commit rate. Reticle exposes it as a registered store you read with `reticle_look { action: "state" }`:
 
 ```ts
 // app entry. MUST run before react-dom loads, so import it FIRST (React reads the devtools hook
@@ -263,7 +263,7 @@ installRenderMeter();
 ```
 
 ```jsonc
-reticle_state({ store: "__reticle_renders", path: "commits" })   // → total React commits (monotonic)
+reticle_look({ action: "state", store: "__reticle_renders", path: "commits" })   // → total React commits (monotonic)
 // read it, do an action (or wait a window), read again → the delta is the commit count for that span.
 ```
 
@@ -308,7 +308,7 @@ reticle_session {action:"review"}({ sessionId })
     pendingCount: 1 }
 ```
 
-Each pending mark carries the human note, the element label, the source **`file:line`** (when the framework stamped one), and a ready-to-act `fix` hint. Open the file, apply the fix, then `reticle_session {action:"review"}({ resolve: "m1" })`. The human watching the panel sees **"✓ fixed: …"** land. Reading never consumes a mark, so you can list → fix → verify → resolve. `reticle_sessions` also reports `pendingMarks` so you notice flagged bugs during normal orientation.
+Each pending mark carries the human note, the element label, the source **`file:line`** (when the framework stamped one), and a ready-to-act `fix` hint. Open the file, apply the fix, then `reticle_session {action:"review"}({ resolve: "m1" })`. The human watching the panel sees **"✓ fixed: …"** land. Reading never consumes a mark, so you can list → fix → verify → resolve. `reticle_session { action: "list" }` also reports `pendingMarks` so you notice flagged bugs during normal orientation.
 
 ### `reticle_network_mock`: stub the network for error-state testing
 
@@ -342,7 +342,7 @@ This is one of three knobs for **CI-stable visual regression**. Set them togethe
 
 ## 4. The predicate DSL: full reference
 
-A **predicate** declares what should be true. `reticle_assert` / `reticle_wait_for` evaluate it against the live DOM + the event buffer.
+A **predicate** declares what should be true. `reticle_assert` / `reticle_assert { action: "wait" }` evaluate it against the live DOM + the event buffer.
 
 ### Leaf predicates
 
@@ -425,7 +425,7 @@ A `state` assertion is graded as a **consequence** (a wrong element or stale ren
 
 ## 6. Snapshot modes & scoping
 
-`reticle_snapshot` has three modes. Pick the cheapest that answers your question:
+`reticle_look { action: "page" }` has three modes. Pick the cheapest that answers your question:
 
 - **`status`** (~30 tokens): route, visible dialogs, counters. "Where am I, is a modal open?"
 - **`interactive`** (~100 tokens): only actionable elements (buttons, inputs, tabs…). "What can I click?" Non-interactive content (e.g. 1,000 list rows) is skipped.
@@ -479,7 +479,7 @@ reticle_assert({ predicate: { kind: "element",
   query: { text: name, scope: "[data-testid=item-list]" }, absent: true } })               // not yet
 // …later: click your Refresh button, then wait for it…
 reticle_act({ ref: refreshBtn, action: "click" })
-reticle_wait_for({ timeout_ms: 5000, predicate: { kind: "element",
+reticle_assert({ action: "wait", timeout_ms: 5000, predicate: { kind: "element",
   query: { text: name, scope: "[data-testid=item-list]" }, state: "visible" } })
 ```
 
@@ -492,7 +492,7 @@ reticle_assert({ timeout_ms: 3000, predicate: { kind: "element",
   query: { text: "Invoice #4821", scope: "[data-testid=item-list]" }, state: "visible" } })
 ```
 
-> Note: if your list is **virtualized** (react-window/virtuoso), an off-screen row is not in the DOM at all, so `reticle_query` correctly finds nothing. Use **`reticle_scroll_to`** to scroll the windowed container until the row renders, then query it: `reticle_scroll_to({ by: "text", value: "Invoice #4821", container: "[data-testid=item-list]" })`. Asserting against the data with `reticle.signal` or `reticle_state` also works and is cheaper.
+> Note: if your list is **virtualized** (react-window/virtuoso), an off-screen row is not in the DOM at all, so `reticle_look { action: "find" }` correctly finds nothing. Use **`reticle_scroll_to`** to scroll the windowed container until the row renders, then query it: `reticle_scroll_to({ by: "text", value: "Invoice #4821", container: "[data-testid=item-list]" })`. Asserting against the data with `reticle.signal` or `reticle_look { action: "state" }` also works and is cheaper.
 
 ### "Login form: does it actually authorize?"
 
@@ -542,9 +542,9 @@ reticle_assert({ timeout_ms: 15000, predicate: { kind: "allOf", predicates: [
 ### "A button's color should change on hover"
 
 ```jsonc
-const before = reticle_inspect({ ref }).styles.backgroundColor
+const before = reticle_look({ action: "element", ref }).styles.backgroundColor
 reticle_act({ ref, action: "hover" })
-const after  = reticle_inspect({ ref }).styles.backgroundColor
+const after  = reticle_look({ action: "element", ref }).styles.backgroundColor
 // assert before !== after
 ```
 
@@ -651,7 +651,7 @@ reticle_record {action:"stop"}({ recordingName: "checkout" })
 //   }
 ```
 
-`reticle_record {action:"stop"}` returns a compiled, replayable `program`: the agent's `reticle_act` / `reticle_act_sequence` invocations captured during the span, with each ref normalized to its element's `data-testid` where resolvable. Re-run it later:
+`reticle_record {action:"stop"}` returns a compiled, replayable `program`: the agent's `reticle_act` / `reticle_act { steps: [...] }` invocations captured during the span, with each ref normalized to its element's `data-testid` where resolvable. Re-run it later:
 
 ```jsonc
 reticle_run({ tool: "reticle_replay", args: { recordingName: "checkout" } })
@@ -701,7 +701,7 @@ This is the sweet spot: the **manual cases you never automated** become things t
 
 Reticle is cheap by design ([benchmark](token-efficiency.md)), but keep it that way:
 
-- Prefer **`reticle_query` + `reticle_assert`** (~30 tokens each) over snapshots inside the loop.
+- Prefer **`reticle_look { action: "find" }` + `reticle_assert`** (~30 tokens each) over snapshots inside the loop.
 - Use **`mode: "interactive"`** or **`"status"`**, not `"full"`.
 - Use **`scope`** to look at just the relevant subtree.
 - Reach for `mode: "full"` only when you truly need the whole page.
@@ -748,14 +748,14 @@ Those let an agent drive/ inspect a _separate_ browser; Reticle verifies your _o
 
 ### Multiple tabs/apps?
 
-Each is a session; pass `sessionId` to any tool when more than one is connected (`reticle_sessions` lists them).
+Each is a session; pass `sessionId` to any tool when more than one is connected (`reticle_session { action: "list" }` lists them).
 
 ---
 
 ## 15. Security & privacy
 
 - **Dev-only, localhost-only by default.** The bridge binds `127.0.0.1`; the SDK is meant for dev builds.
-- **No app data leaves your machine.** Baselines/recordings are local. The CLI sends anonymous, opt-out usage metrics only (random id + event names, no code and no PII; see [telemetry](telemetry.md)); opt out with `reticle telemetry disable`, `RETICLE_TELEMETRY=0`, or `DO_NOT_TRACK=1`. Feedback you or your agent deliberately send (`reticle feedback` / `reticle_feedback`) is the only free text that ever leaves the machine: never passive, redacted first, and separately disabled with `RETICLE_FEEDBACK=0`.
+- **No app data leaves your machine.** Baselines/recordings are local. The CLI sends anonymous, opt-out usage metrics only (random id + event names, no code and no PII; see [telemetry](telemetry.md)); opt out with `reticle telemetry disable`, `RETICLE_TELEMETRY=0`, or `DO_NOT_TRACK=1`. Feedback you or your agent deliberately send (`reticle feedback` / `reticle_session { action: "feedback" }`) is the only free text that ever leaves the machine: never passive, redacted first, and separately disabled with `RETICLE_FEEDBACK=0`.
 - **Network bodies aren't captured by default:** only method/url/status/timing. Body capture is opt-in and runs through a redactor (drop `password`/`token`/`secret`/… + your patterns).
 - **Additive & reversible.** Reticle patches `fetch`/History/console defensively and restores them on disconnect; it will not break the app under test.
 
@@ -892,7 +892,7 @@ reticle_act_and_wait({ ref, action, args?, until: <predicate>, timeout_ms })
 
 Performs the action (with settle so React commits land in the window), waits for `until`, and returns the action's effect + the verdict + the full causal trace. Collapses four calls into one.
 
-### `reticle_state`: read live framework/store state
+### `reticle_look { action: "state" }`: read live framework/store state
 
 No need to broadcast a signal for every fact. Register stores in your app:
 
@@ -976,16 +976,16 @@ function CartProvider({ children }) {
 ```
 
 ```jsonc
-reticle_state({ store: "workspace" })   // → { stores: { workspace: {…} } }
-reticle_state({ ref: "e9" })            // → { component: { ok: true, component, hooks } } or { component: { ok: false, reason: "component-state-unavailable" } }
+reticle_look({ action: "state", store: "workspace" })   // → { stores: { workspace: {…} } }
+reticle_look({ action: "state", ref: "e9" })            // → { component: { ok: true, component, hooks } } or { component: { ok: false, reason: "component-state-unavailable" } }
 // `hooks` carries the hook VALUES only (state / ref / memo). React effect entries (chained,
 // null-filled fiber internals with nothing to act on) are dropped, and when any were, the read
 // says so: component.truncation = { droppedItems, note }.
 
 // Scope a large store instead of paying for the whole thing:
-reticle_state({ store: "workspace", path: "captionCache.v3" })  // → { found: true, value: {…} }
-reticle_state({ store: "workspace", depth: 1 })                 // → top-level keys, deeper values collapsed to "{…N keys}"
-reticle_state({ store: "workspace", path: "nope" })             // → { found: false, availableKeys: ["captionCache", "version", …] }
+reticle_look({ action: "state", store: "workspace", path: "captionCache.v3" })  // → { found: true, value: {…} }
+reticle_look({ action: "state", store: "workspace", depth: 1 })                 // → top-level keys, deeper values collapsed to "{…N keys}"
+reticle_look({ action: "state", store: "workspace", path: "nope" })             // → { found: false, availableKeys: ["captionCache", "version", …] }
 ```
 
 Store reads are the reliable path; ref reads degrade to a structured failure rather than blocking. `path` (dot-path, numeric segments index arrays) and `depth` keep a 60KB store from becoming a token tax, and a wrong `path` returns the keys that _were_ there, so it's self-correcting.
@@ -997,7 +997,7 @@ Every dashboard widget except one renders text a comparison can read: a KPI card
 So any element descriptor containing faulty plot geometry carries a `chart` field. There is no extra tool call and no flag: query the chart the way you already would, and a broken one tells you.
 
 ```jsonc
-reticle_query({ by: "testid", value: "revenue-chart" })
+reticle_look({ action: "find", by: "testid", value: "revenue-chart" })
 // → { elements: [{ ref: "e12", role: "img", source: "src/Chart.tsx:34",
 //      chart: [{ kind: "non-finite-coordinates", tag: "polyline", attr: "points",
 //                sample: "0,10 5,NaN 10,20" }] }] }
@@ -1088,4 +1088,4 @@ That's it. Reticle correlates the CDP page to your SDK session by URL; pointer a
 
 > **Watching the agent (presenter).** With `present: true` the activity border now glows once while the agent is busy and fades when idle (no per-action strobe); the HUD sits **bottom-center**, shows a **READING** vs **ACTING** chip so you can tell observation from action at a glance, and `reticle_session {action:"narrate"}` lines are **queued** with a minimum on-screen dwell so none flash by unread.
 
-> **Limitation: un-scriptable tabs.** Reticle observes/drives a tab through the in-page SDK + (optionally) CDP; it **cannot bring to front or recover a browser tab the OS won't let it script** (e.g. a backgrounded or non-default-browser tab reporting `hidden:true`/`throttled:true`). When that happens, `reticle_sessions` and every act/assert result carry a `session.recommendation` saying so and pointing to `reticle drive <url>` for a guaranteed scriptable context. Refocus the tab, or use `reticle drive`.
+> **Limitation: un-scriptable tabs.** Reticle observes/drives a tab through the in-page SDK + (optionally) CDP; it **cannot bring to front or recover a browser tab the OS won't let it script** (e.g. a backgrounded or non-default-browser tab reporting `hidden:true`/`throttled:true`). When that happens, `reticle_session { action: "list" }` and every act/assert result carry a `session.recommendation` saying so and pointing to `reticle drive <url>` for a guaranteed scriptable context. Refocus the tab, or use `reticle drive`.

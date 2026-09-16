@@ -4,6 +4,13 @@ description: Everything about one element. Accessibility properties, geometry, c
 icon: crosshairs
 ---
 
+<Warning>
+  **reticle_inspect is not advertised.** The default surface is the merged nine, so an agent does not see
+  this name. Call **`reticle_look { action: "element" }`** instead. Everything below describes what that call does;
+  only the spelling changed. A call to the old name is answered with the new one, but an
+  `allowedTools` allowlist or an MCP permission rule naming it refuses before Reticle is asked.
+</Warning>
+
 `reticle_query` finds elements. `reticle_inspect` tells you everything about one of them. It is the tool that turns a finding into an edit, because it ends with a file and a line number.
 
 ## Example

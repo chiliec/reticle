@@ -46,7 +46,7 @@ Three pieces, each from the package for its audience:
 
 1. **The MCP server.** Your agent launches it with `npx @reticlehq/server mcp`; it hosts the tools _and_ the WebSocket bridge your app connects to. You don't run it by hand; the agent does.
 2. **The SDK**: `import { reticle } from '@reticlehq/react'`, a few lines in your app's dev entry point.
-3. **(Optional) React adapter + source-mapping**, so `reticle_inspect` can tell the agent which component/file to edit (also from `@reticlehq/react`).
+3. **(Optional) React adapter + source-mapping**, so `reticle_look { action: "element" }` can tell the agent which component/file to edit (also from `@reticlehq/react`).
 
 Everything is **dev-only** and **localhost-only**. It's tree-shaken out of production builds.
 
@@ -288,7 +288,7 @@ Either way, the rule is the same: **the app's bridge port must equal the daemon'
 
 ## Step 3: (React) component and source-file mapping
 
-This is optional but high-value: it lets `reticle_inspect` map a DOM element back to the **React component and the source file:line**, so when the agent finds a problem, it knows which file to edit. (The React adapter ships in `@reticlehq/react`; nothing extra to install.)
+This is optional but high-value: it lets `reticle_look { action: "element" }` map a DOM element back to the **React component and the source file:line**, so when the agent finds a problem, it knows which file to edit. (The React adapter ships in `@reticlehq/react`; nothing extra to install.)
 
 ```ts
 import { install as installReticleReact } from '@reticlehq/react';
@@ -309,7 +309,7 @@ export default defineConfig({
 });
 ```
 
-> **Next.js:** verified on **Next.js 15 / React 19 (app router, SWC)**. For source-file mapping, use `@reticlehq/next` instead of the Babel plugin. It adds a **dev-only webpack pre-loader that keeps SWC** and stamps `data-reticle-source` so `reticle_inspect` returns `file:line` (e.g. `app/page.tsx:30`):
+> **Next.js:** verified on **Next.js 15 / React 19 (app router, SWC)**. For source-file mapping, use `@reticlehq/next` instead of the Babel plugin. It adds a **dev-only webpack pre-loader that keeps SWC** and stamps `data-reticle-source` so `reticle_look { action: "element" }` returns `file:line` (e.g. `app/page.tsx:30`):
 >
 > ```ts
 > // next.config.ts
@@ -336,7 +336,7 @@ export default defineConfig({
 
 > "List Reticle sessions."
 
-The agent calls `reticle_sessions` and should see your tab:
+The agent calls `reticle_session { action: "list" }` and should see your tab:
 
 ```jsonc
 { "sessions": [{ "sessionId": "my-app", "url": "http://localhost:3000/", "title": "…" }] }
@@ -358,7 +358,7 @@ What the agent does under the hood:
 
 ```jsonc
 // finds the button it just added
-reticle_query({ by: "role", value: "button", name: "Refresh" })   // → ref e12
+reticle_look({ action: "find", by: "role", value: "button", name: "Refresh" })   // → ref e12
 
 // clicks it
 reticle_act({ ref: "e12", action: "click" })                       // → { since: 920 }
@@ -397,12 +397,12 @@ onSaved(() => reticle.signal('order:saved', { id, total }));
 
 > **Recommended:** instead of importing `reticle` into components, inject a `createReticleEmitter()` emitter and pair each commit with `commitAndSignal(...)` so the mutation↔signal can't drift. `reticle.signal` stays the primitive underneath. See [integration-patterns.md](integration-patterns.md).
 
-**3. `registerStore` so the agent reads state directly.** No need to broadcast a signal for every fact: expose the store and the agent reads it via `reticle_state`.
+**3. `registerStore` so the agent reads state directly.** No need to broadcast a signal for every fact: expose the store and the agent reads it via `reticle_look { action: "state" }`.
 
 ```ts
 import { registerStore } from '@reticlehq/react';
 registerStore('cart', useCart); // pass the store itself → auto STATE_CHANGE diffs
-// agent: reticle_state({ store: 'cart' })  → { stores: { cart: {...} } }
+// agent: reticle_look({ action: "state", store: 'cart' })  → { stores: { cart: {...} } }
 ```
 
 **4. `registerCapabilities` so a fresh agent learns the surface without reading source.**
@@ -463,7 +463,7 @@ Everything below comes from the `@reticlehq/react` kit plus your framework's bui
 
 ## Troubleshooting
 
-**`reticle_sessions` is empty / "no browser session connected"**
+**`reticle_session { action: "list" }` is empty / "no browser session connected"**
 
 - Run **`reticle status`**. It shows whether the daemon is up and which tabs are connected (url, health, pending flagged bugs) at a glance. No connected sessions means the SDK isn't reaching the bridge.
 - Is your app actually running and open in a browser tab?
@@ -475,13 +475,13 @@ The errors Reticle returns to the agent now carry a `recovery` hint for this exa
 
 **The agent can't find an element**
 
-- Ask it to `reticle_snapshot({ mode: "interactive" })` to see what's actionable.
+- Ask it to `reticle_look({ action: "page", mode: "interactive" })` to see what's actionable.
 - Add a `data-testid` to the element for a stable handle.
 - Narrow with `scope` (a CSS selector or a ref).
 
 **Assertions are flaky on async UIs**
 
-- Use `timeout_ms` on `reticle_assert` / `reticle_wait_for`.
+- Use `timeout_ms` on `reticle_assert` / `reticle_assert { action: "wait" }`.
 - Pass the `since` cursor returned by `reticle_act` so only post-action events count.
 
 **Source file isn't resolving on React 19**
@@ -528,7 +528,7 @@ Node 20 or newer.
 
 ### Do I need the React adapter?
 
-No, it is optional enrichment and the core works without it. What it adds is component identity, meaning `reticle_inspect` can say which React component rendered an element. Combined with a build plugin that stamps source, that is what turns a DOM node into `src/components/Login.tsx:81`, which is the difference between an agent knowing something failed and knowing which file to open.
+No, it is optional enrichment and the core works without it. What it adds is component identity, meaning `reticle_look { action: "element" }` can say which React component rendered an element. Combined with a build plugin that stamps source, that is what turns a DOM node into `src/components/Login.tsx:81`, which is the difference between an agent knowing something failed and knowing which file to open.
 
 ### Can I run several apps against Reticle at once?
 
