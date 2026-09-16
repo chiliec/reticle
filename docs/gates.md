@@ -14,7 +14,7 @@ If you changed anything at all, run `pnpm format:check && pnpm lint && pnpm type
 
 ## 0. Last verified
 
-Every gate below was executed end to end against `main` on **2026-08-12** (macOS, M-series, `v2.6.0`). A green row means somebody watched it go green, not that it is supposed to be green.
+Every gate below was executed end to end against `main` on **2026-08-12** (macOS, M-series, `v2.6.0`), except the four re-run for the v3.1.0 release review on **2026-09-16** (macOS, M-series, `feat/v3.1.0`): `verify`, `test:e2e`, `gate:install` and `lint:docs`. A green row means somebody watched it go green, not that it is supposed to be green. A row nobody has watched since v2.6.0 is a row making a claim about a different codebase.
 
 **Rows marked ↻ were re-measured on 2026-09-09** (macOS, M-series, this branch). The numbers they replace were wrong by a lot, and wrong in the way that is hardest to notice: `test:unit` was recorded here as "5,725 tests / 613 files" and, forty lines further down in the same file, as "4,315 tests". Two copies of one number, neither derived from anything. The battery was 33 in one row and 32 in another, against 38 spec files on disk.
 

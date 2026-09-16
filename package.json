@@ -21,6 +21,7 @@
     "test:bench": "vitest run bench/harness bench/eval apps/e2e",
     "bench:explore-cost": "node bench/harness/explore-cost.mjs",
     "bench:corpus-verify": "node bench/false-green-corpus/verify-rows.mjs",
+    "bench:recoverability": "node bench/diagnosis/recoverability.mjs",
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "bash apps/e2e/run-ci.sh",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit",

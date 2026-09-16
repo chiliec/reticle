@@ -61,7 +61,7 @@ This is **one git repo** at the root (pnpm + turbo monorepo). The TS library pac
 3. **No free strings.** Every domain/wire/UI string is a named constant.
 4. **No non-null `!`.** Use optional chaining + explicit null checks.
 5. **Tests first.** RED → GREEN → REFACTOR.
-6. **1000-line file cap.** Over it = a cohesion failure; split before adding. (Raised from 600: the old cap was forcing splits of genuinely cohesive units — a stateful class, a package's public-API barrel + bootstrap — and turning a two-line fix into a refactor. Cohesion is still the actual rule; the number is only the backstop.)
+6. **1000-line file cap**, on shipped source. Over it = a cohesion failure; split before adding. (Raised from 600: the old cap was forcing splits of genuinely cohesive units — a stateful class, a package's public-API barrel + bootstrap — and turning a two-line fix into a refactor. Cohesion is still the actual rule; the number is only the backstop.) `eslint.config.mjs` exempts `*.test.ts`, `apps/`, `bench/`, `break/` and `test/`, with its reasons written beside the rule: a fixture catalogue is long for a different reason than a god file is. This line did not mention the exemption, so a reader auditing rule 6 against the tree finds five test files over the cap and no way to tell a decision from a violation.
 7. **Inject the clock.** Never call `Date.now()`/`Math.random()` inside pure logic — pass them in.
 8. **Scope every data access to the authenticated principal.**
 9. **Design tokens are the only place design values live.**

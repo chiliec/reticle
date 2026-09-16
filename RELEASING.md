@@ -56,7 +56,7 @@ pnpm lint:docs                                  #    every documented command st
 claude plugin validate ./plugin                 #    the published Claude Code plugin still resolves
 npx skills add reticlehq/reticle -l             #    the published skills are all still discoverable
 
-node scripts/set-version.mjs 2.3.0              # 3. every artifact that carries the number, in lockstep
+node scripts/set-version.mjs 3.2.0              # 3. every artifact that carries the number, in lockstep
 pnpm install --lockfile-only                   #    …then reconcile the lockfile
 ```
 
@@ -106,7 +106,7 @@ Two limits worth knowing before trusting a green run.
 
 **None of it checks the deployed site.** The guards read this repository. `docs.reticle.sh` is a separate Mintlify deployment, and it has served pages several commits behind before, so a page being correct here is not evidence that it is correct in front of a user. Check the live page after a release, not only the source.
 
-4. `pnpm changelog:assemble` — splices every `.changes/*.md` entry into `[Unreleased]` and deletes the consumed files (`--dry-run` prints the result and touches nothing). Then move `[Unreleased]` under a `## [2.3.0] — YYYY-MM-DD` heading; leave a fresh empty `[Unreleased]`.
+4. `pnpm changelog:assemble` — splices every `.changes/*.md` entry into `[Unreleased]` and deletes the consumed files (`--dry-run` prints the result and touches nothing). Then move `[Unreleased]` under a `## [3.2.0] — YYYY-MM-DD` heading; leave a fresh empty `[Unreleased]`.
 
    **First, check what landed behind it:**
 
@@ -118,8 +118,8 @@ Two limits worth knowing before trusting a green run.
 
    Not every commit earns an entry — a retuned test budget or a new internal guard changes nothing a user can observe. The question to ask of each is whether somebody deciding whether to upgrade would want to know.
 
-5. `git commit -m "chore(release): v2.3.0"` → PR → merge.
-6. `git tag v2.3.0 && git push --tags`
+5. `git commit -m "chore(release): v3.2.0"` → PR → merge.
+6. `git tag v3.2.0 && git push --tags`
 7. **Publish a GitHub Release** on that tag, body = the changelog section. This is what triggers publishing — [`.github/workflows/publish.yml`](.github/workflows/publish.yml) runs the gates again and `pnpm -r publish`es in dependency order with npm provenance. It skips versions already on npm, so a partial run is safe to re-trigger.
 
    **Publish through the workflow, not from a laptop.** The workflow supplies `RETICLE_ISSUER_PUBLIC_KEY`, which `server`'s `prepack` stamps into the built artifact; without it the tarball ships in eval mode, where every enterprise licence key activates nothing and neither runtime nor any gate reports it. A local `pnpm -r publish` now REFUSES rather than producing that artifact quietly — `RETICLE_ALLOW_EVAL_PUBLISH=1` is the deliberate override. `--dry-run` is unaffected and stays the authority it is described as above.
