@@ -1,10 +1,10 @@
 /**
  * What an intent is ABOUT — the key the store shards on, and the thing that makes it retrievable.
  *
- * `.reticle/intent.json` reached 141 entries and 109KB as one object. That is not expensive to
- * parse; it is expensive to READ, which is the operation that matters here. An agent that wants the
- * two rules about checkout has to pull 139 irrelevant ones through its context to find them, and an
- * agent that wants to change one has to rewrite the whole file.
+ * `.reticle/intent.json` grew without bound as one object. That is not expensive to parse; it is
+ * expensive to READ, which is the operation that matters here. An agent that wants the two rules
+ * about checkout has to pull every other rule in the project through its context to find them, and
+ * an agent that wants to change one has to rewrite the whole file.
  *
  * Sharding by subject fixes both, but only if the subject is DERIVABLE. A store that requires every
  * caller to invent a category is one where everything lands in whatever the first caller typed. So

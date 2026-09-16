@@ -1,18 +1,18 @@
 /**
  * The one line that tells an agent it can push back — worded for what just happened.
  *
- * Feedback is the highest-yield channel this product has: **14 reports over two days produced
- * roughly 11 of the fixes in 2.6.0**, against ~6,100 numeric events that produced a funnel which
- * turned out to be broken. Prose from an agent at the moment of friction beats any structured field
- * we could add.
+ * Feedback is the highest-yield channel this product has: a handful of reports from agents in the
+ * field produced most of a release's fixes, while the structured telemetry beside them produced a
+ * funnel that turned out to be broken. Prose from an agent at the moment of friction beats any
+ * structured field we could add.
  *
- * It reached those 14 through a standing instruction in the MCP handshake — paid once at connect.
- * The gap that leaves is the agent who hits something mid-task and is concentrating on the problem
- * rather than on remembering that a feedback tool exists.
+ * It reached those agents through a standing instruction in the MCP handshake — paid once at
+ * connect. The gap that leaves is the agent who hits something mid-task and is concentrating on the
+ * problem rather than on remembering that a feedback tool exists.
  *
  * So: invite at the moment of friction, and vary the wording. A fixed string repeated forty times
  * is invisible by call five; a line that names what just went wrong is read because it is about the
- * thing the agent is already looking at. ~12 tokens against a ~4,546 tok/turn surface.
+ * thing the agent is already looking at. A dozen tokens against a turn measured in thousands.
  *
  * Every invite is counted (`feedbackPrompted`). If `feedback_submitted ÷ feedbackPrompted` stays
  * flat, this is decoration and should be deleted — instrumenting our own nudge is the difference
@@ -35,8 +35,8 @@ export type FrictionKind = (typeof FrictionKind)[keyof typeof FrictionKind];
 /**
  * Runs of one tool before it counts as being stuck.
  *
- * Three, matching the verdict nudge: `reticle_act` led the field data at 110 consecutive-repeat
- * runs, and a run of three is where a deliberate retry becomes a loop.
+ * Three, matching the verdict nudge. `reticle_act` is the tool that repeats most in practice, and
+ * a run of three is where a deliberate retry becomes a loop.
  */
 const REPEAT_INVITE_AT = 3;
 

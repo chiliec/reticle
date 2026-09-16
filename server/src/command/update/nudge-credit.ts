@@ -3,9 +3,9 @@
  *
  * `version_changed` says a version moved. It has never said why, so the only question worth asking
  * about the nudge — does telling agents about a release make releases get installed — was
- * unanswerable. That is not academic: 2.4.0 carried a fix for a connect defect affecting every Vite
- * app and reached zero users, and nothing in the data could distinguish "the nudge never fired" from
- * "the nudge fired and nobody acted on it". Those need opposite responses.
+ * unanswerable. That is not academic: a release once carried a fix for a connect defect affecting
+ * every Vite app and went essentially unadopted, and nothing in the data could distinguish "the
+ * nudge never fired" from "the nudge fired and nobody acted on it". Those need opposite responses.
  *
  * The nudge is delivered by a DAEMON; `reticle update` runs in a different process. They cannot see
  * each other in memory, so a marker file is the join. It holds the version that was offered and

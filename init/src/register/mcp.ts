@@ -53,9 +53,9 @@ const WINDOWS_SHELL_C = '/c';
  *
  * It would also freeze the agent's MCP server at whatever version was installed the day `init` ran,
  * for as long as that entry survives — and `reticle update` upgrades the CLI, not a global agent
- * config. Reticle's biggest measured problem is fixes not reaching people (2.4.0 reached zero users
- * before its nudge existed), and a permanent pin makes that worse for every install, to close a
- * window that lasts until the next npx cache miss.
+ * config. Reticle's biggest measured problem is fixes not reaching people — a release carrying an
+ * important fix can sit unadopted until something tells anyone it exists — and a permanent pin makes
+ * that worse for every install, to close a window that lasts until the next npx cache miss.
  *
  * So it stays unpinned, and the skew is handled where it actually shows up: the contract fingerprint
  * makes a real mismatch loud on the next tool result (see version-skew), and a stale entry of our own

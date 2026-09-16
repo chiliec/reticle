@@ -212,9 +212,9 @@ export type TelemetryEventKind = (typeof TelemetryEventKind)[keyof typeof Teleme
  * Events that belong to a DAEMON RUN, and therefore carry `sessionId`.
  *
  * `sessionId` is minted per process, which is right for a daemon (a daemon run IS the session) and
- * wrong for a one-shot CLI command, which invents one that joins to nothing. Measured over a real
- * day: uniq(sessionId) was 704, of which 561 came from `cli_command_run` and NOT ONE was shared with
- * a daemon. The real number of daemon runs was 121, so every tile counting sessions was ~6x high.
+ * wrong for a one-shot CLI command, which invents one that joins to nothing. Measured: most of the
+ * ids minted in a day came from `cli_command_run` and NOT ONE was ever shared with a daemon, so
+ * every tile counting sessions read several times higher than the daemon runs it claimed to show.
  *
  * Omitting the id on the one-shot events costs nothing — no join on those ids could ever have
  * succeeded — and makes `uniq(sessionId)` mean the thing every dashboard already assumes it means.

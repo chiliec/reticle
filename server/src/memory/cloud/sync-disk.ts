@@ -124,9 +124,8 @@ function readIntent(reticleRoot: string): unknown {
    * The subject ladder lives here, in the engine, and knows how to read a flow, a route and a
    * binding predicate. The server had no access to it and had reimplemented a far weaker version —
    * flow-or-nothing — so records this ladder files correctly arrived at the dashboard as
-   * `unsorted`. Measured on the real corpus: 105 of 163 records the engine can place were landing
-   * in the bucket of last resort, which is what made a coverage map read as one pile with six
-   * labels.
+   * `unsorted`. Measured: most of the records the engine can place were landing in the bucket of
+   * last resort, which is what made a coverage map read as one pile with six labels.
    *
    * Computed HERE rather than duplicated there, because two rules for one question is how the
    * answers start disagreeing — and the one with the evidence should be the one that decides.

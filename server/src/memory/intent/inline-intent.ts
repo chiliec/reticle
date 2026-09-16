@@ -73,7 +73,7 @@ export function inlineVerdictId(tool: string, at: number): string {
 /**
  * The surface an inline intent was captured on, so the store can FILE it.
  *
- * Measured on a real corpus: 167 of 173 things a project knew landed in `unsorted`, because
+ * Measured: almost everything a project knew landed in `unsorted`, because
  * `act_and_wait({ intent })` declared a statement and nothing else. The subject ladder had no flow,
  * no route and no explicit subject to work from, so every record fell to the bucket of last resort
  * — and a coverage map that is one pile with six labels tells a manager the team knows nothing,

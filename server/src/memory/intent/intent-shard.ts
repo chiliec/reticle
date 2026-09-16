@@ -3,11 +3,11 @@
  *
  * ## Why this exists
  *
- * `.reticle/intent.json` was a single object that reached 141 entries and 109KB. Parsing that is
- * nothing; READING it is the cost, and reading is what this store is for. An agent wanting the two
- * rules about checkout pulled 139 irrelevant ones through its context to find them, and an agent
- * changing one rewrote the whole file — which is both slow to review and a lost write whenever two
- * sessions touch different subjects at once.
+ * `.reticle/intent.json` was a single object, and it grew without bound. Parsing that is nothing;
+ * READING it is the cost, and reading is what this store is for. An agent wanting the two rules
+ * about checkout pulled every other rule in the project through its context to find them, and an
+ * agent changing one rewrote the whole file — which is both slow to review and a lost write
+ * whenever two sessions touch different subjects at once.
  *
  * ## The shape
  *
@@ -15,28 +15,26 @@
  *   .reticle/intent/<subject>.json the full records for that subject
  *
  * The index is the whole point: it answers "what do we know, and where does it live?" without
- * opening anything, and detail is then fetched for the one subject in play. Measured on the real
- * corpus, that is 109KB all-or-nothing becoming an index plus one shard — and the largest shard is
- * under 10KB once the unsorted bucket is set aside.
+ * opening anything, and detail is then fetched for the one subject in play. An all-or-nothing read
+ * of everything becomes an index plus one shard.
  *
- * The index is NOT tiny, and measuring beat guessing twice over. With full statements it came to
- * 36KB for 141 entries; summarising them saved 7%, because the bulk is not the prose but the ids —
+ * The index is NOT tiny, and measuring beat guessing twice over. Summarising the statements barely
+ * helped, because the bulk is not the prose but the ids —
  * `inline:signing-in-with-the-email-password-created-earli-6ca804e9` is 63 characters before the
- * statement starts. So the honest numbers are: 109KB all-or-nothing becomes a 33KB index plus one
- * ~10KB shard, and the real win is that a READ and a WRITE are both bounded to one subject rather
- * than the whole corpus.
+ * statement starts. The real win is not the saving on either number: it is that a READ and a WRITE
+ * are both bounded to one subject rather than to the whole corpus.
  *
- * The index is therefore the part that does not scale forever. At ten times this size it needs a
- * second tier — subjects and counts, with ids fetched per subject — rather than a longer single
- * read. Recorded here because the next person will hit it, and the shape of the fix is already
- * visible.
+ * The index is therefore the part that does not scale forever. An order of magnitude larger and it
+ * needs a second tier — subjects and counts, with ids fetched per subject — rather than a longer
+ * single read. Recorded here because the next person will hit it, and the shape of the fix is
+ * already visible.
  *
  * ## What the records carry that the old ones did not
  *
  * The legacy file was written BY verification, AT verification time, in verification's vocabulary: a
- * statement, a predicate, and whether a verdict discharged it. Of 141 entries, four named a surface.
- * There was nowhere to put the reason a thing must be true, who decided it, or when — so the
- * business case somebody states once and then forgets had no home and was never captured.
+ * statement, a predicate, and whether a verdict discharged it. Almost nothing in it named a
+ * surface. There was nowhere to put the reason a thing must be true, who decided it, or when — so
+ * the business case somebody states once and then forgets had no home and was never captured.
  *
  * `why`, `source` and `subject` are that home. They are optional because a migrated record cannot
  * invent them, and a store that rejected incomplete records would simply not be written to.
