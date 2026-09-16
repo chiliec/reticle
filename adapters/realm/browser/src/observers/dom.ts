@@ -55,6 +55,43 @@ function isMeaningful(role: string, name: string): boolean {
   return role !== 'generic' || name.length > 0;
 }
 
+/** How far into an added wrapper to look for the thing that arrived in it. */
+const MOUNT_SCAN_LIMIT = 40;
+
+/**
+ * What actually arrived, when the node that arrived is a bare wrapper.
+ *
+ * A mount is ONE childList record carrying the outermost node, and everything the feature is made of
+ * comes along INSIDE it rather than as records of its own. So filtering the wrapper on its own role
+ * drops the whole subtree with it — and a `<div class="palette-scrim">` around a command palette is
+ * exactly that shape.
+ *
+ * Measured on bench-app: opening the palette committed `paletteOpen: false -> true`, fired the app's
+ * own `palette:opened`, ran its animations and emitted NOT ONE DOM event, while a raw
+ * `MutationObserver` with this observer's own config saw the mutation. Every absence-derived rule
+ * reads this stream, so `crawl` reported `state-vs-render` — "the store committed, nothing rendered"
+ * — against an app that had rendered correctly.
+ *
+ * Bounded, and the bound is the point: this runs inside the app's mutation callback, so an unbounded
+ * walk of a freshly mounted page would be paid on every render. Past the limit the wrapper is treated
+ * as it always was — the filter keeps working for layout noise, which is what it is for.
+ */
+function describeMount(node: Element): { role: string; name: string; el: Element } | undefined {
+  const role = getRole(node);
+  const name = getAccessibleName(node);
+  if (isMeaningful(role, name)) return { role, name, el: node };
+  let scanned = 0;
+  for (const child of node.querySelectorAll('*')) {
+    if (scanned >= MOUNT_SCAN_LIMIT) return undefined;
+    scanned += 1;
+    if (isReticleOverlay(child)) continue;
+    const childRole = getRole(child);
+    const childName = getAccessibleName(child);
+    if (isMeaningful(childRole, childName)) return { role: childRole, name: childName, el: child };
+  }
+  return undefined;
+}
+
 /** Observe DOM mutations and emit semantic (not raw) events. */
 /**
  * The trimmed text carried by a node list, or undefined when it carries none.
@@ -166,11 +203,13 @@ export function installDom(emit: Emit): Teardown {
           continue;
         }
         if (isReticleOverlay(node)) continue;
-        const role = getRole(node);
-        const name = getAccessibleName(node);
-        if (!isMeaningful(role, name)) continue;
+        const mounted = describeMount(node);
+        if (mounted === undefined) continue;
+        const { role, name } = mounted;
         added += 1;
-        const ref = refs.refFor(node);
+        // The ref points at what arrived, not at the wrapper it arrived in: a wrapper is not
+        // something an agent can act on, and the whole value of this event is naming the thing.
+        const ref = refs.refFor(mounted.el);
         emit(EventType.DOM_ADDED, { role, name, region: regionKeyOf(record.target) }, ref);
         if (
           DIALOG_ROLES.has(role) ||
@@ -187,9 +226,11 @@ export function installDom(emit: Emit): Teardown {
           continue;
         }
         if (isReticleOverlay(node)) continue;
-        const role = getRole(node);
-        const name = getAccessibleName(node);
-        if (!isMeaningful(role, name)) continue;
+        // Same reasoning as the mount above, in reverse: a dismissed modal leaves as ONE record
+        // carrying its wrapper, so filtering on the wrapper's own role makes the dismissal silent.
+        const gone = describeMount(node);
+        if (gone === undefined) continue;
+        const { role, name } = gone;
         removed += 1;
         // A removed node has no ref (it is gone), so the CONTAINER is the only stable identity — and it
         // is what ambient learning needs to recognize a churning region.
