@@ -95,6 +95,37 @@ function looseScripts(): string[] {
   return [...found, ...ROOT_LEVEL_SCRIPTS].sort();
 }
 
+/**
+ * A test file is COLLECTED by a runner pointed at a directory, never invoked by its own name.
+ *
+ * So "does any tracked file mention it" is the wrong liveness question for one: the answer is
+ * always no, however green the gate that runs it. What makes a test file live is a gate whose
+ * command names a directory above it — the root `test:bench` names `bench/harness`, `bench/eval`
+ * and `apps/e2e`.
+ *
+ * Asked rather than declared, on purpose: a `*.test.mjs` sitting in a directory NO gate runs is
+ * still caught here, which is the case worth catching. A blanket exemption for test files would
+ * have covered that one too.
+ */
+function collectedByAGate(script: string, runners: readonly string[]): boolean {
+  if (!/\.test\.[cm]?[jt]sx?$/.test(script)) return false;
+  const parts = script.split('/');
+  // Any ancestor directory named on a runner's command line collects this file.
+  return parts.some((_, index) => {
+    const ancestor = parts.slice(0, index + 1).join('/');
+    return (
+      ancestor !== script && runners.some((command) => command.split(/\s+/).includes(ancestor))
+    );
+  });
+}
+
+/** The command line of every script in the root manifest — where a runner names its directories. */
+function runnerCommands(): readonly string[] {
+  const manifest: unknown = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8'));
+  const scripts = (manifest as { scripts?: Record<string, string> }).scripts ?? {};
+  return Object.values(scripts);
+}
+
 /** True when `text` mentions the script by file name, or by its name without the extension. */
 function mentions(text: string, scriptPath: string): boolean {
   const fileName = basename(scriptPath);
@@ -141,8 +172,10 @@ describe('every loose script is reachable from somewhere', () => {
   });
 
   it('no loose script is unreachable, unless it is declared', () => {
+    const runners = runnerCommands();
     const unreachable = scripts.filter((script) => {
       if (DECLARED_UNREACHABLE[script] !== undefined) return false;
+      if (collectedByAGate(script, runners)) return false;
       return !haystack.some(([file, text]) => file !== script && mentions(text, script));
     });
     expect(unreachable).toEqual([]);

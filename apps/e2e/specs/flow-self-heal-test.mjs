@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import os from 'node:os'; import path from 'node:path'; import nfs from 'node:fs';
 import { start, TOOLS, BaselineStore, RecordingStore, FlowStore, ProjectStore, AnnotationStore, createNodeFileSystem } from '@reticlehq/server';
 import { waitForSession } from '../wait-for-session.mjs';
+import { replayIsGreen, replayNotGreen } from '../replay-is-green.mjs';
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 let pass=0,fail=0; const chk=(l,o,d='')=>{console.log(`   ${o?'✅':'❌'} ${l}${d?'  — '+d:''}`);o?pass++:fail++;};
 const reticleRoot=path.join(os.tmpdir(),`reticle-flow-heal-${process.pid}`,'.reticle');
@@ -36,7 +37,7 @@ chk('heal(apply:false) proposes a rebind but does NOT write', /add-task/.test(JS
 const applied=await T('reticle_verify',{action:'heal',flowName:'ht',apply:true});
 chk('heal(apply:true) rewrites the anchor back to add-task', nfs.readFileSync(file,'utf8').includes('add-task') && applied.applied===true, JSON.stringify(applied).slice(0,110));
 const rep=await T('reticle_flow_replay',{flowName:'ht'});
-chk('replay is green again after self-heal', rep.status==='ok'||rep.ok!==false&&!rep.drift, JSON.stringify(rep).slice(0,90));
+chk('replay is green again after self-heal', replayIsGreen(rep), replayNotGreen(rep) ?? `${rep.steps.length} step(s) ran`);
 
 // The rule the gate exists for, driven rather than asserted in a unit: a flow with NO consequence
 // has nothing to check a rebind against, so healing it would produce a flow that passes forever and

@@ -18,7 +18,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test:unit test:guards",
     "test:unit": "turbo run test:unit test:guards && pnpm test:bench",
-    "test:bench": "vitest run bench/harness bench/eval",
+    "test:bench": "vitest run bench/harness bench/eval apps/e2e",
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "bash apps/e2e/run-ci.sh",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit",
