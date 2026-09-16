@@ -28,6 +28,7 @@ import { HOOK_EVENT_NAMES, HookConfigSchema, type HookPayload } from '@reticlehq
 import { ReticleDir } from '@reticlehq/core';
 import { log } from '@/log.js';
 import { onHook } from './hook-bus.js';
+import { setHookProjectId } from './hook-emit.js';
 
 /**
  * How long a hook command may run before it is killed.
@@ -173,4 +174,26 @@ export function installCommandHooks(reticleRoot: string): () => void {
     if (command === undefined || 0 === command.trim().length) return;
     runHookCommand(command, payload, reticleRoot);
   });
+}
+
+/**
+ * Wire BOTH halves of hooks for one entry point: the config surface, and the project id payloads
+ * carry.
+ *
+ * Exists because `start()` and `startDaemon()` each wire their own world, and a line added to one
+ * of them is not added to the other. `installCommandHooks` was in `startDaemon` alone, so
+ * `.reticle/hooks.json` did nothing under `reticle drive`, `reticle verify` and `reticle demo` —
+ * three commands that run a whole verification and emit every event a hook subscribes to. The
+ * in-process surface (`onHook`) worked on both, so the feature looked wired; only the
+ * file-configured half was dead, and it is the half a user who has not written code can reach.
+ *
+ * `initImpact` had already been fixed for exactly this, one line at a time, and the comment left
+ * beside it in `startDaemon` says so. One function is what stops the next one.
+ *
+ * Costs nothing when unused: with no `.reticle/hooks.json` the listener reads an absent file, gets
+ * an empty map and returns.
+ */
+export function wireHooks(reticleRoot: string, projectId: string | undefined): () => void {
+  setHookProjectId(projectId);
+  return installCommandHooks(reticleRoot);
 }

@@ -3,8 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolveProjectCloud } from './memory/cloud/cloud-config.js';
 import { startSyncDaemon } from './memory/cloud/sync-daemon.js';
-import { installCommandHooks } from './hooks/hook-commands.js';
-import { setHookProjectId } from './hooks/hook-emit.js';
+import { wireHooks } from './hooks/hook-commands.js';
 import {
   PROJECT_REGISTRY_FILE,
   emptyProjectRegistry,
@@ -455,6 +454,10 @@ export async function start(options: StartOptions = {}): Promise<RunningServer> 
   // serving a browser with no agent attached still has a HUD to answer, and a report that reads
   // "nothing recorded yet" over a month of history on disk is the worst version of this feature.
   initImpact({ reticleRoot: options.reticleRoot ?? join(process.cwd(), ReticleDir.ROOT) });
+  const uninstallHooks = wireHooks(
+    options.reticleRoot ?? join(process.cwd(), ReticleDir.ROOT),
+    readProjectId(process.cwd()),
+  );
   const security = await resolveBridgeSecurityWithAutoToken(options);
   const bridge = new Bridge({ port, sdkFix: sdkFixForCwd, ...security });
   // Server-authoritative liveness: a Node-side reaper (immune to browser throttling) ends sessions
@@ -562,6 +565,7 @@ export async function start(options: StartOptions = {}): Promise<RunningServer> 
     ...(security.token !== undefined ? { token: security.token } : {}),
     close: async () => {
       reaper.stop();
+      uninstallHooks();
       await cleanupCaptureDirectories();
       leaseReaper?.stop();
       await pool?.shutdown();
@@ -668,17 +672,13 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
    * nothing until one exists, so `reticle link` takes effect without a restart.
    */
   /*
-   * The config half of hooks, attached for the life of the daemon.
+   * Hooks, attached for the life of the daemon — the same call `start` makes, see `wireHooks`.
    *
-   * Installed here rather than lazily on first use because the events it listens for start the
-   * moment a session attaches, and a surface that wires itself up on first need would miss exactly
-   * the events a user most wants — the ones at the start of a run.
-   *
-   * Costs nothing when unused: with no `.reticle/hooks.json` the listener reads an absent file,
-   * gets an empty map and returns, which is the case for every user who has not asked for hooks.
+   * Wired here rather than lazily on first use because the events it listens for start the moment a
+   * session attaches, and a surface that wires itself up on first need would miss exactly the
+   * events a user most wants: the ones at the start of a run.
    */
-  installCommandHooks(reticleRoot);
-  setHookProjectId(readProjectId(process.cwd()));
+  wireHooks(reticleRoot, readProjectId(process.cwd()));
   const cloudSync = startSyncDaemon({
     reticleRoot,
     cloud: () => resolveProjectCloud(fs, reticleRoot, homedir(), process.env),
