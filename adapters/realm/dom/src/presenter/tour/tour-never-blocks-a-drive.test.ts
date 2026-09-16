@@ -41,7 +41,7 @@ const harness = (search: string, driving = false) => {
     storage: freshStorage(),
     projectId: 'p1',
     isDriving: () => driving,
-    copy: () => undefined,
+    copy: () => true,
     search,
   });
   return { doc, handle };
@@ -72,7 +72,7 @@ describe('a page Reticle opened for itself', () => {
       storage: freshStorage(),
       projectId: 'p1',
       isDriving: () => false,
-      copy: () => undefined,
+      copy: () => true,
       search: '?utm_source=blog',
     });
     expect(handle).toBeDefined();
