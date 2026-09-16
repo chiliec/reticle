@@ -53,9 +53,17 @@ const REF_SHAPED = /^e\d+$/;
  * correct and useful. Across one it is not merely useless, it is WRONG: the next session hands `e404`
  * to some other element, and the learned suppression lands on whatever that turns out to be.
  *
- * Measured: real action-caused DOM events disappeared from the window on a freshly opened page,
- * because the map seeded from disk marked refs that session had never issued. Clearing the file and
- * repeating the identical click took `domChanged` from 0 to 7.
+ * WHAT IT ACTUALLY AFFECTS. This map is read in exactly one place — the `settled` predicate drops
+ * events on learned-ambient regions before deciding the page went quiet. So a poisoned map makes
+ * `{kind: "settled"}` ignore regions that were never the churning ones, which is a false-green risk
+ * in the settle oracle. It does NOT filter the windows that summaries or contradictions are computed
+ * from; those read the buffer raw.
+ *
+ * That scope is narrower than this rule was first written as. The measurement offered for the wider
+ * claim — DOM events reappearing once the file was cleared — was taken across a daemon restart and a
+ * new session, so it did not isolate the file, and it is withdrawn. What stands without it: all 43
+ * keys in the persisted map were ref-shaped, and a ref cannot mean anything in a session that did
+ * not mint it.
  */
 export function isStableAmbientKey(key: string): boolean {
   return !REF_SHAPED.test(key);

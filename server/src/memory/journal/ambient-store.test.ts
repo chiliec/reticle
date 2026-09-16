@@ -44,10 +44,11 @@ describe('AmbientStore', () => {
   /**
    * The file is the only place the map crosses a session, and a ref does not survive the crossing.
    *
-   * MEASURED on bench-app: the persisted map was mostly ref-keyed (`e404: 39`, `e405: 43`), a fresh
-   * page seeded from it, and real action-caused DOM events were filtered out of the window before
-   * anything could see them — a crawl then reported `state-vs-render` on a control that plainly
-   * worked. Deleting the file and repeating the identical click took `domChanged` from 0 to 7.
+   * MEASURED on bench-app: every one of the 43 keys in the persisted map was ref-shaped (`e404: 39`,
+   * `e405: 43`), so the whole file addressed a numbering no later session uses. The map is read by
+   * the `settled` predicate, which drops events on learned-ambient regions before deciding the page
+   * went quiet — so seeding it from another session's refs teaches the settle oracle to ignore
+   * regions that were never the churning ones.
    */
   it('persists only the keys that mean something in the next session', async () => {
     const store = new AmbientStore(fs, root);
