@@ -36,7 +36,7 @@ import type { FlowReplayResult } from '@reticlehq/core';
 import { originOf } from './portal/session/session-manager.js';
 import { setBrowserMode, BrowserMode } from './telemetry/browser-mode.js';
 import type { NetworkDetail } from './portal/input/network-detail.js';
-import { replayNamedFlow } from './language/flows/flow-tools.js';
+import { replayAndLearn } from './language/flows/flow-learning.js';
 import { createSharedServer } from './surface/http-server.js';
 import { openLoopbackAlias } from './command/daemon/binding/loopback-alias.js';
 import { reportAppInstrumented } from './telemetry/app-instrumented.js';
@@ -773,7 +773,7 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
     const session = bridge.sessions.get(sessionId);
     if (session === undefined) return;
     session.pushNarration(`▶ Replaying "${flowName}"…`);
-    replayNamedFlow(effectiveDeps, { flowName, sessionId })
+    replayAndLearn(effectiveDeps, { flowName, sessionId })
       .then((result) => session.pushNarration(replayVerdictLine(result)))
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);

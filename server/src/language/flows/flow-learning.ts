@@ -2,6 +2,7 @@ import type { FlowReplayResult } from '@reticlehq/core';
 import { asString } from '@reticlehq/core';
 import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 import { flowsForSession } from './flow-store-for-session.js';
+import { replayNamedFlow } from './flow-replay-run.js';
 
 /**
  * Write back what a replay taught the flow, once the replay has finished writing its own.
@@ -41,4 +42,47 @@ export async function persistLearning(
     // Bookkeeping only.
   }
   return result;
+}
+
+/**
+ * Replay a flow AND keep what it learned. The entry point every ordinary replay should use.
+ *
+ * ── THE DEFECT ──────────────────────────────────────────────────────────────────────────────────
+ * `persistLearning` had one call site, on `reticle_flow_replay`. `replayNamedFlow` had eight. The
+ * six that mattered did not persist — including both branches of `reticle_flow_verify`, whose own
+ * description calls it "the autonomous regression check to run after a build/change".
+ *
+ * That is the whole v3 promise, inert on the path a team actually automates. Promotion needs
+ * CONSECUTIVE clean runs, so a suite that never writes `learned` back starts from zero every time
+ * and promotes nothing, forever — while the result it returns still REPORTS `learned` and
+ * `promoted`, so nothing looked wrong.
+ *
+ * Wrapped here rather than inside `replayNamedFlow`, for the reason `persistLearning` above gives:
+ * persisting from inside it put a second writer in the middle of the replay's own intent
+ * bookkeeping and turned `proved` back into `bound`.
+ *
+ * ── WHO MUST NOT USE THIS ───────────────────────────────────────────────────────────────────────
+ * Two callers replay deliberately BROKEN conditions and call `replayNamedFlow` directly on purpose:
+ *
+ * - mutation testing (`flow-mutate-tools.ts`) breaks the app to check the flow notices. Learning
+ *   from that teaches the flow about a defect nobody shipped.
+ * - the perturbed branch of the seed path slows the network to see what the flow does under stress.
+ *   A finding that appears only under perturbation is not a fact about the app.
+ *
+ * Both write a finding that would then have to STOP appearing to be promoted — so the damage is not
+ * a wrong guard today, it is a guard earned against a condition the app is never in.
+ */
+export async function replayAndLearn(
+  deps: ToolDeps,
+  /**
+   * The tool's args, WHOLE.
+   *
+   * Narrowed to `{ flowName, sessionId }` in the first draft, which silently dropped
+   * `confirmDangerous` — so a replay that had been authorised to drive a destructive control lost
+   * that authorisation on its way through here and refused the step. `tools.flow-replay.test.ts`
+   * caught it. `seed` and anything added later travel the same path, so the whole object goes.
+   */
+  args: Record<string, unknown>,
+): Promise<FlowReplayResult> {
+  return await persistLearning(deps, args, await replayNamedFlow(deps, args));
 }

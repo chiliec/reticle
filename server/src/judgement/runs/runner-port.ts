@@ -5,7 +5,7 @@
  * verdict logic, so this layer carries no decisions.
  */
 
-import { replayNamedFlow } from '@/language/flows/flow-tools.js';
+import { replayAndLearn } from '@/language/flows/flow-learning.js';
 import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 import type { RunnerPort } from './reticle-runner.js';
 import { defaultRunId } from './default-run-id.js';
@@ -16,7 +16,7 @@ export function createRunnerPort(deps: ToolDeps, sessionId?: string): RunnerPort
   return {
     listFlows: () => deps.flows.list(),
     replayFlow: (name) =>
-      replayNamedFlow(
+      replayAndLearn(
         deps,
         sessionId !== undefined ? { flowName: name, sessionId } : { flowName: name },
       ),
