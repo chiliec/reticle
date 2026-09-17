@@ -22,6 +22,7 @@ import { resultIsError } from './faults/mcp-is-error.js';
 import { consumerVerdictRefusal, reservedVerdictKeysIn } from './consumer-verdict-guard.js';
 import { buildServerInstructions } from './server-instructions.js';
 import { unadvertisedToolHelp } from '@/surface/tools/unadvertised-help.js';
+import { mergedNameRedirect } from '@/surface/tools/merged-name-redirect.js';
 import { liveCallText, liveCallValues } from '@/surface/tools/live-call-text.js';
 
 /** The JSON-RPC method the SDK registers its tool dispatcher under. */
@@ -491,10 +492,41 @@ function installUnadvertisedToolHelp(
   }
   handlers.set(CALL_TOOL_METHOD, async (request: unknown, extra: unknown) => {
     const name = toolNameOf(request);
+    // A name that only MOVED is CALLED, not explained. A client registers tools once, at connect,
+    // so every session open across a release that merges a name keeps calling the old one — and an
+    // error there is indistinguishable from a broken tool. The redirect table already knows where
+    // each name went; routing through it costs nothing on `tools/list`, because an old name is
+    // answered here and never advertised.
+    // NOT when the old name is itself live. A merge folds a group into one of its own members, so
+    // `reticle_observe` is both a member of the plan and the tool it merged into — redirecting there
+    // would overwrite a caller's own `action` with the plan's and break the tool for everybody, to
+    // fix nothing. Only a name the surface no longer answers is rewritten.
+    const moved = name === undefined || advertised.has(name) ? undefined : mergedNameRedirect(name);
+    if (moved?.action !== undefined && advertised.has(moved.tool)) {
+      return original(asCallOf(request, moved.tool, moved.action), extra);
+    }
     const help = name === undefined ? undefined : unadvertisedToolHelp(name, advertised, known);
     if (help !== undefined) throw new McpError(ErrorCode.InvalidParams, help);
     return original(request, extra);
   });
+}
+
+/**
+ * The same `tools/call` request, aimed at the tool a merged name now lives in.
+ *
+ * The old name IS the action — `reticle_snapshot` means `reticle_look { action: "page" }` — so it
+ * wins over an `action` in the arguments, which under an old name can only be a contradiction.
+ */
+function asCallOf(request: unknown, tool: string, action: string): unknown {
+  const source = request as { params?: Record<string, unknown> };
+  const params = source.params ?? {};
+  const given = params['arguments'];
+  const args: Record<string, unknown> =
+    'object' === typeof given && null !== given ? (given as Record<string, unknown>) : {};
+  return {
+    ...source,
+    params: { ...params, name: tool, arguments: { ...args, action } },
+  };
 }
 
 /** The requested tool name, when the request has the shape we expect. */
