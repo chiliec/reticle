@@ -105,7 +105,7 @@ const bytesOf = (json: string): number => Buffer.byteLength(json, 'utf8');
  * labels are a UNION (ask for two, get either), and a quarantined flow never runs however it is
  * labelled. Everything else about selection lives in the tool description, which is sent once.
  */
-const DEFAULT_SURFACE_BYTE_BUDGET = 24_500;
+const DEFAULT_SURFACE_BYTE_BUDGET = 24_600;
 // Raised TWICE, each time deliberately, each time with the measurement that bought it.
 //
 // SECOND RAISE, 24_100 -> 24_500. `reticle_verify { action: "mutate" }` costs 185 B on the wire
@@ -133,8 +133,21 @@ const DEFAULT_SURFACE_BYTE_BUDGET = 24_500;
 // `verify` is the only advertised exit. 225 tokens a turn against a loop that did not end is not a
 // close trade.
 //
-// The ratchet stays a ratchet: this is the only raise, it names its evidence, and the next one has
-// to do the same.
+// SECOND RAISE, 24_500 -> 24_600 — with the measurement that bought it.
+//
+// `reticle_act_sequence` gained a `burst` parameter: a millisecond gap held between step
+// dispatches. It costs 112 B on the wire (24,419 -> 24,531, ~28 tokens/turn) and the headroom was
+// 81 B, so it did not fit. Trimming its prose to 92 characters and collapsing a `boolean|number`
+// union to a plain number (a zod union serialises to a fat JSON-Schema `anyOf`) recovered only 62 B
+// of the 174 it first cost; no parameter carrying a usable description fits in 81 B.
+//
+// What it buys, measured on the razorpay merchant-dashboard fixture: it is the ONLY way to provoke
+// an ordering race. Without it `act_and_wait` settles ~530 ms between actions and serialises the
+// two clicks a superseded-response bug needs to overlap, so the defect cannot fire at all — that
+// class was established by Playwright MCP and missed by Reticle until this parameter existed. A
+// whole defect class against 28 tokens a turn is not a close trade.
+//
+// The ratchet stays a ratchet: every raise names its evidence, and the next one has to do the same.
 
 describe('advertised surface cost', () => {
   it(`the default surface fits in ${String(DEFAULT_SURFACE_BYTE_BUDGET)} bytes of tools/list`, async () => {

@@ -59,6 +59,19 @@ function effectOf(session: Session, since: number): StepEffect {
   }
 }
 
+/**
+ * Ceiling for a burst gap. Past this it is not a burst, it is a paced walk.
+ *
+ * HOW TO PICK A GAP, because both edges are real and neither is guessable. It must outlast the
+ * handler committing and dispatching its request, and undercut the response it is racing.
+ * Measured against the razorpay filter race (superseded query 700ms, the one replacing it 90ms):
+ * at 0ms the first request was never issued at all, and at the ordinary settle (~500ms in a
+ * throttled tab, where rAF never fires and the frame budget always times out) the two clicks
+ * serialised and never overlapped. 50ms sat in the window. A different app needs a different
+ * number: read its own slow endpoint.
+ */
+const BURST_MAX_GAP_MS = 500;
+
 export const ACT_SEQUENCE_TOOL: ToolDef = {
   name: ReticleTool.ACT_SEQUENCE,
   // The example is required for a core tool, and this one carries weight: the measured loop it
@@ -79,6 +92,17 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
       .array(z.record(z.unknown()))
       .describe(
         'Ordered list of { ref | target, action, args?, expect? } objects. Each step is equivalent to one reticle_act call — give `ref` from a snapshot/query, or `target` ({ testid } | { label } | { role, name } | { text }) to resolve in this call. Put confirmDangerous:true in a destructive step args object. `expect` is the same predicate shape as reticle_act_and_wait `until`, and it is what makes a step PROVE something: a step without one is driven, not verified, and the result says so. Naming the consequence is also FASTER — a named consequence is detected the instant it fires, where waiting for the page to settle can only conclude by waiting for silence.',
+      ),
+    // A plain number, not boolean|number: a zod union serialises to a JSON-Schema `anyOf` that
+    // cost 174 B on a surface re-sent every turn, against 81 B of headroom. One spelling is also
+    // the better API — `burst: 50` says what it does, where `burst: true` hides a magic default.
+    burst: z
+      .number()
+      .min(0)
+      .max(BURST_MAX_GAP_MS)
+      .optional()
+      .describe(
+        'ms gap between step dispatches, to provoke an ordering race (try 50). Omit to settle fully.',
       ),
     onDeviation: z
       .enum([DeviationMode.HALT, DeviationMode.CONTINUE])
@@ -139,6 +163,15 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
       const perStepTimeout = 'number' === typeof args['timeout_ms'] ? args['timeout_ms'] : 8000;
       const stepResults: Record<string, unknown>[] = [];
       const expectations: StepExpectation[] = [];
+      // `true` means the default window; a number means that window exactly. 0 is legal and means
+      // "no settle at all" — useful only when the app issues its request synchronously.
+      const burstArg = args['burst'];
+      const burstGapMs =
+        // The schema declares the same bounds, so this clamp is belt-and-braces — it matters for
+        // the replay path, which reaches this handler without the advertised schema in front of it.
+        'number' === typeof burstArg && Number.isFinite(burstArg)
+          ? Math.max(0, Math.min(burstArg, BURST_MAX_GAP_MS))
+          : undefined;
       const onDeviation =
         DeviationMode.CONTINUE === args['onDeviation']
           ? DeviationMode.CONTINUE
@@ -161,10 +194,21 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
             async () => {
               const resolved = await resolveActTarget(session, step, perStepTimeout);
               if ('error' === resolved.kind) return { ok: false, error: resolved.message };
+              // In burst mode every step carries a zero settle budget, so step N+1 is dispatched
+              // while step N is still in flight. That overlap IS the test — see `burst` above.
+              const stepArgs = asRecord(step['args'] ?? {});
               return actCommand(
                 deps,
                 session,
-                { ref: resolved.ref, action: step['action'], args: step['args'] ?? {} },
+                {
+                  ref: resolved.ref,
+                  action: step['action'],
+                  // Return as soon as the dispatch is in: the gap below, not the settle, is what
+                  // paces the sequence. Leaving the default settle here would race rAF and return
+                  // early anyway — a budget is a CEILING, not a floor, which is why an earlier
+                  // attempt to pace with `settleMs` alone produced a 12ms step and no race.
+                  args: burstGapMs === undefined ? stepArgs : { ...stepArgs, settleMs: 0 },
+                },
                 perStepTimeout,
               );
             },
@@ -172,6 +216,14 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
             since,
             perStepTimeout,
           );
+          // Hold the gap BEFORE the next dispatch, measured from this step's own start so the
+          // pacing is the interval between ACTIONS, not the interval plus however long this step
+          // happened to take. The last step needs no gap: nothing follows it to race.
+          if (burstGapMs !== undefined && i < inputSteps.length - 1) {
+            const elapsed = session.elapsed() - stepSince;
+            const remaining = burstGapMs - elapsed;
+            if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
+          }
           if (!outcome.ok) {
             stalledAt = i;
             stepResults.push({

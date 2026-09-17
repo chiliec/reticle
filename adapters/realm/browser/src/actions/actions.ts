@@ -781,6 +781,22 @@ async function dispatchOther(
 }
 
 /**
+ * The settle budget for one action, in ms.
+ *
+ * Absent means the default bounded frame. `0` is the burst case — drain microtasks and return so a
+ * following action can land inside this one's window. Clamped: a caller cannot extend the budget
+ * past the frame bound, because a long settle here would block the command channel, and anything
+ * that needs to WAIT for a consequence should be declaring it on act_and_wait instead.
+ */
+function asSettleBudget(raw: unknown): number | undefined {
+  if ('number' !== typeof raw || !Number.isFinite(raw)) return undefined;
+  return Math.max(0, Math.min(raw, FRAME_BUDGET_MS_CEILING));
+}
+
+/** Upper bound for a caller-supplied settle budget. Mirrors the browser's own frame budget. */
+const FRAME_BUDGET_MS_CEILING = 200;
+
+/**
  * Execute a single action against a ref and probe for best-effort evidence of effect.
  * Always async: the MutationObserver read needs a microtask + rAF after dispatch.
  */
@@ -836,7 +852,17 @@ export async function executeAction(
     // mutations → dom.added/dom.text/dom.attr events) flush before we return, landing inside
     // observe({ since }). Bounded so a throttled/background tab never hangs; a settle timeout NEVER
     // rejects (only a real dispatch failure thrown above does). settle can never throw.
-    const outcome = await settle();
+    // BURST: a caller provoking a race needs the next action dispatched while this one is still in
+    // flight. The default budget is a bounded frame, but in a throttled/headless tab rAF never fires
+    // and the full FRAME_BUDGET_MS fallback burns on EVERY step — measured at ~500ms between two
+    // `act_sequence` clicks, which serialises them and suppresses the very interleaving the caller
+    // was trying to cause. `args.settleMs: 0` drains the microtask queue and returns.
+    //
+    // Named after what it costs: a zero budget means DOM mutations from this action may land after
+    // the call returns, so `settled` is false and the effect block is thinner. That is the trade a
+    // race-provoking caller is explicitly asking for, and no other caller gets it by accident.
+    const budget = asSettleBudget(args['settleMs']);
+    const outcome = await settle(budget);
     settled = outcome.settled;
     settleReason = outcome.settled ? null : SettleReason.TIMEOUT;
     obs.disconnect();
