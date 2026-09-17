@@ -349,7 +349,13 @@ async function publishInto(proc) {
     `registry=${REGISTRY}\n//localhost:${String(REGISTRY_PORT)}/:_authToken=${token}\n`,
   );
   const auth = { npm_config_userconfig: npmrc, NPM_CONFIG_USERCONFIG: npmrc };
-  run('pnpm', ['-r', 'publish', '--registry', REGISTRY, '--no-git-checks'], ROOT, auth);
+  run(
+    'pnpm',
+    ['-r', 'publish', '--registry', REGISTRY, '--no-git-checks'],
+    ROOT,
+    auth,
+    PUBLISH_TIMEOUT_MS,
+  );
   return { proc, auth, stop: () => killTree(proc.pid) };
 }
 
@@ -732,17 +738,31 @@ function dumpEvidence(consoleLines, bridgePort, failedResponses = [], wsAttempts
   }
 }
 
-const run = (cmd, args, cwd, extraEnv = {}) => {
+const run = (cmd, args, cwd, extraEnv = {}, timeoutMs = 600_000) => {
   const it = pm(cmd, args);
   return execFileSync(it.cmd, it.args, {
     cwd,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, ...extraEnv },
-    timeout: 600_000,
+    timeout: timeoutMs,
     ...it.shellOpts,
   });
 };
+
+/**
+ * The workspace publish gets its own, much larger budget.
+ *
+ * Every package's `prepack` runs `tsc -b --force`, so this builds the whole workspace from cold
+ * before a single scaffold exists. MEASURED on Windows: the identical publish via
+ * `scripts/local-registry.sh` took ~32 minutes, against the shared 10-minute budget — so the gate
+ * died in its own setup with `spawnSync C:\WINDOWS\system32\cmd.exe ETIMEDOUT` and reported
+ * `0/1 scaffolds`, which reads as an install failure and is not one.
+ *
+ * Generous on purpose, and a bound rather than a measurement: this is the harness paying for a
+ * build, not a claim about how fast a build should be.
+ */
+const PUBLISH_TIMEOUT_MS = 45 * 60_000;
 
 async function reachable(url) {
   try {
