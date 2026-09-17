@@ -31,7 +31,7 @@ import {
   type ReticleEvent,
   PredicateKind,
 } from '@reticlehq/core';
-import { asString } from '@reticlehq/core';
+import { asString, isConsequenceDrift } from '@reticlehq/core';
 import { replayActionArgs, ambiguousTestidNote } from './replay.js';
 import { anchorFieldName } from './fields/flow-secret-field.js';
 import {
@@ -303,6 +303,19 @@ export interface ReplayFromOptions {
    * today, and the reason a caller on a committing surface must say so rather than rely on silence.
    */
   surface?: Surface;
+  /**
+   * Keep going past a step whose ACTION ran and whose declared consequence merely did not hold.
+   *
+   * Off by default, because a regression flow wants the first break and nothing after it. A BUG
+   * SWEEP wants the opposite: a flow that declares what each step SHOULD do, driven against an app
+   * where several of them do not, and one verdict per step. Without this the sweep stops at the
+   * first defect and reports the rest as `notAttempted` — measured on a 6-step flow that halted at
+   * step 0 with five real defects behind it.
+   *
+   * An ANCHOR drift still halts either way: there the element was never found, so the page is not
+   * where the flow says it is and continuing would invent results. `isConsequenceDrift` is the line.
+   */
+  sweep?: boolean;
 }
 
 /**
@@ -566,7 +579,13 @@ export async function replayFlow(
     // forget the rule and quietly re-introduce the cost. Spelled out only when it is NOT the default.
     if (FlowStepTool.ACT === result.tool) delete result.tool;
     if (index >= from || !result.ok || result.drift !== undefined) results.push(result);
-    if (result.drift !== undefined || !result.ok) break;
+    // Under `sweep`, a failure whose action still RAN does not stop the run — the page is where the
+    // step left it, so the next step is as meaningful as it was going to be. Anything else halts.
+    const sweepPast =
+      true === options.sweep &&
+      result.drift !== undefined &&
+      isConsequenceDrift(result.drift.reasonKind);
+    if (!sweepPast && (result.drift !== undefined || !result.ok)) break;
     index += 1;
   }
   return results;

@@ -425,6 +425,12 @@ export const FLOW_TOOLS: ToolDef[] = [
         .boolean()
         .optional()
         .describe('Set true to allow destructive controls during this replay only.'),
+      sweep: z
+        .boolean()
+        .optional()
+        .describe(
+          'BUG SWEEP: keep going past a step whose action ran and whose declared consequence merely did not hold, returning one verdict PER STEP instead of stopping at the first failure. Default false — a regression flow wants the first break. A step whose ANCHOR did not resolve still halts either way.',
+        ),
       seed: seedSchema
         .optional()
         .describe(

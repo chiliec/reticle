@@ -572,6 +572,9 @@ export async function replayNamedFlow(
         const sub = await flowsForSession(deps, projectId).flows.load(invoked, projectId);
         return sub.ok ? await resolveFlowUploads(deps, sub.value) : undefined;
       },
+      // Bug-sweep mode: keep going past a step whose action ran and whose consequence merely did
+      // not hold, so one flow reports one verdict per step instead of stopping at the first defect.
+      sweep: true === args['sweep'],
     },
   );
   // Computed HERE, before the synthetic success row is appended below: once that row is pushed,

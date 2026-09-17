@@ -158,6 +158,27 @@ export const DriftReason = {
 } as const;
 export type DriftReason = (typeof DriftReason)[keyof typeof DriftReason];
 
+/**
+ * Did the step's anchor resolve and its action RUN, leaving only the declared consequence unmet?
+ *
+ * The three reasons below all mean the same thing about the app's state: the element was found, the
+ * action was dispatched, and the page is where the step left it. Only the assertion failed. The
+ * other reasons mean the anchor itself was never resolved, so the page is somewhere the flow never
+ * described and every later step would run against a state nobody predicted.
+ *
+ * That difference is what lets a replay CONTINUE past a failure without turning one wrong result
+ * into several — see the sweep option on replayFlow. Halting on both was correct while there was no
+ * way to tell them apart; it stopped a 6-step bug sweep at its first defect and reported the other
+ * five as `notAttempted`.
+ */
+export function isConsequenceDrift(reason: DriftReason): boolean {
+  return (
+    DriftReason.SIGNAL_NOT_OBSERVED === reason ||
+    DriftReason.STATE_MISMATCH === reason ||
+    DriftReason.EXPECT_ELEMENT_NOT_FOUND === reason
+  );
+}
+
 /** Default timeout (ms) a signal anchor waits to be observed at replay. */
 export const FLOW_SIGNAL_TIMEOUT_MS = 4000;
 

@@ -1,6 +1,7 @@
 import {
   AnchorKind,
   DriftReason,
+  isConsequenceDrift,
   ReplayStatus,
   type FlowFile,
   type FlowReplayResult,
@@ -120,7 +121,13 @@ export function buildDecision(
      * `DriftReason.EXPECT_ELEMENT_NOT_FOUND` exists precisely to separate the two; only this
      * function had not read it.
      */
-    if (DriftReason.EXPECT_ELEMENT_NOT_FOUND === drift.reasonKind) {
+    // WIDENED from `EXPECT_ELEMENT_NOT_FOUND` alone to every consequence drift. The comment above
+    // says this branch exists because the anchor resolved and the action ran — which is equally
+    // true of SIGNAL_NOT_OBSERVED and STATE_MISMATCH, and both were falling through to the
+    // rebind-the-anchor advice below. Seen on a real sweep: a step whose declared request never
+    // fired was answered with "the anchored element is gone; rebind or update the flow", sending
+    // the reader after a locator that had resolved perfectly.
+    if (isConsequenceDrift(drift.reasonKind)) {
       /*
        * `nearest` is the closest testid PRESENT when the assertion was evaluated, which for this
        * kind of drift is a page the journey may never have reached — after a sign-in that did not
@@ -128,7 +135,10 @@ export function buildDecision(
        * step's own anchor, and even then it is a rename of the EXPECTATION, never of the anchor.
        */
       const renamed =
-        drift.nearest !== null && drift.ambiguous !== true && drift.nearest !== step.anchor
+        DriftReason.EXPECT_ELEMENT_NOT_FOUND === drift.reasonKind &&
+        drift.nearest !== null &&
+        drift.ambiguous !== true &&
+        drift.nearest !== step.anchor
           ? `the consequence may have been renamed: update this step's expect to "${drift.nearest}"`
           : undefined;
       return {
