@@ -553,7 +553,7 @@ const list = wanted ? SCENARIOS.filter((s) => wanted.includes(s.id)) : SCENARIOS
  * every other fixture knob in this app is (`?reticle-break=`, `?opaque=`, `?nosource=`), and a
  * scenario that asks for none drives the byte-identical URL it drove before.
  */
-function scenarioUrl(sc) {
+function scenarioUrl(sc, tool) {
   const u = new globalThis.URL(URL);
   // Nobody is sitting in front of a benchmark arm, and `__reticle_opened` is the one fact the page
   // needs to know that.
@@ -574,6 +574,28 @@ function scenarioUrl(sc) {
   // what is being measured, and an arm that carries it is not running the same page as one that
   // does not.
   u.searchParams.set(RETICLE_URL_PARAM.OPENED, '1');
+  /*
+   * A competitor arm drives the app WITHOUT Reticle's HUD, which is the app it would actually face.
+   *
+   * `bench-app`'s own `main.tsx` has carried `?no-hud` for exactly this since it was written — "the
+   * app a non-Reticle tool (e.g. Playwright) would actually face, with NO HUD overlay to fight. The
+   * bug injector still runs, so the same bug is present" — and `pw-vs-reticle/report.mjs` states the
+   * reason plainly: "bench-app embeds the Reticle SDK, whose HUD blocks Playwright clicks". This
+   * pass never passed it.
+   *
+   * Measured: on `broken-form-validation`, `browser_click` on `deploy-submit` timed out every run.
+   * The button was enabled and 96x36, and `elementFromPoint` over its centre returned
+   * `div.reticle-hud-log-well` inside `div.reticle-chat-panel` — Reticle's own chat panel, z-index 5,
+   * `pointer-events: auto`, sitting on the modal. The HUD root above it is correctly
+   * `pointer-events: none`; the panel inside it is not.
+   *
+   * So the competitor columns were being measured against an obstacle Reticle put on the page. That
+   * is not a fair comparison in either direction: it cost Playwright a cell outright, and every
+   * other competitor cell paid whatever that overlay cost without it ever being named.
+   *
+   * NOT set for the reticle arm, which needs its own SDK to be measured at all.
+   */
+  if (tool !== undefined && tool !== 'reticle') u.searchParams.set('no-hud', '1');
   if (sc.ambient !== undefined) u.searchParams.set('ambient', sc.ambient);
   return u.toString();
 }
@@ -639,7 +661,7 @@ for (const sc of list) {
           let baseline = null;
           // baseline scenarios: clean capture first
           if ('baseline' === sc.mode) {
-            const a0 = makeAdapter(tool, scenarioUrl(sc));
+            const a0 = makeAdapter(tool, scenarioUrl(sc, tool));
             openAdapter = a0;
             await a0.start();
             await a0.login();
@@ -659,7 +681,7 @@ for (const sc of list) {
           }
           if (sc.regression) inject(sc.regression);
           await sleep(400); // let vite HMR apply
-          const a = makeAdapter(tool, scenarioUrl(sc));
+          const a = makeAdapter(tool, scenarioUrl(sc, tool));
           openAdapter = a;
           await a.start();
           await a.login();
