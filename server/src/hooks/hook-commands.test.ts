@@ -8,7 +8,7 @@
  * updated alongside the code.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -28,7 +28,17 @@ import { installCommandHooks, readHookConfig } from './hook-commands.js';
 const HOOK_SPAWN_TIMEOUT_MS = 30_000;
 
 let root: string;
-let sink: string;
+
+/**
+ * The sink script lives OUTSIDE the per-test root, and that placement is the fix.
+ *
+ * Putting it in `root` made the running child hold the very directory teardown removes: node keeps
+ * the script file open, Windows refuses to remove a directory with an open handle in it, and every
+ * test failed on `EBUSY: resource busy or locked, rmdir` — as a teardown error reported against a
+ * body that had passed. Created once for the module, removed once at the end.
+ */
+const sinkHome = mkdtempSync(join(tmpdir(), 'reticle-hook-sink-'));
+const sink = join(sinkHome, 'sink.mjs');
 
 /**
  * A portable `cat > file`.
@@ -52,8 +62,11 @@ const sinkTo = (out: string): string => `node ${JSON.stringify(sink)} ${JSON.str
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'reticle-hooks-'));
-  sink = join(root, 'sink.mjs');
   writeFileSync(sink, SINK_SOURCE);
+});
+
+afterAll(() => {
+  rmSync(sinkHome, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 });
 
 afterEach(() => {
@@ -61,7 +74,9 @@ afterEach(() => {
   // Retries because the child may still hold the directory: Windows refuses to remove a directory
   // with an open handle in it, and this suite spawns real processes on purpose. `EBUSY: resource
   // busy or locked, rmdir` is what that looks like, and it failed the run rather than the assertion.
-  rmSync(root, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  // Generous, because the child that wrote into this directory may not have exited yet: the hook
+  // bus spawns it and returns, so teardown can arrive first. Windows reports that as EBUSY.
+  rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 });
 });
 
 const writeConfig = (config: Record<string, string>): void => {
