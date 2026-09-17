@@ -18,9 +18,24 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isConsequenceDrift, DriftReason } from '@reticlehq/core';
+import {
+  asRef,
+  asString,
+  ActionType,
+  AnchorKind,
+  DriftReason,
+  FLOW_FILE_VERSION,
+  isConsequenceDrift,
+  ReticleCommand,
+  ReticleTool,
+  type CommandResult,
+  type ElementDescriptor,
+  type FlowFile,
+  type FlowStep,
+} from '@reticlehq/core';
 import { FLOW_TOOLS } from './flow-tools.js';
-import { ReticleTool } from '@reticlehq/core';
+import { replayFlow, type FlowReplaySession } from './flow-replay.js';
+import { waitForPredicate } from '@reticlehq/engine/question/predicate/predicate.js';
 
 describe('isConsequenceDrift', () => {
   it('is true where the anchor resolved and only the assertion failed', () => {
@@ -38,9 +53,17 @@ describe('isConsequenceDrift', () => {
   });
 
   it('classifies every reason the enum declares, so a new one cannot default silently', () => {
-    for (const reason of Object.values(DriftReason)) {
-      expect(typeof isConsequenceDrift(reason)).toBe('boolean');
-    }
+    // This used to assert `typeof isConsequenceDrift(reason) === 'boolean'`, which the function's
+    // own return type already guarantees: returning `false` for an unclassified reason IS the
+    // silent default the test claimed to stop, and it passed. Pinning the exact partition is what
+    // reddens when a reason is added and nobody decides which side it belongs on.
+    expect(Object.values(DriftReason).filter(isConsequenceDrift).sort()).toEqual(
+      [
+        DriftReason.SIGNAL_NOT_OBSERVED,
+        DriftReason.STATE_MISMATCH,
+        DriftReason.EXPECT_ELEMENT_NOT_FOUND,
+      ].sort(),
+    );
   });
 });
 
@@ -54,5 +77,141 @@ describe('reticle_flow_replay', () => {
     // The two halves a caller has to know before they trust the output.
     expect(described).toMatch(/per step/i);
     expect(described).toMatch(/anchor/i);
+  });
+});
+
+/*
+ * The predicate above is only half of it. Nothing exercised the REPLAY LOOP with `sweep` set, so
+ * deleting the `sweepPast` clause in flow-replay.ts left the whole suite green: the file named
+ * after the feature tested a pure function and a schema description, and not the behaviour.
+ *
+ * The fake here is the one from flow-replay.expect-element.test.ts: a step whose own testid is
+ * present resolves and is clicked, and an `expect.element` testid that is absent drifts with
+ * EXPECT_ELEMENT_NOT_FOUND — a consequence drift. A step whose own testid is absent drifts with
+ * TESTID_NOT_FOUND, which is the anchor half and must halt even under sweep.
+ */
+class SweepSession implements FlowReplaySession {
+  readonly acts: string[] = [];
+  constructor(private readonly present: Set<string>) {}
+
+  command(name: string, args: Record<string, unknown> = {}): Promise<CommandResult> {
+    if (name === ReticleCommand.QUERY) {
+      const value = asString(args['value']) ?? '';
+      const elements = this.present.has(value)
+        ? [
+            {
+              ref: asRef(`e-${value}`),
+              role: 'button',
+              name: value,
+              states: [],
+              visible: true,
+            } satisfies ElementDescriptor,
+          ]
+        : [];
+      return Promise.resolve({
+        kind: 'command_result',
+        id: 'q',
+        ok: true,
+        result: {
+          elements,
+          hint: { route: '/', presentTestids: [...this.present], knownEmptyState: false },
+        },
+      });
+    }
+    if (name === ReticleCommand.ACT) {
+      this.acts.push(asString(args['ref']) ?? '');
+      return Promise.resolve({ kind: 'command_result', id: 'a', ok: true, result: {} });
+    }
+    return Promise.resolve({ kind: 'command_result', id: 'x', ok: true, result: {} });
+  }
+
+  eventsSince(): never[] {
+    return [];
+  }
+
+  onEvent(): () => void {
+    return () => undefined;
+  }
+
+  elapsed(): number {
+    return 0;
+  }
+}
+
+/** A step that clicks `value`, optionally asserting `expectTestid` appears afterwards. */
+function sweepStep(value: string, expectTestid?: string): FlowStep {
+  const s: FlowStep = {
+    tool: ReticleTool.ACT,
+    anchor: { kind: AnchorKind.TESTID, value },
+    action: ActionType.CLICK,
+    args: {},
+  };
+  if (expectTestid !== undefined) s.expect = { element: { testid: expectTestid } };
+  return s;
+}
+
+function sweepFlow(steps: FlowStep[]): FlowFile {
+  return { version: FLOW_FILE_VERSION, name: 'f', createdAt: 0, steps };
+}
+
+const SWEEP_FAST = 60;
+
+describe('the replay loop under sweep', () => {
+  // Both steps click a control that IS present; step 0 asserts a consequence that never arrives.
+  const twoStepsFirstConsequenceFails = (): FlowFile =>
+    sweepFlow([sweepStep('confirm', 'receipt'), sweepStep('sibling')]);
+
+  it('halts at the first consequence drift by default, which is the regression answer', async () => {
+    const session = new SweepSession(new Set(['confirm', 'sibling']));
+    const results = await replayFlow(
+      session,
+      twoStepsFirstConsequenceFails(),
+      waitForPredicate,
+      SWEEP_FAST,
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.drift?.reasonKind).toBe(DriftReason.EXPECT_ELEMENT_NOT_FOUND);
+    // Step 1 was never driven.
+    expect(session.acts).toEqual(['e-confirm']);
+  });
+
+  it('continues past it under sweep, so one run reports every defect it can reach', async () => {
+    const session = new SweepSession(new Set(['confirm', 'sibling']));
+    const results = await replayFlow(
+      session,
+      twoStepsFirstConsequenceFails(),
+      waitForPredicate,
+      SWEEP_FAST,
+      false,
+      undefined,
+      { sweep: true },
+    );
+
+    // The incident: this was 1, and the other step came back as "not attempted".
+    expect(results).toHaveLength(2);
+    expect(results[0]?.drift?.reasonKind).toBe(DriftReason.EXPECT_ELEMENT_NOT_FOUND);
+    expect(results[1]?.ok).toBe(true);
+    expect(session.acts).toEqual(['e-confirm', 'e-sibling']);
+  });
+
+  it('still halts on an ANCHOR drift under sweep, rather than inventing results', async () => {
+    // The negative control, and the worse bug of the two: "confirm" is absent, so its action never
+    // fired and the page is somewhere the flow never described. Continuing would report step 1 as
+    // an observation of a state nobody predicted.
+    const session = new SweepSession(new Set(['sibling']));
+    const results = await replayFlow(
+      session,
+      sweepFlow([sweepStep('confirm'), sweepStep('sibling')]),
+      waitForPredicate,
+      SWEEP_FAST,
+      false,
+      undefined,
+      { sweep: true },
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.drift?.reasonKind).toBe(DriftReason.TESTID_NOT_FOUND);
+    expect(session.acts).toHaveLength(0);
   });
 });

@@ -17,10 +17,9 @@ const INPUT: SetupInput = {
 function world(
   over: Partial<SetupEffects> = {},
   opts: { url?: string } = {},
-): SetupEffects & { opened: string[]; driven: number } {
+): SetupEffects & { opened: string[] } {
   let clock = 0;
   const opened: string[] = [];
-  const state = { driven: 0 };
   const url = opts.url ?? 'http://localhost:5173';
   const base: SetupEffects = {
     startDevServer: () => Promise.resolve(),
@@ -39,12 +38,7 @@ function world(
     note: () => undefined,
     ...over,
   };
-  return Object.assign(base, {
-    opened,
-    get driven() {
-      return state.driven;
-    },
-  });
+  return Object.assign(base, { opened });
 }
 
 describe('the whole sequence, when everything works', () => {
@@ -62,7 +56,6 @@ describe('the whole sequence, when everything works', () => {
     const r = await runSetupPhases(INPUT, fx);
     expect(r.ok).toBe(true);
     expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
-    expect(fx.driven, 'onboarding must not drive; that is the first run').toBe(0);
     expect(r.fallback).toEqual([]);
   });
 
