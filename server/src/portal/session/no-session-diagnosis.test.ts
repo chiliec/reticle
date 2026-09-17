@@ -182,8 +182,8 @@ describe('diagnoseNoSession', () => {
 /**
  * An empty result from an eleven-port scan is not evidence of absence.
  *
- * Reported from a scripted drive of published 2.5.0: the diagnosis asserted the app was not running
- * while it was serving 200 on `:7699`. `DEV_SERVER_PORTS` is a fixed set of eleven, and it does not
+ * Reported from a scripted drive: the diagnosis asserted the app was not running while it was
+ * serving 200 on `:7699`. `DEV_SERVER_PORTS` is a fixed set of eleven, and it does not
  * contain 7699 — nor 4310 (our own bench-app), 3100 (next-smoke), 5175 (a second Vite on a machine
  * already running one), 1420 (Tauri), 4173 (`vite preview`), or anything a user passed to --port.
  *

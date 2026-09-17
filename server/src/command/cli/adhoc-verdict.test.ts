@@ -1,9 +1,8 @@
 /**
  * A verdict from the CLI, against the daemon that is already running.
  *
- * The largest single cluster in the field feedback was not a defect in any tool — it was that the
- * tools were not loaded in the client, and there was no supported way to reach a verdict from that
- * state. The app is instrumented, the daemon is healthy, `doctor` shows a live connected page, and
+ * The dead end is not a defect in any tool — it is that the tools are not loaded in the client, and
+ * there was no other supported way to reach a verdict from that state. The app is instrumented, the daemon is healthy, `doctor` shows a live connected page, and
  * the client (Codex, Cursor Cloud, Antigravity, Gemini CLI, or a Claude Code session whose MCP link
  * dropped) exposes no `reticle_*` tools, because they load only at client startup.
  *
@@ -11,7 +10,7 @@
  * install. The other CLI verdict paths need saved flows, and a first-install project has none. And
  * our own guidance says never to stop the daemon, because that kills the agent's MCP link. So an
  * agent held a live, correctly-wired app and no path to a verdict short of a human restarting their
- * editor; several reporters fell back to another tool and said so.
+ * editor.
  */
 import { describe, expect, it, vi } from 'vitest';
 import { runAdhocVerdict, type ToolCaller } from './adhoc-verdict.js';

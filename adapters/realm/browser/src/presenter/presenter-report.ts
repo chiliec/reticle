@@ -125,7 +125,7 @@ function defects(scope: ImpactScope, dashboardUrl: string | undefined): string {
    * Defaulted here as well as in the schema. Zod's default applies when a record is PARSED, and the
    * snapshot reaching this panel is pushed straight from the daemon rather than round-tripped
    * through the schema — so a record written by an older build arrives with no `defects` field at
-   * all and used to throw, taking the whole report down with it.
+   * all, and an unguarded read throws, taking the whole report down with it.
    */
   const list = (scope.defects ?? []).slice(0, IMPACT_DEFECT_LIMIT);
   if (0 === list.length) return '';
@@ -213,10 +213,10 @@ export function reportBodyHtml(
 /**
  * The one line about where this record lives, and what the next step is — if there is one.
  *
- * `dashboardUrl` alone used to gate this, which conflated two states with opposite remedies:
- * "nobody on this machine has signed in" (`reticle login`) and "signed in, but this repo is not
- * linked" (`reticle link`). Telling a signed-in user to sign in is the kind of nag that gets a
- * dev-only HUD switched off for good.
+ * NOT gated on `dashboardUrl` alone, which conflates two states with opposite remedies: "nobody on
+ * this machine has signed in" (`reticle login`) and "signed in, but this repo is not linked"
+ * (`reticle link`). Telling a signed-in user to sign in is the kind of nag that gets a dev-only HUD
+ * switched off for good.
  *
  * An ABSENT `account` is unknown, never signed-out. An older daemon sends none, and guessing there
  * would prompt a paying user on every panel they open. Silence is the only safe reading.

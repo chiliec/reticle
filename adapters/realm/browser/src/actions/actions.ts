@@ -91,8 +91,7 @@ interface ActionEffect {
    * holds. They come apart exactly when it matters: a default-checked input the app has not
    * committed, a property written earlier by something else, a control read mid-render. Then `check`
    * no-ops, the framework never hears, and every later read agrees because every later read is also
-   * reading the DOM — reported from the field as a form whose flag was unset in the database while
-   * Reticle confirmed it checked.
+   * reading the DOM: a form's flag stays unset in the database while Reticle confirms it checked.
    *
    * So this is a caveat, not a failure: the requested state is what the DOM shows, and Reticle did
    * not put it there. Assert the app's own state (a signal, a request, a derived control) rather than
@@ -163,11 +162,10 @@ interface CapturedAnchor {
  * reading the anchor post-settle would silently degrade the recorded step. We read it up front while
  * the element is still mounted.
  *
- * The component walk runs even when a testid is present. It used to be skipped, on the reasoning that
- * a testid is the better anchor and the walk is wasted work — true for anchoring, but it also threw
- * away the source pointer, which answers a different question (where is this defined?) and is the
- * most useful thing we can give an agent that has to fix the thing we just broke. Acts are
- * agent-initiated and rare, so the walk's cost is not on any hot path.
+ * The component walk runs even when a testid is present. A testid is the better ANCHOR, but skipping
+ * the walk also throws away the source pointer, which answers a different question — where is this
+ * defined? — and is the most useful thing to hand an agent that has to fix what it just broke. Acts
+ * are agent-initiated and rare, so the walk's cost is not on any hot path.
  */
 function anchorOf(el: Element): CapturedAnchor {
   const testid = el.getAttribute('data-testid') ?? undefined;
@@ -177,11 +175,11 @@ function anchorOf(el: Element): CapturedAnchor {
   const component = info?.componentStack[0];
   if (component !== undefined) out.component = component;
   if (info?.source !== undefined) out.source = info.source;
-  // Reported INDEPENDENTLY. They used to be all-or-nothing, so an element with a role and no
-  // accessible name — an icon button, a clickable div, a control labelled by an SVG — came back with
-  // no identity at all once identifyComponent (React-specific) also found nothing. Two features read
-  // this and both silently degrade without it: the flow recorder anchors a step by it, and coverage
-  // recognises a control it already drove across a re-render by it.
+  // Reported INDEPENDENTLY, never all-or-nothing: otherwise an element with a role and no accessible
+  // name — an icon button, a clickable div, a control labelled by an SVG — comes back with no identity
+  // at all once identifyComponent (React-specific) also finds nothing. Two features silently degrade
+  // without it: the flow recorder anchors a step by it, and coverage recognises a control it already
+  // drove across a re-render by it.
   //
   // A role alone is not a unique anchor, and the flow compiler still requires role AND name before it
   // will anchor a step that way. But it is real information, and reporting it beats reporting nothing.
@@ -240,8 +238,8 @@ const CLICK_LIKE = new Set<string>([
   ActionType.DBLCLICK,
   // check/uncheck activate through a real click, so they need everything a click needs: the point
   // geometry, the off-viewport scroll, the occlusion hit-test, and the component/source attribution.
-  // Their absence here is why a `check` came back with no `component` while a `click` on the same
-  // element carried one — the tell the field report noticed and could not explain.
+  // Their absence here makes a `check` come back with no `component` while a `click` on the same
+  // element carries one.
   ActionType.CHECK,
   ActionType.UNCHECK,
 ]);
@@ -261,11 +259,10 @@ function alreadyAtCheckedState(el: HTMLElement, action: string): boolean {
 /**
  * What the destructive-action guard classifies: the ELEMENT, and nothing rendered around it.
  *
- * This used to end with `form?.textContent`, so the whole enclosing form's rendered text decided the
- * verdict for every control inside it — a settings form with per-row "Remove" buttons made its own
- * Save button read as destructive, intermittently, depending on whether the rows had rendered yet.
- * The field report's workaround was `confirmDangerous: true` on every click, which deletes the guard
- * outright: a guard that fires on everything is a guard that gets switched off.
+ * NOT `form?.textContent`: the whole enclosing form's rendered text would decide the verdict for
+ * every control inside it, so a settings form with per-row "Remove" buttons reads its own Save button
+ * as destructive — intermittently, depending on whether the rows have rendered. The way past that is
+ * `confirmDangerous: true` on every click, and a guard that fires on everything gets switched off.
  *
  * The form's `action` stays — that is a URL this element submits to, i.e. a property of what this
  * click DOES, not of what happens to be on screen beside it.
@@ -515,8 +512,8 @@ async function dispatchOther(
       const moved = el.dispatchEvent(
         new MouseEvent('mousemove', { bubbles: true, cancelable: true }),
       );
-      // hover-dwell: keep "hovering" for holdMs so timer-gated reveals can mount. Same cap as
-      // click — this arg was previously unbounded here, which is the same never-returns hazard.
+      // hover-dwell: keep "hovering" for holdMs so timer-gated reveals can mount. Capped like
+      // click's: unbounded, it is the same never-returns hazard.
       const holdMs = clampHold(args['holdMs']);
       if (holdMs > 0) await sleep(holdMs);
       return !moved;
@@ -531,10 +528,9 @@ async function dispatchOther(
       // is why the synthetic pair exists at all.
       //
       // But on a FOCUSED element `el.blur()` already dispatches `blur` and a bubbling `focusout`
-      // natively. Dispatching them again meant React ran `onBlur` TWICE, and Reticle reported the
-      // resulting double write as a `duplicate-request` contradiction — a defect we invented and
-      // handed to a human as real. Reported from the field on React 19 + Vite with a single
-      // `onBlur={() => mutate(...)}`, one render site and no StrictMode.
+      // natively. Dispatching them again makes React run `onBlur` TWICE, and the resulting double
+      // write is reported as a `duplicate-request` contradiction — an invented defect handed to a
+      // human as real.
       //
       // So synthesize ONLY when nothing native will fire. Read before the call, because `blur()` is
       // what changes it — and read off the element's own ROOT: `document.activeElement` reports the
@@ -606,12 +602,11 @@ async function dispatchOther(
         const options = Array.from(el.options);
         // REFUSE an option that does not exist, before touching the element.
         //
-        // This used to assign anyway and report the resulting `valueChanged` delta as proof the
-        // option never took. That only works if nobody is listening. An unmatched value drives
-        // selectedIndex to -1, so `el.value` becomes '' — and we then dispatched `change`. Reported
-        // from a real session: the app read that empty value in its change handler and persisted it,
-        // corrupting a stored language setting. The "detectable no-op" both mutated the app into a
-        // state no user could reach AND did it through the app's own handler.
+        // Assigning anyway and reporting the resulting `valueChanged` delta as proof the option
+        // never took only works if nobody is listening. An unmatched value drives selectedIndex to
+        // -1, so `el.value` becomes '' — and `change` is then dispatched, so the app reads that empty
+        // value in its handler and persists it. The "detectable no-op" mutates the app into a state
+        // no user could reach AND does it through the app's own handler.
         //
         // Same rule as the readonly/disabled refusal: if a real user could not do it, forcing it is
         // not a test, it is damage.
@@ -763,9 +758,8 @@ async function dispatchOther(
       // handed '' to refs.resolve. A drag with NO target named is a free drag — resolve nothing.
       if ('' === toRef) return await dragElement(el, null, args['data']);
       // A target WAS named and did not resolve. That is a malformed call, not a free drag: dragging
-      // nowhere and reporting `ok: true` is a false green, and it is the one this action produced
-      // in the field — the drop target argument is undocumented, the agent guessed a name, the guess
-      // read as "no target", and the drag landed nowhere while every effect field looked healthy.
+      // nowhere and reporting `ok: true` is a false green, and a guessed target name reads as "no
+      // target" while every effect field looks healthy.
       const resolved = refs.resolve(toRef);
       if (!isHtmlElement(resolved)) {
         throw new Error(

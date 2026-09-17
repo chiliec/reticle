@@ -10,10 +10,7 @@ import { EventType } from './constants/constants.js';
  * First-come-first-dropped therefore spends the whole budget on churn and loses exactly the signal
  * the agent asked about.
  *
- * Measured on a react-admin renderer with a render loop: 11,138 events dropped in one window, and the
- * single IPC call under test was among them. The assertion came back `unknown` — honest, but blind.
- *
- * So over the cap we drop the high-volume/low-value kinds first and keep a reserve for these. The
+ * So over the cap the high-volume/low-value kinds drop first and these keep a reserve. The
  * reserve is bounded (see RATE_CAP_HIGH_VALUE_RESERVE_RATIO) — a flood of errors is still a flood,
  * and going unbounded here would just move the overload rather than shed it.
  */

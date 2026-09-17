@@ -5,11 +5,10 @@
  * and the proxy rebuilds it. It is catastrophic for a stream of them: the write that failed is
  * retried at once, fails identically, and is absorbed again, with no backoff and no exit.
  *
- * Measured in the field: one `reticle mcp` ran four days after its editor closed, at 97-98% of a
- * core, 1473 minutes of CPU time, writing ~930 MB/hour of identical `client_disconnected` lines all
- * stamped to the same millisecond. Nothing in Reticle's own output showed it — the daemon beside it
- * reported healthy with `sessions: 0` — so it was findable only by running `ps` by hand, with
- * thirteen more resident pairs from earlier sessions behind it.
+ * Unbounded, a `reticle mcp` outlives the editor that launched it by days, pinning a core and
+ * writing identical `client_disconnected` lines stamped to the same millisecond. Nothing in
+ * Reticle's own output shows it — the daemon beside it reports healthy with `sessions: 0` — so it is
+ * findable only by running `ps` by hand.
  */
 import { describe, expect, it } from 'vitest';
 import { installProxyResilience } from './daemon-resilience.js';

@@ -7,7 +7,7 @@ import { HUD_CHROME_CSS, HUD_LOG_WELL_CSS } from './chrome/presenter-hud-chrome.
 import { REPORT_CSS } from './presenter-report-styles.js';
 /**
  * All presenter overlay CSS - glow border, synthetic cursor/ring/ripple, and the floating HUD shell.
- * Split across shell-styles + controls + log modules so each file stays under the size cap.
+ * Assembled from the shell-styles, controls and log modules.
  */
 /** Re-exported so the places that already read it from here still can. See layers.ts. */
 export { Z_OVERLAY };

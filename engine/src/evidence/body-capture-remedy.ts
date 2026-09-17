@@ -13,15 +13,16 @@
  * does not check whether it applies. A wrong remedy is worse than none, because it is followed.
  */
 
-/** The release that introduced `captureNetworkBodies` — see the browser observer's history. */
+/** The earliest SDK release whose observer can capture network bodies at all. */
 export const BODY_CAPTURE_MIN_VERSION = '2.4.0';
 
 /**
  * Compare two dotted versions numerically.
  *
- * String comparison inverts exactly where it hurts: `'2.10.0' < '2.4.0'` lexically, so a NEWER SDK
- * would be told it is too old and the working remedy withheld. A prerelease suffix is dropped rather
- * than parsed — `2.13.0-rc.1` is 2.13 for this question, and nothing here needs finer.
+ * String comparison inverts exactly where it hurts: a two-digit minor sorts BEFORE a one-digit one
+ * as text, so a NEWER SDK would be told it is too old and the working remedy withheld. A prerelease
+ * suffix is dropped rather than parsed — an `-rc` build counts as its own minor, and nothing here
+ * needs finer.
  */
 function isAtLeast(version: string, minimum: string): boolean {
   const parts = (v: string): number[] =>

@@ -36,38 +36,12 @@ import { findContradictions } from '@reticlehq/engine/disagreement/contradiction
 import type { Session } from '@/portal/session/session.js';
 
 /**
- * Reticle's own realms, said in the protocol's words.
+ * An adapter from `Session` to the protocol's `Realm`.
  *
- * We wrote a specification with an abstract class at the middle of it and then did not extend it
- * anywhere. The two realms this product actually ships -- a browser document and a desktop
- * webview -- predate `Realm` and are built around a wire rather than around a class, so they
- * conformed to the vocabulary and not to the interface. An author who publishes an interface and
- * implements it nowhere has published a suggestion.
- *
- * This closes that. It is an ADAPTER, not a rewrite: every method delegates to the session that
- * already knows the answer, and nothing about the wire, the SDK or the daemon changes. What it
- * buys is not new behaviour, it is a second opinion -- writing the eight answers down in the
- * protocol's shape is what makes it possible to notice that one of them was never being asked.
- *
- * ── WHAT WRITING IT ESTABLISHED ─────────────────────────────────────────────────────────────────
- *
- * **A "realm" here is a PAIR, not a page.** The protocol's realm answers eight questions; this
- * codebase answers half of them in the browser and half in the daemon, across a socket. The class
- * has to live on the side that can see both, which is the daemon -- the SDK alone can never
- * implement this interface, because it cannot photograph itself and does not know its own
- * document id until the daemon assigns one. That is worth knowing before somebody tries to make
- * the SDK extend it.
- *
- * **Desktop is the same realm with a different camera.** Electron and Tauri run this same SDK in
- * their renderer, so identity, channels, actions and observations are byte-identical to the web.
- * The only divergence is who owns the pixels — one method, which is why this is one class rather
- * than three subclasses.
- *
- * The surface used to arrive as a PARAMETER, on the same reasoning. It is derived now, because
- * a parameter is a place to be wrong: every caller in the repository passed `'web'`, the session
- * had known its runtime the whole time, and `desktop` had therefore never once been the surface
- * of anything. A field a caller must remember to set correctly, which nothing checks, and which
- * every caller sets the same way, is not a parameter — it is a constant with a way to lie.
+ * A realm is a PAIR — half the answers live in the browser, half in the daemon — so it must live
+ * daemon-side; the SDK can never implement this interface, because it cannot photograph itself.
+ * Electron and Tauri run the same SDK and differ only in who owns the pixels, which is why this is
+ * one class and not three.
  */
 
 /**
@@ -173,15 +147,6 @@ const PAGE_CAPABILITIES: readonly Capability[] = [
   },
 ];
 
-/**
- * Which protocol channel each observed event belongs to.
- *
- * `Record` over the event vocabulary would be better and is not available here without importing
- * the whole enum, so this reads the event's own prefix -- the convention every event name in this
- * codebase already follows (`net.request`, `dom.added`, `state.change`). An event whose prefix is
- * unrecognised is reported on no channel rather than guessed onto one, because a guess here is an
- * observation attributed to a source that did not produce it.
- */
 /** Why an action's settle wait ended, when the page said. */
 function readSettleReason(result: unknown): string | undefined {
   if ('object' !== typeof result || null === result) return undefined;
@@ -203,13 +168,20 @@ function readUrl(data: unknown): string | undefined {
   return 'string' === typeof url ? url : undefined;
 }
 
+/**
+ * Which protocol channel each observed event belongs to.
+ *
+ * `Record` over the event vocabulary would be better and is not available here without importing
+ * the whole enum, so this reads the event's own prefix -- the convention every event name in this
+ * codebase already follows (`net.request`, `dom.added`, `state.change`). An event whose prefix is
+ * unrecognised is reported on no channel rather than guessed onto one, because a guess here is an
+ * observation attributed to a source that did not produce it.
+ */
 export const CHANNEL_OF_PREFIX: Readonly<Record<string, ProtocolChannel>> = {
   net: ProtocolChannel.NET,
   // Screen facts. Each is unambiguously "what is on the subject's surface", which is what the
-  // protocol's `ui` channel means, and each was being dropped as an unrecognised prefix -- so
-  // an animation, a dialog or a reveal was recorded by the SDK and never reached the
-  // adjudicator at all. The refusal to guess was right; the list of things that need no
-  // guessing was short.
+  // protocol's `ui` channel means; a prefix missing from this map reaches the adjudicator on no
+  // channel at all.
   anim: ProtocolChannel.UI,
   dialog: ProtocolChannel.UI,
   focus: ProtocolChannel.UI,
@@ -289,6 +261,23 @@ const MUTATING_COMMANDS: ReadonlySet<string> = new Set(
 );
 
 /**
+ * Findings the specification models as COVERAGE rather than as anomalies.
+ *
+ * Both describe a gap in what was observed, not a fault in the application, and the protocol
+ * gives each a `BlindSpotKind`: `consequence-elsewhere` is `effect-elsewhere`, and
+ * `request-never-settled` is `still-in-flight`. `coverage()` already emits the latter, so filing
+ * it here as well reports one gap twice.
+ *
+ * The verdict is unchanged either way, because both are absence-derived and both routes downgrade
+ * to `unknown`. The PLANE is what matters: the specification separates "I could not see" from
+ * "something is wrong" precisely so that an unsettled request cannot read as a fault.
+ */
+const REPORTED_AS_COVERAGE: ReadonlySet<string> = new Set<string>([
+  ContradictionKind.CONSEQUENCE_ELSEWHERE,
+  ContradictionKind.REQUEST_NEVER_SETTLED,
+]);
+
+/**
  * Reticle's contradiction kinds, in the protocol's vocabulary.
  *
  * `Record` would be wrong here: ours is deliberately the larger list, and a kind with no
@@ -296,26 +285,6 @@ const MUTATING_COMMANDS: ReadonlySet<string> = new Set(
  * listed one. Filing an anomaly under the wrong kind is worse than filing it under an
  * unfamiliar name, because the wrong kind is believed.
  */
-/**
- * Findings the specification models as COVERAGE rather than as anomalies.
- *
- * Both describe a gap in what was observed, not a fault in the application, and the protocol
- * gives each a `BlindSpotKind`: `consequence-elsewhere` is `effect-elsewhere`, and
- * `request-never-settled` is `still-in-flight`. Reporting them as anomalies put them in the
- * wrong plane -- and `request-never-settled` was reported TWICE, once here and once as the
- * blind spot `coverage()` already emits.
- *
- * The verdict is unchanged either way, because both were absence-derived and both routes
- * downgrade to `unknown`. The plane is what matters: the specification separates "I could not
- * see" from "something is wrong" precisely so that an unsettled request cannot read as a fault,
- * and an implementation that files it under anomalies has agreed with the words and not the
- * shape.
- */
-const REPORTED_AS_COVERAGE: ReadonlySet<string> = new Set<string>([
-  ContradictionKind.CONSEQUENCE_ELSEWHERE,
-  ContradictionKind.REQUEST_NEVER_SETTLED,
-]);
-
 const PROTOCOL_ANOMALY: Readonly<Record<string, string>> = {
   [ContradictionKind.UI_ADVANCED_REQUEST_FAILED]: AnomalyKind.ADVANCED_OVER_FAILURE,
   [ContradictionKind.SIGNAL_CONTRADICTED]: AnomalyKind.CLAIMED_OVER_FAILURE,
@@ -367,18 +336,6 @@ export class WebRealm extends Realm {
   #settleThrottled = false;
 
   /**
-   * Saved state, and putting it back — assigned in the constructor rather than declared as methods.
-   *
-   * That is the difference between offering a capability and having one. A realm must not OFFER a
-   * fixture it cannot honour: claiming one you cannot restore produces flows that pass because the
-   * PREVIOUS flow happened to leave the right state behind, which is a suite that only works in the
-   * order it was written — worse than running every flow from cold, which is merely slower.
-   *
-   * A declared method is always present, so a realm with no port would answer "yes I do fixtures"
-   * and then throw. `applyFixture === undefined` is how an optional member says *not offered*, and
-   * these are therefore fields that exist only when something can back them.
-   */
-  /**
    * Break the subject, when something can — and be ABSENT when nothing can.
    *
    * The same structural honesty the fixture methods carry: a declared method is always present, so
@@ -388,6 +345,13 @@ export class WebRealm extends Realm {
    */
   override readonly mutate?: (mutation: { kind: string; target?: string }) => Promise<Reversal>;
 
+  /**
+   * Saved state, and putting it back — assigned in the constructor rather than declared as methods,
+   * for the same reason `mutate` is. A realm must not OFFER a fixture it cannot honour: claiming one
+   * you cannot restore produces flows that pass because the PREVIOUS flow left the right state
+   * behind, which is a suite that only works in the order it was written. `applyFixture ===
+   * undefined` is how an optional member says *not offered*.
+   */
   override readonly captureFixture?: () => Promise<FixtureRef>;
   override readonly applyFixture?: (ref: FixtureRef) => Promise<void>;
 

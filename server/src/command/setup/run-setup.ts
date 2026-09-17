@@ -5,12 +5,9 @@
  * connected. That is where ONBOARDING ends — the first run, which proves a flow, is a separate
  * stage and a separate command.
  *
- * This used to drive a flow too, by spawning a second agent CLI. Measured against an agent doing
- * the steps by hand from SKILL.md across five real applications, that was worth it at the time:
- * 176 model turns, $9.92, forty minutes, and a verdict in two runs out of five — three ended by
- * asking a human to restart their client, having shown them nothing. What replaced it is better on
- * both counts: `reticle_verify { action: "explore" }` drives with a model inside the daemon that
- * already holds the tools, so no restart is needed and no second CLI has to exist on the machine.
+ * It does NOT drive a flow. `reticle_verify { action: "explore" }` does that, with a model inside
+ * the daemon that already holds the tools — so no client restart is needed and no second CLI has to
+ * exist on the machine.
  *
  * Every effect is injected. That is not ceremony: the sequence has five phases, each with its own
  * way of going wrong, and the alternative to injecting them is a test that boots a real dev server
@@ -365,13 +362,6 @@ export async function runSetupPhases(input: SetupInput, fx: SetupEffects): Promi
   // session is the whole proof that onboarding worked: the SDK is in the page, the bridge paired,
   // and the tools now have something to talk to.
   //
-  // It used to spawn a SECOND agent CLI here to drive a flow, and report the entire install as
-  // unfinished when that failed. Two things were wrong with that. It could not work on Windows at
-  // all — npm installs those CLIs as `.cmd` shims, which Node refuses to spawn without a shell —
-  // so a run whose wiring had succeeded completely still printed "setup did not finish". And it
-  // duplicated a mechanism that is now better done in the daemon: `reticle_verify { action:
-  // "explore" }` drives with a model that already holds the tools, and RECORDS what it drove, so
-  // every later run replays with no model in the loop.
   // `<url>` stays a placeholder in this string on purpose: `guidance-commands-run` feeds every
   // command we print to the real parser, and an interpolated value reads there as a missing operand.
   // The live url is named in the sentence instead, where a reader needs it anyway.

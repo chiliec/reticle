@@ -63,9 +63,9 @@ export interface QuerySnapshot {
  */
 export function tanstackQueryStore(client: QueryClientLike): StoreLike {
   // Resolved per call, not captured once. A QueryClient can be rebuilt — React Strict Mode double
-  // effects, a provider remount, HMR — and an adapter holding the old cache would keep answering
-  // from a store the app no longer reads, which is a stale-data bug inside the tool whose job is
-  // catching stale data.
+  // effects, a provider remount, HMR — and an adapter holding a stale cache would keep answering from
+  // a store the app no longer reads, which is a stale-data bug inside the tool whose job is catching
+  // stale data.
   const store: StoreLike = {
     getState: (): Record<string, QuerySnapshot> => {
       const out: Record<string, QuerySnapshot> = {};

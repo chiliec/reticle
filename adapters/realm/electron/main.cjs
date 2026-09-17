@@ -10,9 +10,9 @@
  *
  * Why the main process: `webContents.capturePage()` reads the window's own BACKING STORE. That makes
  * it correct while the window is behind your editor, correct while it is backgrounded, and free of
- * any screen-recording permission. Capturing a screen region instead was tried and rejected — it
- * photographs whatever is on top, which would quietly save a picture of your editor as a visual
- * baseline. Renderer-side capture is not an option either: the renderer has no access to the pixels.
+ * any screen-recording permission. NOT a screen-region capture, which photographs whatever is on top
+ * and would quietly save a picture of your editor as a visual baseline. Renderer-side capture is not
+ * an option either: the renderer has no access to the pixels.
  *
  * Dev-only, like the rest of Reticle. Gate the require behind your dev check so it never ships.
  */
@@ -58,7 +58,7 @@ function usableContents(sender) {
  *
  * The daemon unlinks a capture after reading it, but only if it ever reads: a session that died, a
  * command that timed out, or a path the daemon rejected all leave a ~300KB PNG in the temp directory
- * forever. Sweeping our own prefix on each capture bounds that to one file at a time, and the daemon
+ * forever. Sweeping Reticle's own prefix on each capture bounds that to one file at a time, and the daemon
  * removes this empty private directory in its existing shutdown path. Best-effort — a failed sweep
  * must never fail a capture.
  *
@@ -129,9 +129,8 @@ function installReticleCapture(win) {
       // Saying so beats handing back a viewport the caller thinks covers the whole scroll height.
       if (options && options.fullPage === true) throw new Error(RETICLE_FULL_PAGE_UNSUPPORTED);
       const contents = usableContents(event.sender);
-      // Named, not null. Every no-image answer used to be the same bare null, so a dead window, an
-      // uncomposited one and a thrown error were one silence — the tool reported `saved:false` with
-      // no bytes and no reason, which is unreadable in CI and useless to a user.
+      // Named, not null. A bare null makes a dead window, an uncomposited one and a thrown error one
+      // silence — `saved:false` with no bytes and no reason, unreadable in CI and useless to a user.
       if (contents === null) throw new Error('no usable webContents to capture');
       try {
         const image = await contents.capturePage();
@@ -156,7 +155,7 @@ function installReticleCapture(win) {
         // getting a symlink here, so this is the second lock on the same door — and the one that
         // still holds if a later change moves this write back out into the shared temp dir. The
         // sequence only ever climbs within a fresh per-process directory, so it never collides
-        // with a capture of our own.
+        // with a capture of Reticle's own.
         await writeFile(file, image.toPNG(), { flag: 'wx' });
         await sweepOldCaptures(dir, file);
         return file;

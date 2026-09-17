@@ -4,8 +4,8 @@
  * The rule was "exactly one .astro file in src/layouts/". Measured on two real projects:
  *   - one has NO src/layouts/ at all and renders from src/pages/index.astro;
  *   - the other has THREE (Layout, Header, Footer) — two of which are partials, not layouts.
- * Both fell back to a printed recipe, nothing was wired, and no session ever connected. This was
- * 2.4.1's headline install feature, dead on 100% of the apps it was written for.
+ * Both fell back to a printed recipe, nothing was wired, and no session ever connected — a headline
+ * install feature, dead on every app it was written for.
  *
  * A file COUNT cannot tell a layout from a partial, and a directory NAME cannot tell you where the
  * document shell lives. `</body>` can: the file that closes the document body is the one every page

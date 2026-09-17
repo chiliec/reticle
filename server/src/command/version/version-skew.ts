@@ -4,8 +4,7 @@
  * Reticle is three separately-installed pieces — the SDK in the page, this daemon, and the MCP
  * server the agent spawns — upgraded independently and therefore drifting constantly. Each pair
  * fails the same silent way: `protocolVersion` still matches, the connection succeeds, and only
- * BEHAVIOUR disagrees. A user hit exactly that with a 2.2.1 SDK against a 2.3.0 daemon and saw a
- * bare `-32000` with nothing on either side naming a version.
+ * BEHAVIOUR disagrees — a bare `-32000`, with nothing on either side naming a version.
  *
  * Two decisions shape this file.
  *
@@ -16,8 +15,8 @@
  * which one is behind.
  *
  * The signal is the CONTRACT FINGERPRINT, not the version. Version equality is wrong in both
- * directions: it fires on 2.4.0-vs-2.4.1 where nothing changed — so every patch release makes every
- * un-upgraded app cry wolf, and the warning becomes noise — and it cannot fire at all for two
+ * directions: it fires on a patch release where nothing on the wire changed — so every release
+ * makes every un-upgraded app cry wolf, and the warning becomes noise — and it cannot fire at all for two
  * different BUILDS of one version number, which is exactly what a stale daemon and a cached npx
  * install are. The fingerprint is derived from core's wire vocabulary, so it moves when a name on
  * the wire changes and stays put when internals do. Versions still ride along, because they are what
@@ -47,8 +46,8 @@ export interface PeerIdentity {
    * The vocabulary this peer actually speaks, when it says so.
    *
    * Present, this is compared name by name: a peer declaring a subset is compatible. Absent, the
-   * fingerprint is all there is and the comparison stays what it always was -- which is what every
-   * SDK in the field relies on.
+   * fingerprint is all there is and the comparison stays a fingerprint match, which is what an
+   * SDK that predates `contractParts` relies on.
    */
   contractParts?: ContractParts | undefined;
   /** What the human runs to bring this piece into line. */

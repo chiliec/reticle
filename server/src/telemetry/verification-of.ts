@@ -1,16 +1,14 @@
 /**
  * Which tool results count as a completed verification, as one pure rule.
  *
- * It used to live inline in `runTool` and read `status === 'pass'`, mapping everything else to
- * "no verdict". That was wrong in both directions at once, and the shape of the error is visible in
- * the production data:
+ * A verdict is not `status === 'pass'`. That reading is wrong in both directions at once:
  *
- *   - a FAILING suite emitted nothing, so `verification_completed` only ever fired on greens while
- *     `bugsInResult` fired on the reds — bugs with no verifications to divide them by;
- *   - an EMPTY suite ("all 0 flows pass") emitted `verified: yes, passed: true`.
+ *   - a FAILING suite emits nothing, so `verification_completed` fires only on greens while
+ *     `bugsInResult` fires on the reds — bugs with no verifications to divide them by;
+ *   - an EMPTY suite ("all 0 flows pass") emits `verified: yes, passed: true`.
  *
- * Kept in one place because a rule this easy to get wrong should
- * be readable and testable on its own rather than inferred from a ternary inside a dispatcher.
+ * Kept in one place, out of `runTool`, because a rule this easy to get wrong should be readable and
+ * testable on its own rather than inferred from a ternary inside a dispatcher.
  */
 import { type BrowserBrand, CaptureLoss, type Verification, VerifiedReason } from '@reticlehq/core';
 import { VERDICT_TOOLS } from '@/surface/tools/feedback-tools.js';

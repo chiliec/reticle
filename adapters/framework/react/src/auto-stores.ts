@@ -1,13 +1,9 @@
 /**
  * Find the app's state stores WITHOUT the app registering them.
  *
- * `registerStore` is the highest-value line in a Reticle install and the one most likely never to be
- * written: `init` can only offer a commented suggestion, because the argument it would need
- * (which client, which store instance) is knowable only by reading the source. Measured on real
- * apps, that suggestion mostly stays a comment — the install reports every step green,
- * `hasCapabilities` stays false, and `reticle_state` is empty forever. The agent doing the install
- * then spends a handful of turns being told to go finish the file, which is most of what makes
- * onboarding long.
+ * `init` can only offer a commented `registerStore` suggestion, because the argument it would need
+ * (which client, which store instance) is knowable only by reading the source. While that suggestion
+ * stays a comment, `hasCapabilities` is false and `reticle_state` is empty.
  *
  * The observation that removes the whole step: every context-based state library already hands its
  * store to React as a prop. `<Provider store>` renders `ReactReduxContext.Provider value={{store}}`,
@@ -17,8 +13,7 @@
  * WHAT THIS CANNOT FIND, deliberately: module-scope stores (Zustand, Valtio, MobX singletons, Jotai
  * atoms). They are never passed through a provider, so nothing in the tree points at them and only
  * the app can hand them over. Those still need `registerStore`, and the capability report must keep
- * saying so — an auto-discovery that quietly covered 60% of apps while reading as though it covered
- * all of them would be a worse failure than the manual step it replaced.
+ * saying so.
  *
  * A store the app registered itself ALWAYS wins. This never overwrites a name that is already taken.
  */

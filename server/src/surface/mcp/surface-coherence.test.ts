@@ -29,10 +29,8 @@ import { REPO_ROOT } from '@/machine/repo-root.js';
  * LIVE DEFAULT SURFACE rather than restated here, because a hand-maintained copy of the surface is
  * the same defect one level up.
  *
- * It used to read `CORE_TOOL_NAMES`, and that stopped being the default the day the nine-tool
- * surface became it. The distinction is the whole point of this file: `CORE_TOOL_NAMES` is the
- * nineteen-tool table, and a reader handed the nine would have been judged against a product they
- * were not given — which is the failure recorded further down, where drive calls fell 96 to 2.
+ * `CORE_TOOL_NAMES` is NOT the answer: it is the nineteen-tool table, and a reader handed a trimmed
+ * surface would be judged against a product it was not given — the failure recorded further down.
  * `resolveToolSurface()` answers what a daemon started today actually serves.
  */
 const REPO = REPO_ROOT;

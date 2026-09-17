@@ -39,14 +39,13 @@ export const REPORT_TEXT = {
   /**
    * What `counts.failed` actually is: a verdict whose declared consequence did not hold.
    *
-   * It used to read "defects caught before you saw them", which overclaims in the one direction a
-   * verification tool must never overclaim. A failed verdict is not proof of a defect in the app —
-   * it is equally the shape of an assertion that was wrong. Measured in the field: an agent
-   * asserted a clean console on an app with ordinary dev-mode logging, the verdict went red, and
-   * the panel reported a defect nobody had found.
+   * NOT "defects caught before you saw them", which overclaims in the one direction a verification
+   * tool must never overclaim: a failed verdict is not proof of a defect in the app, it is equally
+   * the shape of an assertion that was wrong — a clean-console assertion against ordinary dev-mode
+   * logging goes red and reports a defect nobody found.
    *
    * The honest word is what Reticle DID: it refused to pass them. That is true of the assertion
-   * error and the real bug alike, and it still reads as the tool having done its job.
+   * error and the real bug alike.
    */
   HERO_DEFECTS: 'checks Reticle refused to pass',
   VERDICTS: 'Verdicts',

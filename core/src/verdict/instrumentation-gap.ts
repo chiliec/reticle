@@ -5,20 +5,14 @@
  * verdict rather than passing it. That is a safety property and it is why a green verdict here means
  * something. What it has never answered is the other half: **what would I need in order to see it?**
  *
- * The difference matters because of who is driving. The decision-maker is an agent, and an agent
- * cannot be relied on to remember to instrument an app — nobody can. But an agent WILL act on a cost
- * it is paying right now, if it is handed the file, the line, and the change. So an absence in the
- * app stops being a silent weakness in the verdict and becomes a piece of work, at the moment the
- * agent is trying to finish.
+ * An agent will act on a cost it is paying right now if it is handed the file, the line and the
+ * change — so an absence in the app becomes a piece of work rather than a silent weakness in the
+ * verdict.
  *
- * ## The rule that keeps this from becoming noise
- *
- * A gap is reported ONLY when a verdict came back weaker than it would otherwise have been, BECAUSE
- * of an absence in the app. Never as a survey of everything uninstrumented on the page.
- *
- * A gap nobody hit is a backlog, not a finding, and this product does not need another surface
- * producing findings nobody reads. The test for whether a gap belongs here is: *did this absence
- * change the answer the agent just got?* If not, it does not fire.
+ * THE RULE THAT KEEPS IT FROM BECOMING NOISE: a gap is reported ONLY when a verdict came back weaker
+ * than it would otherwise have been, BECAUSE of an absence in the app. Never as a survey of
+ * everything uninstrumented on the page. The test is *did this absence change the answer the agent
+ * just got?* — if not, it does not fire.
  */
 
 /**

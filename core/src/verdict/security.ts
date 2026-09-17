@@ -1,40 +1,31 @@
 /**
  * Labels that can trigger an irreversible or money-moving effect.
  *
- * `send` used to be a bare token here, to cover moving money, and it taxed every ordinary button
- * that sends something: reported from the field on `Send check-in` (a POST that logs a text
- * message) and alongside it `Send message`, `Send invite`, `Send feedback`. A false block costs a
- * round-trip and, repeated, trains an agent to pass confirmDangerous reflexively — which is the one
- * outcome that makes this guard worthless.
+ * `send` is deliberately NOT a bare token here. It taxes every ordinary button that sends
+ * something — `Send message`, `Send invite`, `Send feedback`, `Send check-in` — and a false block
+ * costs a round-trip and, repeated, trains an agent to pass confirmDangerous reflexively, which is
+ * the one outcome that makes this guard worthless.
  *
  * The money cases are still covered, through the thing being SENT rather than the act of sending:
  * `payment` catches "Send payment" and "Confirm payment" (which the bare-verb list missed entirely,
  * because `\bpay\b` does not match "payment"), and `send money`/`send funds` catch the rest.
  *
- * `logout` / `log out` / `sign out` were here and are not. Signing out is reversible, and the
- * words fire on almost every authenticated drive — a `Log out` menuitem was blocked on every
- * session. Same cost as `send`: a guard that fires on routine controls trains agents to pass
- * `confirmDangerous` reflexively.
+ * `logout` / `log out` / `sign out` are deliberately absent for the same reason: signing out is
+ * reversible, and the words fire on almost every authenticated drive.
  *
  * The guard stays deliberately asymmetric — a false block costs one round-trip, a missed block can
- * charge somebody's card — so this narrows the trigger without lowering money coverage. Both
- * directions are pinned in security.test.ts.
+ * charge somebody's card — so the trigger narrows without lowering money coverage. Both directions
+ * are pinned in security.test.ts.
  */
 /**
  * Labels that read as irreversible: something is destroyed, or money moves.
  *
- * `deploy` and `publish` were here and are not. The guard's contract — written at the top of
+ * `deploy` and `publish` are deliberately absent. The guard's contract — written at the top of
  * act-danger.ts — is "a money-moving or destructive control", and a deploy is neither: nothing is
- * destroyed, nothing is paid, and the thing it produces did not exist before. Consequential is a
+ * destroyed, nothing is paid, and the thing it produces did not exist before. CONSEQUENTIAL is a
  * wider net than this list is allowed to be, or half the buttons in a dev tool sit behind a
- * permission flag.
- *
- * Removed on measurement, not taste. Three benchmark runs against an app with a "New deploy" button
- * lost their ENTIRE turn budget to the refusal. Improving its wording did not rescue the last one:
- * the agent spent its remaining turns weighing a bug report about the block and looking for a
- * webmcp workaround. A guard that costs a whole run on a control it was never written to catch is
- * not protecting anybody — it is training agents to route around it, which is worse than not having
- * it, because the routing-around generalises to the buttons that DO matter.
+ * permission flag — and a guard that fires on a control it was never written to catch trains agents
+ * to route around it, which generalises to the buttons that DO matter.
  */
 const DANGEROUS_ACTION =
   /\b(delete|remove|destroy|erase|drop|terminate|revoke|reset|close account|cancel subscription|purchase|buy|pay|payment|place order|confirm order|send money|send funds|transfer|withdraw|refund)\b/i;

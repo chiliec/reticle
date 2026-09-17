@@ -42,9 +42,9 @@ export const RETICLE_PROTOCOL_VERSION = 1;
 /**
  * The oldest protocol version this build still talks to.
  *
- * A range rather than a single number, because the door used to be exact: a peer one version out was
- * refused outright. That is correct when both sides ship together and wrong the moment anything else
- * implements this -- an SDK a user has not upgraded yet is not an incompatible SDK.
+ * A range rather than a single number. An exact door refuses a peer one version out, which is
+ * correct when both sides ship together and wrong the moment anything else implements this -- an
+ * SDK a user has not upgraded yet is not an incompatible SDK.
  *
  * Equal to the current version today, so nothing changes yet. It exists so that raising the current
  * version is a decision about what to keep supporting, rather than an automatic break.
@@ -198,25 +198,17 @@ export const TRANSPORT_LIMITS = {
   /**
    * Inbound events per second before the bridge SAMPLES rather than records everything.
    *
-   * This was 1000, and an ordinary React app with an active query cache blew through it: the
-   * reporter's FIRST `act_and_wait` of the session came back `unknown` with `unclean_capture` and a
-   * four-figure drop count, and setting the env override to twenty times the default fixed it (#316).
-   * Reticle was right to refuse the verdict — a sampled window cannot support one, and the guard that
-   * catches false greens is blindest exactly there — but landing that on the first drive after an
-   * install, recoverable only by knowing an environment variable exists and inventing a number for
-   * it, is the worst possible place to spend the honesty.
+   * The cap exists to stop a PATHOLOGICAL page (an animation loop firing DOM mutations every frame),
+   * not to throttle a busy one: an ordinary React app with an active query cache passes 1000/s, and a
+   * sampled window cannot support a verdict, so too low a cap answers `unknown` with
+   * `unclean_capture` on the first `act_and_wait` after an install (#316).
    *
-   * 20000 is the value that was measured to work on the page that reported it. The cap exists to stop
-   * a PATHOLOGICAL page (an animation loop firing DOM mutations every frame), not to throttle a busy
-   * one, and the ceiling it has to defend is cheap: the daemon is on the same machine and a typical
-   * event is a few hundred bytes, so this is single-digit MB/s over loopback.
-   *
-   * Raising it does not raise what a runaway page can make the bridge HOLD, and that separation is
-   * what makes the change safe. Memory is bounded independently by the ring buffer, which evicts on
-   * `RING_BUFFER_DEFAULTS.MAX_BYTES` (this same constant, reached through that alias) as well as on
-   * a count and an age. Grep for `MAX_BUFFER_BYTES` alone and it looks like a constant nobody reads,
-   * which is exactly the wrong conclusion to draw before touching this number: the rate cap defends
-   * parse cost, the ring buffer defends memory, and they are not substitutes.
+   * The ceiling it defends is cheap — the daemon is on the same machine and a typical event is a few
+   * hundred bytes, so 20000/s is single-digit MB/s over loopback. Raising it does not raise what a
+   * runaway page can make the bridge HOLD: memory is bounded independently by the ring buffer, which
+   * evicts on `RING_BUFFER_DEFAULTS.MAX_BYTES` (this same constant through that alias) as well as on
+   * a count and an age. The rate cap defends parse cost, the ring buffer defends memory, and they are
+   * not substitutes.
    */
   MAX_MESSAGES_PER_SECOND: 20000,
   MAX_SESSIONS: 32,
@@ -239,7 +231,7 @@ export const TRANSPORT_LIMITS = {
    * daemon fails — so the e2e battery is what caught it.
    *
    * 128 leaves the vocabularies room to roughly triple. A cap here is still worth having: this
-   * arrives on an unauthenticated HELLO, so it is an untrusted list whose size we choose.
+   * arrives on an unauthenticated HELLO, so it is an untrusted list and the bound is chosen here.
    */
   MAX_CONTRACT_NAMES: 128,
   MAX_ADAPTER_NAME_LENGTH: 128,
@@ -289,8 +281,8 @@ export const ReticleDir = {
   /**
    * the user's own record of what Reticle has done for them — .reticle/impact.json.
    *
-   * Local only, never uploaded, and deliberately NOT part of telemetry: telemetry answers our
-   * questions about the product; this answers the user's question about their own work.
+   * Local only, never uploaded, and deliberately NOT part of telemetry: telemetry answers questions
+   * about the product; this answers the user's question about their own work.
    */
   IMPACT_FILE: 'impact.json',
   /** what changes were SUPPOSED to make true —.reticle/intent.json (git-checked, reviewed) */
@@ -426,13 +418,7 @@ export const ContractReadError = {
 } as const;
 export type ContractReadError = (typeof ContractReadError)[keyof typeof ContractReadError];
 
-// The on-disk artifact constants used to be re-exported from here, which was the whole of
-// `wire -> artifacts`: one convenience line, no symbol in this file using any of them. A barrel
-// is not a dependency, and putting one in a leaf module made the wire contract and the on-disk
-// artifacts need each other -- the shape that stops either being read or moved alone. The
-// re-export now lives in `index.ts`, which is the barrel, so the public surface is unchanged.
-
-/** Bounds for the per-session ring buffer (see plan/02-architecture.md). */
+/** Bounds for the per-session ring buffer. */
 export const RING_BUFFER_DEFAULTS = {
   MAX_EVENTS: 2000,
   MAX_AGE_MS: 60_000,
@@ -684,7 +670,7 @@ export type DriveErrorCode = (typeof DriveErrorCode)[keyof typeof DriveErrorCode
 export const DRIVE_PLAYWRIGHT_MISSING_MSG =
   "reticle drive needs the optional 'playwright' package — install it: pnpm add -D playwright && npx playwright install chromium";
 
-/** Actions the executor can perform against a ref (plan/03 + plan/05). */
+/** Actions the executor can perform against a ref. */
 /**
  * The console levels an agent can filter by, DERIVED from the console EventTypes rather than
  * retyped. `reticle_console { level }` matches by building `console.${level}`, so any list written
@@ -779,7 +765,7 @@ export interface ComponentStateResult {
   truncation?: { droppedItems: number; note: string };
 }
 
-/** Element states the assertion engine can check (plan/06). */
+/** Element states the assertion engine can check. */
 export const ElementState = {
   VISIBLE: 'visible',
   HIDDEN: 'hidden',
@@ -800,7 +786,7 @@ export const ElementState = {
 } as const;
 export type ElementState = (typeof ElementState)[keyof typeof ElementState];
 
-/** Query strategies, aligned with Testing Library semantics (plan/04). */
+/** Query strategies, aligned with Testing Library semantics. */
 export const QueryBy = {
   ROLE: 'role',
   TEXT: 'text',
@@ -841,7 +827,7 @@ export const ReticleCommand = {
   /**
    * Bridge -> browser: the user's own impact record, so the HUD can show what Reticle has done for
    * them without the page asking for it. `args: { snapshot: ImpactSnapshot }`. Local data on a
-   * local socket - it is the same file the report is stored in, not a fetch to us.
+   * local socket - it is the same file the report is stored in, not a network fetch.
    */
   IMPACT: 'impact',
   /**
@@ -874,7 +860,7 @@ export const PresenterMode = {
 } as const;
 export type PresenterMode = (typeof PresenterMode)[keyof typeof PresenterMode];
 
-/** Snapshot rendering modes (plan/04). */
+/** Snapshot rendering modes. */
 export const SnapshotMode = {
   FULL: 'full',
   INTERACTIVE: 'interactive',

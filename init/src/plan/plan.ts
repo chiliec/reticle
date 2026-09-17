@@ -67,11 +67,11 @@ export { RETICLE_CONFIG_FILE };
 /**
  * Pin the SDK to the CLI's own version.
  *
- * `pnpm add -D @reticlehq/react` installed **2.2.1** in one project while npm and yarn took 2.3.0 in
- * the next — a stale registry metadata cache, invisible to the user and to us. A version-skewed SDK
- * talking to a newer daemon is the `-32000` failure path: the app connects, the protocol disagrees,
- * and nothing on either side names a version. Asking for the CLI's exact version makes the cache
- * irrelevant, and a skewed pair impossible to install by accident.
+ * `pnpm add -D @reticlehq/react` once installed an older release in one project while npm and yarn
+ * took the current one in the next — a stale registry metadata cache, invisible to everyone. A
+ * version-skewed SDK talking to a newer daemon is the `-32000` failure path: the app connects, the
+ * protocol disagrees, and nothing on either side names a version. Asking for the CLI's exact version
+ * makes the cache irrelevant, and a skewed pair impossible to install by accident.
  */
 function pinnedPackages(
   packages: readonly string[],
@@ -503,8 +503,8 @@ function agentRuleSteps(input: PlanInput): Step[] {
  *
  * pnpm's `minimumReleaseAge` refuses any release younger than the configured window — a deliberate
  * supply-chain policy, not a bug — with `ERR_PNPM_NO_MATURE_MATCHING_VERSION`. Unpinned it silently
- * resolves to an OLDER version instead, which is how an app ends up running a 2.2.1 SDK against a
- * 2.3.0 daemon: the connection succeeds, the protocol disagrees, and the failure surfaces as -32000
+ * resolves to an OLDER version instead, which is how an app ends up running a stale SDK against a
+ * newer daemon: the connection succeeds, the protocol disagrees, and the failure surfaces as -32000
  * with nothing naming a version. Pinning turns that into this loud failure, which is the better
  * trade — but only if the message says what to do about it.
  */

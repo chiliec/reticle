@@ -10,16 +10,15 @@ import { refs } from '@/dom/addressing/refs.js';
  * description an agent reads. The `args` sentence lists `value`, `text`, `native`, `holdMs` and
  * `confirmDangerous`, and never names the one argument without which the action cannot do its job.
  *
- * So the agent guesses. The field report guessed `target`. Then:
+ * So the agent guesses, and `target` is the guess. Then:
  *
  *   - `asString(args['toRef'])` returns `''`;
  *   - `''` is read as "no target given", which is a legitimate free drag;
  *   - `dragElement(el, null)` runs a drag that lands nowhere, so no `drop` fires;
  *   - and it returns normally — `dispatched: true`, `domMutatedWithin: 2`, settled. **Success.**
  *
- * The report described it as "drag dispatched and settled but never fired the app's onDrop". That is
- * exactly right, and the root cause it proposed — synthetic events not reaching handlers — was
- * exactly wrong. The drag worked. It had nowhere to go.
+ * It reads as "drag dispatched and settled but never fired the app's onDrop", which invites the
+ * wrong root cause — synthetic events not reaching handlers. The drag worked. It had nowhere to go.
  *
  * Two fixes, because either alone leaves the trap: accept the argument agents actually send, and
  * refuse when a target WAS named and could not be resolved. A free drag with no target named at all

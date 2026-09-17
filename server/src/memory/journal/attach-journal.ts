@@ -24,13 +24,9 @@ interface JournalAttachDeps {
  * skips a session whose id is not a safe path segment (never crashes the live session over a
  * journaling concern). The recorder's clock is the session's own elapsed time.
  *
- * That skip used to be SILENT, which is the part that mattered. The id becomes a directory name, so
- * one that is not a safe path segment cannot be journalled — but the session itself connects and
- * drives perfectly well, so the only observable difference is that the durable causal record for it
- * does not exist. Every query that reads back through the journal then returns nothing, and nothing
- * anywhere says why. An app self-assigning an unusual id gets a quietly degraded session; a hostile
- * one gets the same, which is why this is worth a line either way. Nothing escapes the directory —
- * the guard holds, and that is exactly why the failure is invisible rather than loud.
+ * The skip is LOGGED, because it is otherwise invisible: the session connects and drives perfectly
+ * well, and the only difference is that its durable causal record does not exist, so every query
+ * reading back through the journal returns nothing with no explanation.
  */
 export function makeJournalAttach(deps: JournalAttachDeps): (session: JournalTarget) => void {
   return (session) => {

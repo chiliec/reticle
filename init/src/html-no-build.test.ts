@@ -6,9 +6,9 @@
  * a dev server". True of a BARE specifier and false of the thing that matters: a CDN URL resolves in
  * any browser, needs no npm, no bundler and no package.json.
  *
- * That sentence was the end of the road for every server-rendered app we hear from: FastAPI and
- * Flask serving static HTML, Django, Streamlit, Rails. Each of them was told by `init` to go and
- * build a JavaScript pipeline they do not have, in order to use a tool that needed no such thing.
+ * That sentence was the end of the road for every server-rendered stack: FastAPI and Flask serving
+ * static HTML, Django, Streamlit, Rails. Each was told by `init` to go and build a JavaScript
+ * pipeline it does not have, in order to use a tool that needed no such thing.
  *
  * Verified end to end before this was written, not reasoned about: a plain page served by
  * `python3 -m http.server`, one `<script type="module">` importing from a CDN, produced a connected

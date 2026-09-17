@@ -245,7 +245,7 @@ async function serveWithHonestExit(parsed: {
     // Name the CAUSE when we can see it. An unwritable state directory is a first-run failure mode
     // (locked-down home, read-only container mount, managed profile) that produced only "nothing is
     // listening" — the symptom restated — and then pointed at a log INSIDE that directory, which
-    // cannot exist. Found by stress-testing 2.6.0 with `chmod 555 ~/.reticle`.
+    // cannot exist. Reproduced with `chmod 555 ~/.reticle`.
     const dirProblem = stateDirProblem(reticleStateHome());
     process.stderr.write(
       dirProblem === undefined
@@ -797,8 +797,8 @@ export function main(): void {
   // The licence key specifically is searched for HARDER than the rest of the environment, because
   // the daemon is spawned without an explicit cwd and inherits the editor's. A key in the app's own
   // `.env` — or in the repo root when the editor started inside the app — was never read, and the
-  // customer then produced events that said `missing`, which is indistinguishable from having no
-  // licence at all. Only the key is taken; see license-env.ts for why nothing else is.
+  // run then reported the licence as `missing`, which is indistinguishable from having none at all.
+  // Only the key is taken; see license-env.ts for why nothing else is.
   const licenseKey = licenseKeyFromEnvFiles(process.cwd());
   if (licenseKey !== undefined) process.env[LICENSE_KEY_ENV] = licenseKey;
   const argv = process.argv.slice(2);

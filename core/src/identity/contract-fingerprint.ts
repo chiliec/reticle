@@ -4,9 +4,9 @@
  * Reticle is installed as separate pieces — the SDK in the page, the daemon, the MCP server the
  * agent spawns — upgraded independently and therefore drifting constantly. The question that
  * matters when they meet is not "are these the same release?" but "do these speak the same
- * contract?", and package-version equality answers it wrongly in both directions: it fires on
- * 2.4.0-vs-2.4.1 where nothing changed, and it stays silent for two different BUILDS of one version
- * number, which is exactly what a stale daemon and a cached npx package are.
+ * contract?", and package-version equality answers it wrongly in both directions: it fires on two
+ * adjacent patch releases where nothing changed, and it stays silent for two different BUILDS of one
+ * version number, which is exactly what a stale daemon and a cached npx package are.
  *
  * So this hashes the vocabulary itself. Both sides compute it from their own copy of core, so equal
  * hashes mean "we agree" whatever the version strings say, and a hash that moved means a name on the
@@ -63,17 +63,11 @@ export const CONTRACT_FINGERPRINT = fingerprintOf({
  * The same vocabulary, by NAME rather than by hash — what a peer announces so skew can be decided
  * structurally.
  *
- * ── WHY IT EXISTS AND WHY NOTHING SENT IT ───────────────────────────────────────────────────────
- * `contractParts` was added to the HELLO schema and read by `describeSkew`, and NOTHING EVER
- * PRODUCED IT. The comparison written to prevent a false alarm was therefore dead on the only peer
- * that matters, and every page fell through to the hash branch: "they speak DIFFERENT wire
- * contracts — tools will behave in ways neither side reports".
- *
  * A hash answers "same" or "different" and nothing else, so it cannot tell an ADDITIVE change from
- * a breaking one. This release added `scroll`, `tap` and `zoom` to `ActionType` — three names an
- * older page never needs to know — and that alone moves the hash. Every user upgrading from 2.14.0
- * with a pinned SDK would have met that sentence on their first session, about a change that breaks
- * nothing.
+ * a breaking one: adding an `ActionType` an older page never needs to know about moves the hash,
+ * and a peer with a pinned SDK is then told "they speak DIFFERENT wire contracts — tools will
+ * behave in ways neither side reports" about a change that breaks nothing. Every peer MUST announce
+ * this list; `describeSkew` falls back to the hash branch when nothing produces it.
  *
  * `messageKinds` is deliberately absent: it frames the envelope rather than naming a capability, so
  * a peer that did not know a message kind could not have parsed the message carrying this list.

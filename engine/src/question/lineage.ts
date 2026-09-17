@@ -1,7 +1,7 @@
 /**
  * Where a runtime value came from: state path ← the signal that preceded it ← the request behind it.
  *
- * The prior art this issue names (`firatorhan/sentinel`'s `get_lineage`) builds the same chain by
+ * Prior art (`firatorhan/sentinel`'s `get_lineage`) builds the same chain by
  * picking "the most recent action whose payload contains this value", then "an API call whose type
  * matches". That is CORRELATION, and for a devtool a human reads it is the right trade — the reader
  * discounts it on sight.

@@ -112,10 +112,8 @@ export function workspaceParents(sources: WorkspaceSources): string[] {
 /**
  * Which directories under this workspace are runnable apps.
  *
- * Moved here from run.ts, which was over the 1000-line cap and had carried a note saying it was at
- * its cohesion limit. `library-path-boundary.test.ts` had already written down that this function
- * "squats in init/ for historical reasons" — it is a general-purpose question about a repository's
- * shape, next to `workspaceParents`, which answers the other half of it.
+ * A general-purpose question about a repository's shape, so it lives next to `workspaceParents`,
+ * which answers the other half of it.
  */
 /** Deps that mark a directory as a runnable web app even when it has no bundler config file. */
 export const APP_DEPS = ['next', 'vite', 'electron-vite'] as const;

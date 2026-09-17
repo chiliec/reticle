@@ -1,21 +1,19 @@
 /**
  * When the proxy may start a daemon — the rule that keeps an idle install from looping forever.
  *
- * Two changes collided to produce a real regression, and this is the seam that prevents it coming
- * back. A daemon may now shut itself down when it has served nothing and no browser ever connected
- * (see daemon-usefulness.ts). The proxy separately learned to respawn a dead daemon, because one
- * that crashed or was stopped used to take the agent's whole Reticle surface with it. Together they
- * loop: the daemon exits as useless, the proxy immediately brings back a daemon that is equally
- * useless, which exits, forever. Measured with a 4s grace: four processes in 200 seconds. At the
- * real 300s grace that is a new process every five minutes for the many installs that never call a
- * tool, for as long as the editor is open.
+ * Two correct behaviours collide here, and this is the seam that keeps them from looping. A daemon
+ * may shut itself down when it has served nothing and no browser ever connected (see
+ * daemon-usefulness.ts); the proxy respawns a dead daemon, because one that crashed or was stopped
+ * otherwise takes the agent's whole Reticle surface with it. Together: the daemon exits as useless,
+ * the proxy immediately brings back a daemon that is equally useless, which exits, forever — one new
+ * process per grace period, for as long as the editor is open, on any install that never calls a
+ * tool.
  *
- * The rule that resolves it: a dropped stream is not demand. Reattach to a daemon that is already
+ * The rule that resolves it: A DROPPED STREAM IS NOT DEMAND. Reattach to a daemon that is already
  * there; otherwise go dormant and let the next thing the CLIENT asks for bring Reticle back.
  *
- * Extracted as pure functions because the decision used to live inside a closure where no test could
- * reach it — and a guard that re-implements the decision instead of calling it is insensitive to the
- * thing it claims to guard.
+ * Pure functions, so a test can reach the decision — a guard that re-implements it instead of
+ * calling it is insensitive to the thing it claims to guard.
  */
 
 import { PortPresence } from '@/command/daemon/binding/port-presence.js';

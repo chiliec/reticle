@@ -38,18 +38,11 @@ export type {
 /**
  * The contradiction hunter.
  *
- * Every other check in Reticle reads ONE channel and asks "did something bad happen there?" — a
- * console error, a 500, a control that did nothing. A human can do that too, just slower.
- *
- * This asks a question a human structurally cannot: do the channels DISAGREE with each other? A
- * person watching an app has exactly one channel open — the screen. The agent holds the DOM, the
- * store, the app's own signals, the console and the network in one causally ordered window, so it
- * can catch the case where the screen says one thing and the network says the opposite.
- *
- * That gap is where false greens live. The archetype ships in both desktop demos: click Archive, the
- * row disappears, the status line reads "archived", and the IPC call rejected into a swallowed
- * `.catch()`. A screenshot agrees. A DOM assertion agrees. A human agrees. Only the disagreement
- * between channels reveals it.
+ * Every other check reads ONE channel and asks "did something bad happen there?". This asks what a
+ * person watching the screen structurally cannot: do the channels DISAGREE? The DOM, the store, the
+ * app's own signals, the console and the network arrive in one causally ordered window, so the case
+ * where the screen says one thing and the network says the opposite is visible — and that gap is
+ * where false greens live, because a screenshot, a DOM assertion and a human all agree there.
  *
  * Pure: a window of events in, findings out. No session, no IO, no clock.
  */

@@ -85,10 +85,9 @@ export function scrollFrom(
   if (fraction !== undefined && fraction >= 0 && fraction <= 1) {
     target.scrollTop = Math.round(target.scrollHeight * fraction);
   } else {
-    // A NEGATIVE dy scrolls back up, and that is the whole reason this signature grew. The default
-    // step is still forward, so nothing about the existing "reveal the next window" call changes —
-    // but a page could previously be walked in one direction only, and whatever scrolled past was
-    // unreachable without reloading.
+    // A NEGATIVE dy scrolls back up. The default step is forward, so a plain "reveal the next
+    // window" call is unaffected — but without this a page can only be walked one way, and whatever
+    // scrolled past is unreachable without reloading.
     if (dx !== undefined && dx !== 0) target.scrollLeft = beforeLeft + dx;
     if (dx === undefined || (dy !== undefined && 0 !== dy)) {
       const step = dy ?? (Math.round(target.clientHeight * VIEWPORT_FRACTION) || FALLBACK_STEP_PX);

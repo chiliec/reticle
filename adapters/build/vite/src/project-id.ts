@@ -26,8 +26,8 @@ export function shortHash(input: string): string {
  * Derive the stable projectId from the package name (may be undefined) and the absolute root path.
  *
  * The rule itself is core's `projectIdFrom`, shared with `reticle init`: this id is what scopes a
- * session to an app, so what the plugin stamps and what init records must be the same string. They
- * used to be two identical copies kept in step by a comment.
+ * session to an app, so what the plugin stamps and what init records must be the same string — ONE
+ * implementation, not two copies kept in step by hand.
  */
 export function deriveProjectId(pkgName: string | undefined, rootPath: string): string {
   return projectIdFrom(pkgName, rootPath, shortHash);

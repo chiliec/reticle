@@ -138,7 +138,7 @@ describe('store adapters against the libraries they claim to support', () => {
     await client.fetchQuery({ queryKey: ['user', 1], queryFn: () => Promise.resolve({ id: 1 }) });
     await settle();
     const state = adapter.getState() as Record<string, unknown>;
-    // The projection is keyed by the serialized query key; assert on content, not on our own format.
+    // The projection is keyed by the serialized query key; assert on content, not on Reticle's own format.
     expect(JSON.stringify(state)).toContain('user');
     expect(fired).toBeGreaterThan(0);
     unsub();

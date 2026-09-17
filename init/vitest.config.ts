@@ -14,12 +14,12 @@ import { fileURLToPath } from 'node:url';
  *
  * It is biased in the worst direction: a missing enum member is `undefined`, and `undefined` is
  * exactly what an unimplemented branch returns, so the stale build AGREES with the bug. And
- * "add a constant to core, assert on it from server" is the normal shape of a change here — rule 3
- * of CLAUDE.md requires every wire and domain string to live in core.
+ * "add a constant to core, assert on it from server" is the normal shape of a change here, because
+ * every wire and domain string lives in core.
  *
  * `pnpm test:unit` was never at risk: `turbo.json` declares `test:unit` dependsOn `^build`. The hole
  * is the inner loop — `npx vitest run <file>` bypasses turbo entirely, which is precisely what the
- * RED step of a TDD cycle is, and CLAUDE.md positions the full gate as a PRE-COMMIT step.
+ * RED step of a TDD cycle is.
  *
  * Exact-match on purpose. A plain string alias in Vite is a PREFIX replacement, which would also
  * capture `@reticlehq/core/schema/*.json` and `@reticlehq/core/desktop-contract` — real export

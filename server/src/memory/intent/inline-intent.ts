@@ -53,44 +53,6 @@ export function inlineVerdictId(tool: string, at: number): string {
 }
 
 /**
- * Put an inline intent in the ledger and attach the predicate about to be evaluated. Returns the id
- * the verdict may later discharge, or undefined when there was no intent to record.
- *
- * `intent` carries EITHER prose OR the id of an intent already in the ledger. One field rather than
- * two because the surface is the scarce thing here and the two cases are told apart by the ledger
- * itself: a string that names an existing row is a reference, anything else is prose. A statement
- * that happens to equal an existing id is the same intent said twice, so pointing at the row is the
- * right answer there too, not a collision.
- *
- * A referenced intent is never re-declared, which would overwrite the agent's own words with an id,
- * and its binding is left alone when it already has one — a predicate bound deliberately through
- * `reticle_intent { action: "bind" }` is a stronger statement than whatever this one call asserts,
- * and quietly replacing it is exactly the narrowing the ledger exists to make visible.
- *
- * Best-effort by construction: a ledger that cannot be written is a small problem, and a verdict
- * that fails to return because of one is a large problem.
- */
-/**
- * The surface an inline intent was captured on, so the store can FILE it.
- *
- * Measured: almost everything a project knew landed in `unsorted`, because
- * `act_and_wait({ intent })` declared a statement and nothing else. The subject ladder had no flow,
- * no route and no explicit subject to work from, so every record fell to the bucket of last resort
- * — and a coverage map that is one pile with six labels tells a manager the team knows nothing,
- * when the truth is that it knows a great deal and none of it is filed.
- *
- * The ROUTE is what makes this work at all, because it is always available: an agent asserting
- * something is always somewhere. A flow name is better when there is one, and `subjectFor` already
- * prefers it — this only has to supply both and let that ladder decide.
- *
- * Query and hash are dropped. `/issues?category=severe` and `/issues` are the same subject seen
- * twice; keeping the query would shard one area of the product across every filter anybody used.
- *
- * Returns undefined rather than an empty object when there is nothing to record. A surface that
- * says nothing reads as a capture that looked for a location and found none, rather than one that
- * never had one — and the second is the truth.
- */
-/**
  * Strip a trailing `:line` from a `file:line` label.
  *
  * Anchored to the END and to digits, because a Windows path carries its own colon: splitting on the
@@ -99,6 +61,24 @@ export function inlineVerdictId(tool: string, at: number): string {
  */
 const SOURCE_LINE_SUFFIX = /:\d+$/;
 
+/**
+ * The surface an inline intent was captured on, so the store can FILE it.
+ *
+ * Without one, almost everything a project knew landed in `unsorted`: `act_and_wait({ intent })`
+ * declared a statement and nothing else, so the subject ladder had no flow, no route and no explicit
+ * subject to work from. A coverage map that is one pile with six labels reads as a team that knows
+ * nothing, when the truth is that it knows a great deal and none of it is filed.
+ *
+ * The ROUTE is what makes this work at all, because it is always available: an agent asserting
+ * something is always somewhere. A flow name is better when there is one, and `subjectFor` already
+ * prefers it — this only has to supply both and let that ladder decide.
+ *
+ * Query and hash are dropped: `/issues?category=severe` and `/issues` are the same subject seen
+ * twice, and keeping the query would shard one area across every filter anybody used.
+ *
+ * Returns undefined rather than an empty object when there is nothing to record, so the result reads
+ * as a capture that looked for a location and found none.
+ */
 export function surfaceForInlineIntent(
   url: string | undefined,
   flow: string | undefined,
@@ -148,6 +128,21 @@ function sessionUrl(deps: ToolDeps, sessionId: string | undefined): string | und
   }
 }
 
+/**
+ * Put an inline intent in the ledger and attach the predicate about to be evaluated. Returns the id
+ * the verdict may later discharge, or undefined when there was no intent to record.
+ *
+ * `intent` carries EITHER prose OR the id of an intent already in the ledger. One field rather than
+ * two because the surface is the scarce thing here, and the two cases are told apart by the ledger
+ * itself: a string that names an existing row is a reference, anything else is prose.
+ *
+ * A referenced intent is never re-declared, which would overwrite the agent's own words with an id,
+ * and its binding is left alone when it already has one — a predicate bound deliberately through
+ * `reticle_intent { action: "bind" }` is a stronger statement than whatever this one call asserts.
+ *
+ * Best-effort by construction: a ledger that cannot be written is a small problem, and a verdict
+ * that fails to return because of one is a large problem.
+ */
 export async function linkInlineIntent(
   deps: ToolDeps,
   sessionId: string | undefined,

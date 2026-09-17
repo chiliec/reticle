@@ -16,17 +16,15 @@ import { refs } from '@/dom/addressing/refs.js';
  * Three separate consequences, worst last:
  *
  *   1. The requested key never arrives, so Escape-to-close and Tab-traversal go unverified while
- *      looking verified. Two field reports were exactly this, both diagnosed by the agent as
- *      "synthetic events do not reach the app" — the wrong root cause, because the event reached
- *      the app perfectly well and simply said `Enter`.
+ *      looking verified — and it invites the wrong root cause ("synthetic events do not reach the
+ *      app"), because the event reaches the app perfectly well and simply says `Enter`.
  *   2. It is silent. Nothing in the result says the argument was ignored.
  *   3. **Enter is not a neutral substitute.** On a focused field inside a form it submits it. So a
  *      request to close a dialog could file the form behind it, and the destructive-action guard
  *      above (`assertActionAllowed`) read the same missing `key`, so it classified the call by the
  *      key nobody asked for too.
  *
- * `key` keeps working — it was the de-facto argument for anyone who read the source rather than the
- * description — but `text` is what we document, so it wins when both are present.
+ * `key` keeps working, but `text` is the documented argument, so it wins when both are present.
  */
 describe('press sends the key it was asked for', () => {
   beforeEach(() => {
@@ -65,7 +63,7 @@ describe('press sends the key it was asked for', () => {
   });
 
   it('bubbles, so a document-level handler sees it', async () => {
-    // The other half of the field report: apps listen on `document`, not on the button.
+    // Apps listen on `document`, not on the button.
     const el = document.createElement('button');
     document.body.appendChild(el);
     const atDocument: string[] = [];

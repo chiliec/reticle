@@ -40,9 +40,9 @@ function tokenNames(): Set<string> {
     for (const rule of Array.from(rules)) {
       if (!(rule instanceof CSSStyleRule)) continue;
       // Deliberately NOT filtered to `:root`/`html`: a theme block is usually `.dark` or
-      // `[data-theme="dark"]`, and an app that declares its palette only there had no palette at all
-      // under the old filter. Names are cheap; a name that is not in scope resolves to nothing below
-      // and is dropped, so widening collection cannot invent a token.
+      // `[data-theme="dark"]`, so such a filter leaves an app that declares its palette only there
+      // with no palette at all. Names are cheap; a name that is not in scope resolves to nothing
+      // below and is dropped, so the wider collection cannot invent a token.
       for (const prop of Array.from(rule.style)) {
         if (prop.startsWith('--')) names.add(prop);
       }

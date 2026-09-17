@@ -639,14 +639,10 @@ export const NEXT_RETICLE_DEV_PATH = 'app/reticle-dev.tsx';
 export const SVELTEKIT_HOOKS_PATH = 'src/hooks.client.ts';
 
 /**
- * Said to the user's face rather than discovered later. React, Next, Remix and Astro each have an
- * app and a CI gate; SvelteKit has neither, so "it generated some wiring" is not evidence it works.
- */
-/**
  * Said out loud when the app does not render through React. The SDK is framework-agnostic — DOM,
  * network, console and routing all still work — but `@reticlehq/react` is a React adapter, so
- * component names and source mapping do not, and no CI gate covers this stack. Reporting all-green
- * here is the one thing this project exists not to do.
+ * component names and source mapping do not, and no CI gate covers this stack. Saying so beats
+ * reporting all-green.
  */
 export function unverifiedUiLibraryNote(library: string): string {
   // Preact is not in the same position as Vue or Svelte and must not be told it is. The React
@@ -905,20 +901,14 @@ export const NUXT_PLUGIN_NOTICE =
   'The flag alone is NOT sufficient off localhost.';
 
 /**
- * The Nuxt recipe, written out in full because every trap in it is one somebody actually hit.
+ * The Nuxt recipe, written out in full because each trap in it is one a Nuxt 4 app actually hit:
+ * a Vue codebase classified as `html` and handed `@reticlehq/react`, a connect guarded on
+ * `window.location.hostname === 'localhost'` (false on any hosts-file alias, and `window` does not
+ * exist during SSR), and a running dev server that never picked up the new plugin.
  *
- * Reported from the field, in the order they were hit: `init` classified a Nuxt 4 app as `html`, so
- * it installed a package named `@reticlehq/react` (with `react` in its peer dependencies) into a Vue
- * codebase — the reporter only continued after auditing our dist to confirm there are no React
- * imports at runtime, which most people will not do. It then handed over a snippet guarded on
- * `window.location.hostname === 'localhost'`, which fails twice over in Nuxt: `window` does not
- * exist during SSR, and the dev host here was a hosts-file alias (required for the backend's
- * white-label origin detection), so the guard was false and the connect never ran — no error, no log
- * line, nothing to debug. And nothing said a running dev server does not pick up a new plugin.
- *
- * So: `import.meta.dev` (build-time, host-independent) instead of a hostname check, `.client.ts`
- * instead of an SSR guard, the framework-neutral sensor instead of the React kit, the non-localhost
- * flag named up front, and the restart said out loud.
+ * So: `import.meta.dev` instead of a hostname check, `.client.ts` instead of an SSR guard, the
+ * framework-neutral sensor instead of the React kit, the non-localhost flag named up front, and the
+ * restart said out loud.
  */
 export function nuxtManual(port: number | undefined, projectId?: string): string {
   const base = connectArg(port, projectId);
@@ -981,11 +971,10 @@ export function reticleConfigContent(
   const fields: Record<string, unknown> = { framework };
   if (projectId !== undefined && projectId.length > 0) fields['projectId'] = projectId;
   if (port !== undefined && port !== RETICLE_DEFAULT_PORT) fields['port'] = port;
-  // How this install arrived, recorded HERE because it is a property of the install and the only
-  // moment anything knows it is the moment it happens. It reaches us as an environment variable set
-  // by whichever channel ran the install, and an environment variable is gone by the next command,
-  // so every event after this one reported `unknown` and the question "which channel actually
-  // converts" could not be asked at all. Written once, read for the life of the project.
+  // How this install arrived, recorded HERE because this is the only moment anything knows it. It
+  // arrives as an environment variable set by whichever channel ran the install, and an environment
+  // variable is gone by the next command, so every later event reported `unknown`. Written once,
+  // read for the life of the project.
   //
   // A closed vocabulary, narrowed before it gets here, so this can never carry a path or a URL.
   if (installSource !== undefined && installSource.length > 0) {

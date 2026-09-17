@@ -3,28 +3,21 @@ import type { FlowExpect, FlowFile } from './flow-types.js';
 /**
  * Whether one flow may be replayed straight after another.
  *
- * WHY THIS EXISTS AS A CHECK RATHER THAN A HOPE. Replaying journeys back to back only works when the
- * state one leaves is the state the next expects, and until `requires`/`ensures` existed nothing
- * said so. A suite either got lucky or produced a failure that looked like a regression and was a
- * missing precondition — the most expensive kind of red, because it sends somebody to read product
- * code that is fine. Two flows that each pass alone can fail composed, and the reverse, and neither
- * outcome tells you which of the two it was.
+ * Replaying journeys back to back only works when the state one leaves is the state the next
+ * expects. Two flows that each pass alone can fail composed, and the reverse, and the red looks
+ * like a regression — the most expensive kind, because it sends somebody to read product code that
+ * is fine.
  *
  * It answers over DECLARATIONS, not over a running app: a pure comparison of what B says it needs
- * against what A says it leaves. That is the whole point — it can be asked before either flow runs,
- * which is the only moment the answer is cheap.
+ * against what A says it leaves, so it can be asked before either flow runs.
  *
- * SILENCE IS PERMISSIVE, and deliberately. A flow that declares neither is every flow recorded
- * before this shipped, and treating "did not say" as "does not satisfy" would refuse every existing
- * composition on the day it landed. Unknown means unchecked, not unsafe; the caller decides whether
- * it wants to run unchecked, and `unmet` says which claims could not be discharged so the answer is
- * never a bare boolean.
+ * SILENCE IS PERMISSIVE. A flow that declares neither `requires` nor `ensures` says nothing, and
+ * unknown means unchecked rather than unsafe; `unmet` names the claims that could not be
+ * discharged, so the answer is never a bare boolean.
  *
- * NOT YET ENFORCED AT REPLAY TIME, and said plainly rather than implied. Reporting an unmet
- * precondition as a step result would read as a FAILURE — `FlowStepResult` has `ok: boolean` and no
- * third state — and a missing precondition is honestly `unknown`: nothing ran, so nothing was
- * proved. Giving it a verdict of its own is a change to the suite roll-up, and it belongs with the
- * feature that orders flows into a composition rather than ahead of it.
+ * NOT ENFORCED AT REPLAY TIME. An unmet precondition reported as a step result would read as a
+ * FAILURE — `FlowStepResult` has `ok: boolean` and no third state — and honestly it is `unknown`:
+ * nothing ran, so nothing was proved.
  */
 export interface CompositionCheck {
   /** True when nothing B requires is left undischarged by A. Vacuously true when either is silent. */

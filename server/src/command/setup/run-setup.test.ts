@@ -221,19 +221,6 @@ describe('when it cannot continue, it says what is left', () => {
   });
 });
 
-/*
- * A browser that FAILED to open is not a browser that opened.
- *
- * MEASURED on `install-gate (ubuntu, cra)` in 3.1.0, and reproduced locally for vite-react by
- * putting an `open` on PATH that exits 3: on a machine with no browser -- CI, a container, an SSH
- * session -- the launcher fails, `openBrowser` PRINTS that and resolves, and the caller set
- * `openedBrowser = true` anyway. The run then waited the FULL connect budget for a session that
- * nothing could ever create, and a Windows cell spent thirty minutes there before the job timed out.
- *
- * The code one line below already states the rule for the case it did handle: "declining to open it
- * and then waiting as if we had is a promise to the reader that cannot be kept." Failing to open is
- * the same promise, made by accident.
- */
 describe('a desktop app', () => {
   // The harmful one: the app's own window is the client, so a browser tab would be a SECOND session
   // that is not the app — the stale-tab false green, arranged deliberately.

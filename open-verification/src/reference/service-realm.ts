@@ -13,36 +13,17 @@ import { BlindSpotKind, type Coverage, type Observation } from '@/vocabulary/evi
 import { Surface, type SubjectRef } from '@/vocabulary/subject.js';
 
 /**
- * A realm for something with no screen, written to find out whether this interface is honest.
+ * A realm for something with no screen: no DOM, no elements, no quiescence, no screen to
+ * photograph. A REFERENCE, not a product — it ships in this package so an implementer asked to
+ * extend an abstract class with eight methods can read one that already does.
  *
- * The specification claims the adjudicator is realm-blind and that a browser is one implementation
- * of a general shape rather than the shape itself. That claim is cheap to make and is falsified
- * only by writing a realm that shares nothing with a browser -- no DOM, no elements, no
- * quiescence, no screen to photograph. This is that realm.
+ * A service does not go quiet. It answers, often `202 Accepted`, and the truth arrives later
+ * through a channel nobody is holding open — which is why `openWindow` must never assume
+ * quiescence: quiescence is a web answer, not the general one.
  *
- * It is a REFERENCE, not a product. It ships in this package deliberately, because an implementer
- * asked to extend an abstract class with eight methods deserves to read one that already does, and
- * because a specification whose only implementation is the author's flagship has not demonstrated
- * anything.
- *
- * ── WHAT WRITING IT ESTABLISHED ─────────────────────────────────────────────────────────────────
- *
- * **The close condition really is the load-bearing generalisation.** A service does not go quiet.
- * It answers, and the answer is frequently `202 Accepted`, which means the truth has not arrived
- * and will arrive later through a channel nobody is currently holding open. If `openWindow` had
- * been allowed to assume quiescence -- the obvious choice, and the one a web-shaped design makes
- * without noticing -- this realm could not have been written at all, and the failure would have
- * looked like "the protocol does not support backends" rather than "the protocol has a browser
- * baked into one method".
- *
- * **`photograph` being optional is not a courtesy.** There is nothing here to photograph. An
- * interface that required it would have forced every non-visual realm to return an empty buffer,
- * and an empty buffer saved as a baseline is a comparison that passes forever.
- *
- * **Declaring two channels honestly beats declaring five hopefully.** This realm reaches the
- * `effect` profile and can never reach `in-realm`, because it observes the service from outside
- * and cannot read its memory. That is not a deficiency to be worked around. It is the true
- * statement about what this vantage point can see, and the profile exists so it can be said.
+ * This realm reaches the `effect` profile and can never reach `in-realm`, because it observes the
+ * service from outside and cannot read its memory. Declaring two channels honestly beats declaring
+ * five hopefully.
  */
 
 /** What the service under test can be asked to do. Domain language, not transport language. */

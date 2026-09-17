@@ -114,15 +114,14 @@ export function installBlindSpots(emit: Emit): Teardown {
 
   // Coalesce rather than gate.
   //
-  // This used to try to skip unrelated churn by testing each added/removed node with
-  // `n.querySelector('iframe')` — but that is a full subtree scan per mutated node, so a React commit
-  // mounting a 500-node panel paid a 500-node scan to decide whether to do a document scan. The gate
-  // cost more than the work, and it scaled with exactly the thing a large app does most.
+  // Skipping unrelated churn by testing each added/removed node with `n.querySelector('iframe')` is
+  // a full subtree scan per mutated node, so a React commit mounting a 500-node panel pays a 500-node
+  // scan to decide whether to do a document scan — a gate costing more than the work, scaling with
+  // exactly the thing a large app does most. It is also wrong: `querySelector` misses an iframe added
+  // inside a subtree whose own root is a text or comment node.
   //
-  // Since report() emits only when the count CHANGES, running it late and rarely is free. One
-  // debounced document scan per quarter-second replaces per-node scanning, and it is also more
-  // correct: the old gate's `querySelector` missed an iframe added inside a subtree whose own root
-  // was a text or comment node.
+  // Since report() emits only when the count CHANGES, running it late and rarely is free: one
+  // debounced document scan per quarter-second.
   let pending: ReturnType<typeof nativeSetTimeout> | undefined;
   const observer = new MutationObserver(() => {
     if (pending !== undefined) return;

@@ -1,9 +1,8 @@
 import { nativeSetTimeout } from '@/timers/native/native-timers.js';
 
 /**
- * Synthetic-cursor + click effects - the visible "the agent is acting here" motion. Pure DOM helpers
- * extracted from presenter.ts so the controller stays under the size cap; each is a no-op when its
- * element is absent (the panel may not be mounted). Behavior is unchanged from the inlined methods.
+ * Synthetic-cursor + click effects - the visible "the agent is acting here" motion. Pure DOM helpers;
+ * each is a no-op when its element is absent, because the panel may not be mounted.
  */
 
 /** Fly the synthetic cursor to a viewport point and show it. */

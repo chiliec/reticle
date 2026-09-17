@@ -38,10 +38,8 @@ export const notInjectedMessage = (): string =>
  *
  * In serve, `injected` records "my transform ran THIS session", which is not the same as "the app
  * has no connect()". Vite serves an unchanged module straight from its transform cache, so on a
- * warm cache the transform never runs, the flag stays false, and the old wording announced that
- * the app "will never connect" while the served entry demonstrably contained the injection —
- * verified by fetching it from the dev server. A false alarm, in the tool whose entire argument is
- * that it does not raise them.
+ * warm cache the transform never runs and the flag stays false, so wording that announces the app
+ * "will never connect" is a false alarm raised over a served entry that does contain the injection.
  *
  * So dev reports what it actually knows: unconfirmed, with the benign explanation first.
  */
@@ -72,12 +70,9 @@ export const htmlHookNeverRanMessage = (): string =>
 /**
  * The state behind those three messages, and the rules for reaching each one.
  *
- * Extracted from the plugin factory when `index.ts` crossed the line cap, and it belongs here
- * rather than anywhere else: this file's header already argues that choosing BETWEEN these
- * messages is the whole subtlety, and the choosing was happening a thousand lines away from the
- * wording it chose. The flags are small, they are only ever read by these four functions, and every
- * one of the defects in this area has been a rule about when to speak rather than a bug in the
- * speaking.
+ * Beside the wording rather than in the plugin factory: choosing BETWEEN these messages is the whole
+ * subtlety, the flags are only ever read by these four functions, and every defect in this area has
+ * been a rule about when to speak rather than a bug in the speaking.
  */
 export interface InjectionWatchDeps {
   /** Desktop builds keep the certainty; web dev does not. See the two messages above. */

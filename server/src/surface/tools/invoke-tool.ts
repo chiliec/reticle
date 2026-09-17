@@ -204,19 +204,14 @@ function recordVerification(
     actor: TelemetryActor.AGENT,
     verification,
   });
-  // THE conversion event, and the reason the funnel exists.
+  // The public half of the same moment. Nothing before this marks a user's own app actually being
+  // verified: `init_completed` fires when files are written, minutes earlier.
   //
-  // Everything before this is setup that proved nothing, and no existing event marks the moment a
-  // user's own app is actually verified: `init_completed` fires when files are written, minutes
-  // earlier. Emitted from the same site as `verification_completed` so the two can never disagree
-  // about whether a verdict happened — a second listener is a second thing that can stop firing.
+  // Emitted from the site that already decided a verdict happened, so the two can never disagree —
+  // a second listener deciding for itself is a second thing that can stop firing.
   //
-  // Idempotency is deliberately NOT applied: the funnel step is per verdict, and a session that
-  // proves ten things is a different shape from one that proves one. The FIRST is what a funnel
-  // query takes; the rest are how much the product was used after conversion.
-  // The public half of the same moment. Emitted from the site that already decided a verdict
-  // happened, for the reason stated just above about the telemetry pair: a second listener deciding
-  // for itself is a second thing that can stop agreeing about whether a verdict occurred.
+  // Idempotency is deliberately NOT applied: the step is per verdict, and a session that proves ten
+  // things is a different shape from one that proves one.
   emitVerdictHook(toolName, result, verification.verified, sessionId);
   // The ONBOARD half of the same moment: the first verdict of this run, once.
   noteFirstVerdict();
@@ -619,10 +614,10 @@ export async function runTool<Ext>(
   if (lease !== undefined) envelope[EnvelopeKey.SESSION_LEASE] = lease;
   const warning = resolved.ageWarning();
   if (warning !== undefined) envelope[EnvelopeKey.SESSION_AGE_WARNING] = warning;
-  // Ask for a verdict when the agent has driven the page and not asked for one. Almost every
-  // verdict-less session in the field never called a verdict-producing tool ONCE;
-  // the counter behind this already existed and was reported only to us. One-shot per abandoned
-  // run, same discipline as the pool lease — a hint on every call is noise that gets tuned out.
+  // Ask for a verdict when the agent has driven the page and not asked for one: a session that never
+  // calls a verdict-producing tool proves nothing, however many tools it used. One-shot per
+  // abandoned run, same discipline as the pool lease — a hint on every call is noise that gets tuned
+  // out.
   // The A/B control, and the reason it exists as an env flag rather than a code edit.
   //
   // `verify_next` is described in this repo's own changelog as "the largest known lever on whether a

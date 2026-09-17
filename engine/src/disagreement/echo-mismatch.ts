@@ -157,7 +157,7 @@ const EchoDiscriminator = {
  * flat by-key comparison below therefore measures the request's value against an unrelated sibling
  * field's value, which is not evidence about the target field at all.
  *
- * Measured in the field, and it produced a FALSE RED on a passing assertion: the request asked
+ * That produced a FALSE RED on a passing assertion: the request asked
  * `{"slot":"_dim","value":"3D"}`; the server applied it (`brief.dim: "3D"`, and the interview
  * advanced from `{kind:"question"}` to `{kind:"geometry", payload:{dim:"3D"}}`); and this kind
  * reported "asked 3d, got cfd", where `cfd` is `brief.slots._family.value` — a different slot,

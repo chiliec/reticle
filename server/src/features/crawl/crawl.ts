@@ -1,3 +1,9 @@
+/**
+ * The autonomous "smart monkey": discover every reachable interactive control once, click each
+ * (bounded by `maxSteps`) and classify the reaction into anomalies — console errors, failed
+ * requests, and DEAD controls (dispatched but the app did nothing). Pure orchestration over a
+ * `CrawlSession`, so no browser or Node imports. Single-pass by design, so it always terminates.
+ */
 import { span } from '@/trace.js';
 import {
   ActionType,
@@ -259,14 +265,6 @@ function failedRequests(events: ReticleEvent[], floor: number): ReticleEvent[] {
 }
 
 /**
- * The autonomous "smart monkey". Discovers every reachable interactive control once,
- * then clicks each (bounded by maxSteps) and classifies the reaction into anomalies — console
- * errors, failed requests, and DEAD controls (dispatched but the app did nothing). Pure
- * orchestration over a CrawlSession: no browser/Node imports, fully unit-testable with a fake.
- * Single-pass by design (no re-discovery) so it always terminates and never explodes on navigation.
- */
-
-/**
  * Controls whose correct behaviour IS to do nothing when clicked.
  *
  * Read off the same descriptor the crawler already has, so no extra round trip: `[disabled]` is inert
@@ -482,11 +480,10 @@ export async function crawl(
 
     // DEAD: the click dispatched but the app produced no activity and no error to explain it.
     //
-    // Unless the control is SUPPOSED to be inert. Measured on a shipments console: every one of the
-    // crawler's three anomalies was a control behaving correctly — a `[disabled]` button, an already
-    // `[checked]` radio, and a text input (a click focuses it; mutating would be the surprise). An
-    // anomaly list that is 100% false on a real app is worse than no anomaly list, because the agent
-    // spends its budget disproving it and learns to skip the field.
+    // Unless the control is SUPPOSED to be inert. A control clicked twice with no reaction may be
+    // legitimately inert — a `[disabled]` button, an already `[checked]` radio, a text input (a click
+    // focuses it; mutating would be the surprise). An anomaly list that is all false positives is
+    // worse than no anomaly list: the agent spends its budget disproving it and learns to skip it.
     //
     // Deliberately NOT fixed by counting focus as activity: focus moving is not the app reacting, and
     // treating it as such would make a genuinely dead button that takes focus look alive — trading

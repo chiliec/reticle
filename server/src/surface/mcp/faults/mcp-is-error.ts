@@ -1,10 +1,10 @@
 /**
  * Does a SUCCESSFUL tool result actually describe a refusal?
  *
- * `isError` used to be set only when a handler threw. Every tool that returns a well-formed
- * `{ error, recovery }` object instead — and that is half the surface — came back as protocol
- * success with the flag unset, so anything branching on `isError` read a refusal as a result.
- * Reported from a field sweep that had to special-case each tool's shape to score a run at all.
+ * A thrown handler is not the only refusal. Half the surface returns a well-formed
+ * `{ error, recovery }` object instead, which is protocol SUCCESS — so `isError` set only on a throw
+ * leaves anything branching on it reading a refusal as a result, and every caller special-casing
+ * each tool's shape.
  *
  * A top-level `error` STRING is this codebase's refusal convention (see buildErrorPayload), so that
  * is the whole test. Deliberately top-level only: `error` appears inside console entries and network

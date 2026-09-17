@@ -446,7 +446,7 @@ export class SessionManager {
           : ` NOTE: the bridge REFUSED or closed a connection recently — "${closure.reason}". The app is probably still running and trying to connect: it was turned away, and the SDK does not retry after a policy close. The reason above names the fix — do not go looking for a stopped dev server.`;
       // Hand the branch code to the refusal that is about to be reported for this throw. The
       // diagnosis is computed HERE and the refusal is classified from the message downstream, so
-      // without this the largest refusal cohort stays one undifferentiated bucket (#615).
+      // without this every no-session refusal lands in one undifferentiated bucket (#615).
       notePendingNoSessionReason(this.#noSessionReason?.());
       throw new Error(`${hint ?? NO_SESSION_CONNECTED_ERROR}${refusal}`);
     }

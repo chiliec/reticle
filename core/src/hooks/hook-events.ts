@@ -2,25 +2,19 @@
  * What Reticle says happened, and the shape it says it in.
  *
  * This is a CONTRACT, not an internal enum, which is why it lives in `core` beside the wire types.
- * A hook payload crosses out of this process into somebody else's script or somebody else's
- * product, and the moment one person writes `if (event.kind === 'bug_found')` the spelling is
- * theirs as much as ours. Renaming one is a breaking change and has to be treated as one.
+ * A hook payload crosses into somebody else's script, so renaming an event kind is a breaking
+ * change and has to be treated as one.
  *
- * ── WHY THE LIST IS SHORT ───────────────────────────────────────────────────────────────────────
- * Every event here is a MOMENT SOMETHING BECAME TRUE, never a step in how we got there. `verdict`
- * is a verdict; there is no `verdict_starting`, no `snapshot_taken`, no per-tool-call firehose. An
- * event that fires on internal progress freezes internal structure into a public contract — the
- * next refactor either breaks somebody's script or gets abandoned to avoid breaking it.
+ * Every event is a MOMENT SOMETHING BECAME TRUE, never a step on the way there. `verdict` is a
+ * verdict; there is no `verdict_starting`, no `snapshot_taken`, no per-tool-call firehose — an event
+ * that fires on internal progress freezes internal structure into a public contract. The bar for
+ * adding one is the bar for a tool: name what a consumer could not otherwise know, and that stays
+ * true if the implementation is rewritten.
  *
- * So the bar for adding one is the same as the bar for a tool: name the thing a consumer could not
- * otherwise know, and that stays true if the implementation is rewritten.
- *
- * ── WHAT A PAYLOAD MAY CARRY ────────────────────────────────────────────────────────────────────
- * No credentials, ever — not the pairing token, not the cloud API key, not a session cookie the
- * page was carrying. A command hook is a local process, but a hook is also the easiest place in
- * this product for somebody to post a payload somewhere, and the honest assumption is that anything
- * put here may end up in a log we do not control. `hook-payload-carries-no-secret.test.ts` is the
- * check, and it reads this file's schemas rather than a hand-kept list.
+ * A payload carries NO credentials, ever — not the pairing token, not the cloud API key, not a
+ * session cookie the page was carrying. Assume anything put here ends up in a log nobody here
+ * controls. `hook-payload-carries-no-secret.test.ts` is the check, and it reads this file's schemas
+ * rather than a hand-kept list.
  */
 
 import { z } from 'zod';

@@ -1,6 +1,6 @@
 /**
- * #689: the largest single cluster of field reports is not a defect in any tool — it is that the
- * tools were not loaded in the client, and there was no supported way to reach a verdict.
+ * The dead end is not a defect in any tool — it is that the tools are not loaded in the client, and
+ * there was no other supported way to reach a verdict (#689).
  *
  * `verify` refuses because the daemon owns the port, which is precisely the state a successful
  * install leaves you in. The refusal's first suggestion was "ask the daemon through the Reticle

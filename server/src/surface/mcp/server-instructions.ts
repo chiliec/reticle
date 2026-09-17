@@ -44,18 +44,17 @@ DIAGNOSING a bug? Read the source first — Reticle proves what the app DOES, no
 /**
  * Replay before you drive, when a saved flow already covers the change.
  *
- * WHY THIS IS IN THE BRIEFING AND NOT IN A TOOL DESCRIPTION. Measured across 13 agent cells and 323
- * tool calls, with 29 saved flows on disk for every one of them: replay was invoked ZERO times. Not
- * once. It was never a question of the recording being absent — the daemon saves a flow from every
- * drive at teardown, so coverage accumulates whether or not anybody asks. The agent simply had no
- * way to know. `reticle_verify` carries the whole explanation in its own description, and both
- * shipping surfaces trim that from 1,791 characters to 93, which removes every mention of flows. A
- * rule that must survive the trim has to be here.
+ * WHY THIS IS IN THE BRIEFING AND NOT IN A TOOL DESCRIPTION. Across a whole bench run with saved
+ * flows on disk for every cell, replay was invoked ZERO times. Coverage was never the problem — the
+ * daemon saves a flow from every drive at teardown, so it accumulates whether or not anybody asks.
+ * `reticle_verify` carries the whole explanation in its own description, and every shipping surface
+ * trims that description down to one line, which removes every mention of flows. A rule that must
+ * survive the trim has to be here.
  *
  * THE ORDER IS THE POINT. Replaying after a drive proves nothing the drive did not already prove,
- * and you paid for the drive. The saving is avoided TURNS: one scenario measured here cost 14-22
- * turns and 201k-325k tokens to drive, against roughly 460 tokens to replay a flow that covers it.
- * That difference only exists if the question is asked BEFORE the browser is opened.
+ * and the drive is already paid for. The saving is avoided TURNS — orders of magnitude, driving a
+ * journey against replaying it — and it only exists if the question is asked BEFORE the browser is
+ * opened.
  *
  * `unknown` is load-bearing and is stated explicitly. It means no saved flow covers this change, so
  * nothing ran and nothing was proved — and an agent that reads it as "fine" has turned the cheapest
@@ -92,16 +91,15 @@ Fix that before anything else: run \`npx @reticlehq/server init\` in the project
  * When to reach for the tools that are advertised but never explained, and how to reach the two
  * that are explained but not advertised. Both halves of the same defect.
  *
- * An advertised tool arrives as a name and one line of description. That is enough to USE and not
- * enough to CHOOSE, and `reticle_observe` is the case that proves it costs something: the
- * measurement recorded on TOOL_SURFACE.VERIFY is that dropping the observation tools TRIPLED false
- * alarms, because the model stops observing and reaches for the verdict without the evidence. So
- * observe gets a reason, not a listing.
+ * An advertised tool arrives as a name and one line of description: enough to USE, not enough to
+ * CHOOSE. `reticle_observe` is where that costs something — dropping the observation tools TRIPLES
+ * false alarms (see TOOL_SURFACE.VERIFY), because the model stops observing and reaches for the
+ * verdict without the evidence. So observe gets a reason, not a listing.
  *
  * The other direction: `reticle_context` and `reticle_intent` sit on the EXTENDED surface, so they
- * are not in the list an agent is handed. Naming them without their call shape sent an agent at a
- * tool it could not call, which is worse than silence — it teaches distrust of everything else
- * here. They are now written the way the skill writes them, as the `reticle_run` call that works.
+ * are not in the list an agent is handed. Naming one without its call shape points the agent at a
+ * tool it cannot call, which is worse than silence — it teaches distrust of everything else here. So
+ * they are written as the `reticle_run` call that works.
  *
  * Only in the connected state, and that is not a budget trick: an agent whose app has never
  * connected has nothing to observe, no run to carry forward and nothing to declare an intent
@@ -111,8 +109,8 @@ const reachFor = (v: SurfaceVocabulary): string => {
   const lines = [
     `${v.observe} is the evidence channel: everything the page did since a cursor, in one read. Take it BEFORE you call a build broken — measured, stripping the observation tools TRIPLED false alarms, because an agent that stops observing reaches for the verdict without the evidence. ${v.settle} settles a page that is changing without you; ${v.inspect} maps an element to its source file:line, which turns a finding into an edit${v.yield.length > 0 ? `; ${v.yield} hands the tab back to the human` : ''}.`,
   ];
-  // Said ONLY when both halves are advertised. A catalogue with no way to invoke what it lists sent
-  // an agent at `reticle_lease` four times and then off the product entirely — see
+  // Said ONLY when both halves are advertised. A catalogue with no way to invoke what it lists sends
+  // the agent at a tool it cannot call and then off the product entirely — see
   // surface-vocabulary.ts. Where there is no cold tail, there is nothing to say about reaching it.
   if (v.coldTail.length > 0) {
     lines.push(
@@ -137,8 +135,8 @@ interface InstructionState {
    * The names this surface actually advertises. Every tool the prose mentions is resolved from it.
    *
    * Optional so the two proxy call sites, which brief before a daemon has answered, keep the shipped
-   * default — but a daemon that knows its surface MUST pass it, or it briefs an agent on a product
-   * it is not serving. That is not hypothetical: it cost a whole benchmark run.
+   * default — but a daemon that knows its surface MUST pass it, or it briefs an agent on a product it
+   * is not serving.
    */
   advertised?: readonly string[];
   /**
@@ -153,9 +151,9 @@ interface InstructionState {
 
 /** The instructions this daemon should advertise, given what it knows about the project. */
 /**
- * Instructions are sent ONCE at initialize; the tool surface is re-sent every turn. Measured on this
- * server: 621 tokens here against 5,480 per turn there, so anything true of every tool belongs in
- * this block rather than repeated across sixteen parameter descriptions. See shared-params.ts.
+ * Instructions are sent ONCE at initialize; the tool surface is re-sent every turn, and costs an
+ * order of magnitude more for it. So anything true of every tool belongs in this block rather than
+ * repeated across every parameter description. See shared-params.ts.
  */
 export function buildServerInstructions(state: InstructionState): string {
   // Defaults to the surface this package ships, so the two proxy callers — which brief an agent
@@ -163,22 +161,18 @@ export function buildServerInstructions(state: InstructionState): string {
   // The two meta-tools are added by `buildDynamicTools`, not by the surface filter, so they are
   // absent from CORE_TOOL_NAMES — and without them the cold-tail sentence goes silent on the very
   // surface that has a cold tail. The default surface always carries both.
-  // The fallback is the LIVE default surface, not a list. It used to be `CORE_TOOL_NAMES` plus both
-  // meta-tools, which stopped being the default the day the nine became it — and the proxy briefs
-  // WITHOUT passing a surface, so that stale fallback was what every agent reaching Reticle through
-  // `reticle mcp` actually read. It named reticle_snapshot, reticle_query and reticle_wait_for at a
-  // surface that has none of them.
+  // The fallback is the LIVE default surface, never a hardcoded list. The proxy briefs WITHOUT
+  // passing a surface, so a stale fallback here is what every agent reaching Reticle through
+  // `reticle mcp` reads — naming tools the surface it is being served does not have.
   const v = surfaceVocabulary(state.advertised ?? defaultAdvertisedNames());
   const firstMove = firstMoveFor(v);
   /*
    * Said in BOTH states, and gated only on whether the surface can reach replay.
    *
-   * The first cut gated this on `previouslyConnected`, reasoning that replay presupposes saved
-   * flows. That was wrong in the one way that mattered: `previouslyConnected` needs
+   * NOT gated on `previouslyConnected`, though replay presupposes saved flows: that flag needs
    * `readProjectId(cwd)` to resolve, and in a monorepo where the agent runs from the repo root and
-   * the app lives in a subdirectory it returns undefined — so the rule would have been absent
-   * exactly where it is most needed, and reach is the entire problem it exists to fix (measured:
-   * zero replay calls in 323, with 29 saved flows on disk).
+   * the app lives in a subdirectory it returns undefined. The rule would be absent exactly where it
+   * is most needed, and reach is the entire problem it exists to fix.
    *
    * It is safe to say with no flows, because the tool is honest without help: `affected` names
    * nothing, `change` answers `unknown`, and `unknown` already means "drive it" — which is what a

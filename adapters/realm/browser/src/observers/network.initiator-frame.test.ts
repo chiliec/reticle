@@ -1,16 +1,12 @@
 /**
  * The instrument must not name itself as the cause of what it is measuring.
  *
- * `initiatorStack` answers "which line of your code started this request". It filtered our own
- * frames by FILE NAME, which holds only while our code is served under a path that still says
- * `@reticlehq`. Vite's dependency optimiser emits shared chunks as
- * `/node_modules/.vite/deps/chunk-ABC123.js`, where nothing identifies the package — so our patched
- * `fetch` read as ordinary app code and was reported as the caller.
- *
- * The cost was not a cosmetic mislabel. A field reporter was looking at an RSC request stuck
- * `pending` for 170 seconds, trying to decide whether the app's navigation genuinely hung or
- * Reticle's own tracking had lost it, and the evidence said Reticle initiated the request. Their
- * words: "I could not disambiguate from the available tools."
+ * `initiatorStack` answers "which line of your code started this request". Filtering Reticle's own
+ * frames by FILE NAME holds only while its code is served under a path that still says `@reticlehq`:
+ * Vite's dependency optimiser emits shared chunks as `/node_modules/.vite/deps/chunk-ABC123.js`,
+ * where nothing identifies the package, so the patched `fetch` reads as app code and is reported as
+ * the caller. A request stuck `pending` then cannot be told apart from Reticle's own tracking having
+ * lost it.
  */
 import { describe, expect, it } from 'vitest';
 import { firstAppFrame } from './network.js';

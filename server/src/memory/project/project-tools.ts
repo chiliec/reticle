@@ -72,10 +72,10 @@ async function cloudRegression(deps: ToolDeps, sessionId: string | undefined): P
   return report ?? undefined;
 }
 
-/** The two most-recent runs for `name`, oldest-first, or undefined if there are fewer than two. */
 /** Runs returned when the caller does not ask for a specific count. */
 const DEFAULT_RUN_LIMIT = 25;
 
+/** The two most-recent runs for `name`, oldest-first, or undefined if there are fewer than two. */
 function lastTwoFor(runs: RunRecord[], name: string): [RunRecord, RunRecord] | undefined {
   const matching = runs.filter((r) => r.name === name);
   const n = matching.length;
@@ -85,13 +85,6 @@ function lastTwoFor(runs: RunRecord[], name: string): [RunRecord, RunRecord] | u
   if (previous === undefined || current === undefined) return undefined;
   return [previous, current];
 }
-
-/**
- * The cross-run memory tools. `reticle_project` reads .reticle/project.json (optionally
- * scoped to a name, with a diff-vs-last summary); `reticle_run_record` explicitly records an outcome
- * (the manual companion to the auto-record on reticle_flow_replay). Both keep the agent's "did this
- * behave like last run?" question answerable without re-deriving it from raw observations.
- */
 
 /**
  * The per-flow diff between the two most-recent verification ARTIFACTS (.reticle/runs), or undefined when
@@ -106,6 +99,12 @@ async function lastTwoRunArtifacts(deps: ToolDeps): Promise<VerificationRunDiff 
   }
 }
 
+/**
+ * The cross-run memory tools. `reticle_project` reads .reticle/project.json (optionally scoped to a
+ * name, with a diff-vs-last summary); `reticle_run_record` explicitly records an outcome (the manual
+ * companion to the auto-record on `reticle_flow_replay`). Both keep the agent's "did this behave
+ * like last run?" question answerable without re-deriving it from raw observations.
+ */
 export const PROJECT_TOOLS: ToolDef[] = [
   {
     name: ReticleTool.PROJECT,

@@ -152,6 +152,20 @@ function isCompletePng(bytes: Buffer): boolean {
 }
 
 /**
+ * Which runtime this session is, for scoping a visual artifact.
+ *
+ * Undefined when the session cannot be resolved or its SDK never reported one — and undefined means
+ * the flat legacy path, so a baseline captured before any of this keeps matching.
+ */
+function runtimeOf(deps: ToolDeps, sessionId: string | undefined): string | undefined {
+  try {
+    return deps.sessions.resolve(sessionId).runtime;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Get pixels for a session, by whichever route exists.
  *
  * A driven/attached browser is captured through CDP — exact, and the only route that can do
@@ -168,20 +182,6 @@ function isCompletePng(bytes: Buffer): boolean {
  * `full-page-unsupported` — a viewport image returned as though it were the whole scroll height is a
  * baseline that says nothing about the content below the fold, and a later diff would call it green.
  */
-/**
- * Which runtime this session is, for scoping a visual artifact.
- *
- * Undefined when the session cannot be resolved or its SDK never reported one — and undefined means
- * the flat legacy path, so a baseline captured before any of this keeps matching.
- */
-function runtimeOf(deps: ToolDeps, sessionId: string | undefined): string | undefined {
-  try {
-    return deps.sessions.resolve(sessionId).runtime;
-  } catch {
-    return undefined;
-  }
-}
-
 async function capture(
   deps: ToolDeps,
   sessionId: string | undefined,

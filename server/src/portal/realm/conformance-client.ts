@@ -12,25 +12,16 @@ import type { WebRealm } from './web-realm.js';
 /**
  * The binding between the conformance driver and a live Reticle session.
  *
- * The suite has always said this piece was the reader's problem: *"`driveAll` takes a client with
- * three methods, and how those reach your implementation is your business, because we have never
- * seen your platform."* That is the right contract and it left the author in an awkward place —
- * we are also an implementation, and we had not written ours, so the suite could not be run
- * against the thing it was written from.
- *
- * This is ours. It is small on purpose: three methods over a `WebRealm`, no new rules, no second
- * adjudicator. Every verdict it returns comes from the specification's own `adjudicate`, so a
- * score produced through this is a score against the published rules rather than against
- * whatever Reticle happens to do.
+ * Three methods over a `WebRealm`, no new rules and no second adjudicator: every verdict comes from
+ * the specification's own `adjudicate`, so a score produced through this is a score against the
+ * published rules rather than against whatever Reticle happens to do.
  *
  * ── WHAT IT STILL CANNOT DO ─────────────────────────────────────────────────────────────────────
  * Plant a defect. The suite inverts that contract deliberately — it cannot inject a fault into an
  * application it does not own, so the implementation supplies a subject that answers
  * `x-conformance.plant`. Reticle's own fixture does not answer it yet, so a full self-score is
- * still out of reach and every scenario would come back ABSENT.
- *
- * That is the honest state and it is worth stating rather than hiding behind a client that
- * exists: the connection problem is solved here, the subject problem is not.
+ * still out of reach and every scenario comes back ABSENT: the connection problem is solved here,
+ * the subject problem is not.
  */
 
 /** What the driver needs, and nothing more. */
@@ -42,29 +33,9 @@ export interface ConformanceClient {
   verify(claim: Claim): Promise<{ verdict: string; ground: string; reason?: string }>;
 }
 
-/**
- * The window has to be open BEFORE the action, and the first version of this got it backwards.
- *
- * `verify` opened a fresh window and observed it, which is a window containing nothing: the
- * action had already happened during the plant. Every scenario came back unproved, including the
- * healthy one whose entire job is to come back `yes` — and a suite where the negative control
- * fails is a suite that cannot tell a careful implementation from a mute one.
- *
- * That is the specification's own ordering, stated in its own words -- a claim is registered
- * before the action and a window is opened to hold what follows -- and it was violated by the
- * binding written to demonstrate it. Which is the argument for running your own suite: the rule
- * was written down, agreed with, and broken in the same week by the person who wrote it.
- */
-
 /** How long a scenario's window is given before it is judged on what it saw. */
 const WINDOW_BUDGET_MS = 8_000;
 
-/**
- * Evidence from what the realm observed, at the grades its own channel declaration assigns.
- *
- * Built here rather than by the realm, because a realm that produced evidence would be grading
- * the weight of its own observations — the separation the specification exists to keep.
- */
 /**
  * An observation that records a send and can never record its outcome.
  *
@@ -118,6 +89,12 @@ function closedBy(
     : window.closes;
 }
 
+/**
+ * Evidence from what the realm observed, at the grades its own channel declaration assigns.
+ *
+ * Built here rather than by the realm, because a realm that produced evidence would be grading
+ * the weight of its own observations — the separation the specification exists to keep.
+ */
 function asEvidence(
   realm: WebRealm,
   observations: Awaited<ReturnType<WebRealm['observe']>>,
@@ -221,7 +198,9 @@ export function conformanceClient(realm: WebRealm, now: () => number): Conforman
     },
 
     async command(name, args = {}) {
-      // Opened before the action, not after it. See the note above.
+      // The window must be opened BEFORE the action — a window opened in `verify()` contains
+      // nothing, because the action has already happened. That is the specification's ordering: a
+      // claim is registered before the action and a window is opened to hold what follows.
       //
       // The budget is the subject's to shorten. One scenario needs a window that runs out before
       // the application settles -- the verifier giving up, which must never be read as the

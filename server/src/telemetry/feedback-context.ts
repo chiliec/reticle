@@ -66,9 +66,9 @@ interface PackageJsonLike {
 /**
  * What one directory's manifest said: a stack, no manifest at all, or a manifest naming nothing known.
  *
- * The three used to be one empty object. That collapsed the two facts that need opposite fixes —
- * "there is no app here" is a discovery problem, "we read this app and did not recognise it" is a
- * one-line addition to STACK_BY_DEP — and it is why the unknown bucket could not be acted on.
+ * Three cases, not one empty object, because two of them need OPPOSITE fixes: "there is no app
+ * here" is a discovery problem, while "this app was read and not recognised" is a one-line addition
+ * to STACK_BY_DEP. Collapsed together, the unknown bucket cannot be acted on.
  */
 type ManifestStack =
   | { kind: 'found'; stack: string; stackMajor?: number }

@@ -43,7 +43,7 @@ describe('render meter — counts React commits via the devtools hook', () => {
 
   it('a faulting original hook never breaks the commit count (host-safe)', () => {
     const verboten = hookOf().onCommitFiberRoot;
-    // even if the wrapped original throws, our counter still advances and nothing propagates
+    // even if the wrapped original throws, the counter still advances and nothing propagates
     expect(() => verboten?.(1, {})).not.toThrow();
   });
 });

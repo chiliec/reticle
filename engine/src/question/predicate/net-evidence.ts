@@ -15,10 +15,10 @@ import type { Predicate } from './predicate-schema.js';
  * How much of a body the evidence for a PASS may carry when the check never read it.
  *
  * Enough to see the shape of what the server answered — a JSON document's opening keys — and not the
- * document itself. Measured in the field: six `act_and_wait` calls asserting `{ urlContains, status
- * 200 }` through one interview each returned the server's whole answer, ~9.6KB of the same document
- * growing by one slot per step, so almost all of it was a re-send of what the agent already had. The
- * evidence block was 9,693 of an 11,194-byte result.
+ * document itself. Unbounded, a run of `act_and_wait` calls asserting only `{ urlContains, status
+ * 200 }` against one endpoint each return the server's whole answer — nearly the same document every
+ * time — so the evidence block dwarfs the result and almost all of it is a re-send of what the agent
+ * already had.
  *
  * Larger than `MAX_BODY_IN_FAILURE`, and deliberately: a failure quotes the value that DIFFERED and
  * knows which one that is, while a pass is showing the caller what came back and has no such anchor.

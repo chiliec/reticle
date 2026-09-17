@@ -138,18 +138,9 @@ export function tutorialNextSteps(audience: TutorialAudience): string {
 /**
  * What the installer prints when it has finished.
  *
- * The tour used to be a command nobody was told to run twice: one line at the end of
- * `setup install` naming it, and no mention at all from `reticle init`. Unless somebody read that
- * line and chose to type it, the ONBOARD phase never happened — Installation went straight to
- * First run, and the funnel would have shown `tour_started` at nearly zero and read as "nobody
- * wants the tour" rather than "nobody was shown one".
- *
- * Installation and onboarding are ONE script, so the tour is not conditional on anything. An
- * earlier version showed it only when `process.stdout.isTTY` was true — which is `undefined`
- * through every pipe, so in practice nobody ever saw it, including the person who asked four times
- * where it had gone. A heuristic that silently answers "nobody is watching" is worse than no
- * heuristic, and "twenty-five lines is too many for an agent" was never worth a stage of onboarding
- * that reached no one.
+ * Installation and onboarding are ONE script, so the tour is not conditional on anything. Gating it
+ * on `process.stdout.isTTY` does not work: that is `undefined` through every pipe, so the tour never
+ * prints. A heuristic that silently answers "nobody is watching" is worse than no heuristic.
  *
  * It ends with the tour's OWN closing, which already names `reticle init`. Adding a second "Next:"
  * under it would be the same instruction twice in ten lines.

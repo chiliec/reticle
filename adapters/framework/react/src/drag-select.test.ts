@@ -1,5 +1,5 @@
 /**
- * Drag-to-select through React's own delegation, the shape reported in the field.
+ * Drag-to-select through React's own delegation.
  *
  * `onMouseDown` on a cell sets the selection anchor, `onMouseEnter` extends the selection while
  * that anchor lives, and a window-level `mouseup` clears it. React never delivers `onMouseEnter`
@@ -7,7 +7,7 @@
  * native `mouseover`/`mouseout` as the pointer crosses element boundaries. So if the drag action
  * does not announce the crossing with those bubbling boundary events, the extend handler never
  * runs and the selection stays one cell. The rendered `data-selected` attributes are the oracle;
- * the assertion reads what the app rendered, not what our events did.
+ * the assertion reads what the app rendered, not what the synthetic events did.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

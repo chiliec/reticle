@@ -30,8 +30,8 @@ const MAX_CONFIG_SEARCH_DEPTH = 6;
  * Every reader below used to join the basename onto `cwd` and stop there, so a process whose
  * working directory was one level away from the config behaved exactly like a project that had
  * never been through `init`: no port, no projectId, no journal setting, and a diagnostic that told
- * the user to run an install they had already run. That is the shape of several field reports at
- * once — an app wired in a subdirectory, an agent running from a repo root, a worktree beside its
+ * the user to run an install they had already run. Every layout that hits it — an app wired in a
+ * subdirectory, an agent running from a repo root, a worktree beside its
  * main checkout — and they are all the same missing walk.
  *
  * Returns undefined when nothing is found, which keeps every caller's existing default intact.

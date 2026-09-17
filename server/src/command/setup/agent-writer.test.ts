@@ -185,7 +185,7 @@ describe('the skill file', () => {
   /**
    * The `/reticle` command is the first thing an agent runs, and it named tools that are gone.
    *
-   * MEASURED by installing 3.1.0 into a fresh app and driving the default surface: this text sent
+   * MEASURED by installing into a fresh app and driving the default surface: this text sent
    * the reader to `reticle_act_sequence`, which answers "no longer exists — a sequence is now
    * reticle_act { steps: [...] }", and routed two of its three answers through `reticle_run`, which
    * that surface does not advertise at all. Three of the four lines in the cheapest-path list could

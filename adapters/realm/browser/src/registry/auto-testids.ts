@@ -1,13 +1,12 @@
 /**
  * The testids the page is actually showing, read from the live DOM.
  *
- * `registerCapabilities({ testids: [...] })` used to be the only source, and `init` filled it by
- * grepping the source at install time. That list is a snapshot of the codebase on the day `init` ran:
- * it goes stale on the next commit that renames an element, it is empty for every app whose testids
- * arrive with a lazy route, and finishing it was homework handed to whoever ran the install.
+ * NOT `registerCapabilities({ testids: [...] })` alone: a list `init` fills by grepping the source is
+ * a snapshot of the codebase on the day it ran, stale on the next commit that renames an element and
+ * empty for every app whose testids arrive with a lazy route.
  *
  * The attribute in the DOM is the same declaration, read fresh, so nothing has to be copied into a
- * config file to be true. Reticle's own presenter markup is excluded — advertising our own controls
+ * config file to be true. Reticle's own presenter markup is excluded — advertising its own controls
  * as the app's testable surface would be the tool describing itself.
  */
 

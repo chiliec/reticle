@@ -46,10 +46,8 @@ export function pressModifiers(args: Record<string, unknown>): {
  *
  * A real browser always sends both, and a meaningful class of library reads only `code`, because it
  * is the layout-independent one: dnd-kit's KeyboardSensor matches its activation and arrow keys on
- * it, and so does react-aria. We sent `key` alone, so those handlers simply never matched — the
- * event fired, the listener ran, the guard failed, and the action reported dispatched over an app
- * that did nothing. Reported from the field as a keyboard drag that could be neither started nor
- * steered.
+ * it, and so does react-aria. With `key` alone those handlers never match — the event fires, the
+ * listener runs, the guard fails, and the action reports dispatched over an app that did nothing.
  *
  * An explicit `code` always wins: a caller driving a non-US layout knows something this derivation
  * cannot. And an unrecognised multi-character key yields `''` rather than a guess — a wrong `code`

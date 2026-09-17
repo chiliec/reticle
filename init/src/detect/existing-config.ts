@@ -6,10 +6,8 @@ export const RETICLE_CONFIG_FILE = '.reticle.json';
 /**
  * Reading a `.reticle.json` that is ALREADY on disk.
  *
- * Split out of plan.ts when it crossed the line cap. These two are one job -- looking at a config
- * somebody else wrote and deciding what it tells us -- and neither knows anything about steps,
- * plans or the shape of a report, which is what made them the cohesive piece to lift rather than
- * the nearest thousand-line boundary.
+ * These two are one job -- looking at a config somebody else wrote and deciding what it tells us --
+ * and neither knows anything about steps, plans or the shape of a report.
  */
 
 /**

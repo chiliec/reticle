@@ -234,9 +234,9 @@ export class Presenter {
     const root = document.createElement('div');
     root.setAttribute('data-reticle-overlay', '');
     // The mode rides ON the status row, next to the dot and the elapsed time it already reports.
-    // It used to be a sibling BELOW the strip, hidden except while reading or acting — so every
-    // single tool call popped a block into the panel and took it away again, which reads as a
-    // second UI flashing in rather than as the one status line changing what it says.
+    // A sibling BELOW the strip, hidden except while reading or acting, would pop a block into the
+    // panel and take it away again on every tool call — which reads as a second UI flashing in rather
+    // than as the one status line changing what it says.
     const actStrip = `<div class="reticle-act-strip" data-liveness="idle"><span class="reticle-act-dot" aria-hidden="true"></span><span class="reticle-act">${ACT_STRIP.READY}</span><span class="reticle-chip" data-reticle-chip></span></div>`;
     root.innerHTML = `
       ${blockerHtml()}
@@ -286,9 +286,9 @@ export class Presenter {
   /** Annotate whenever the HUD is open and the person asked for it - agent or no agent. */
   #syncAnnotator(): void {
     // Two things have to agree, and both are the user's: the HUD is open, and annotate is switched
-    // on. Session state used to be a third, so the mode was refused the moment the agent
-    // disconnected - which is precisely when someone opens the HUD to record what they just saw.
-    // The button still lit up, so the refusal was invisible: no outline, no composer, no reason.
+    // on. NOT session state - that refuses the mode the moment the agent disconnects, which is
+    // precisely when someone opens the HUD to record what they just saw. The button still lights up,
+    // so the refusal is invisible: no outline, no composer, no reason.
     const live = !this.#shell.isCollapsed() && this.#shell.isAnnotateOn();
     this.#annotator?.toggle(live);
     if (this.#root !== undefined) {
@@ -335,11 +335,11 @@ export class Presenter {
   /**
    * The bridge never answered: show that, rather than showing nothing.
    *
-   * An instrumented page with a dead bridge used to be indistinguishable from a page with no
-   * Reticle in it — overlay mounted, dock off, nothing on screen. The user cannot tell "I forgot to
-   * start the daemon" from "the install did not work", and the commonest cause is the cheapest to
-   * say: the port. So the HUD appears, states the URL it tried, and marks itself unreachable so it
-   * is never mistaken for a live session.
+   * Silence makes an instrumented page with a dead bridge indistinguishable from a page with no
+   * Reticle in it — overlay mounted, dock off, nothing on screen — so the user cannot tell "I forgot
+   * to start the daemon" from "the install did not work". The commonest cause is the cheapest to say:
+   * the port. So the HUD appears, states the URL it tried, and marks itself unreachable so it is
+   * never mistaken for a live session.
    *
    * Not an error dialog and not modal: the page is the user's, and a dev overlay that shouts is one
    * they turn off. It is the same capsule they would have had, saying the one thing it knows.

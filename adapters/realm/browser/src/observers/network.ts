@@ -18,8 +18,7 @@ import { redactUrl, netUrlFields } from './net-detail/network-redact.js';
 import { watchStreamedBody } from './network-stream.js';
 import { requireCapturedMethod } from '@/util/captured-method.js';
 
-// Redaction moved to its own cohesive module (network.ts is at its line cap); re-exported so callers
-// and the existing test suite keep importing it from here.
+// Redaction lives in its own module; re-exported so callers keep importing it from here.
 export { redactUrl, netUrlFields };
 
 /** Config for the network observer. Body capture is OFF by default and dev-only opt-in. */
@@ -176,18 +175,12 @@ const NON_APP_FRAME =
   /@reticlehq|reticle\.ts|network\.ts|transport\.ts|<anonymous>|new Promise|node:internal/i;
 
 /**
- * A frame inside somebody's dependencies, ours included.
+ * A frame inside somebody's dependencies, Reticle's own included.
  *
- * `NON_APP_FRAME` matches on FILE NAME, which works only while our code is served under a path that
- * still says `@reticlehq`. A bundler is free to rename it: Vite's dependency optimiser emits shared
- * chunks as `/node_modules/.vite/deps/chunk-ABC123.js`, where nothing identifies the package. Our own
- * patched `fetch` then reads as ordinary app code and gets reported as the CALLER.
- *
- * That is what a field reporter hit, and the cost was not a cosmetic mislabel. They were looking at
- * an RSC request stuck `pending` for 170 seconds and trying to decide whether the app's navigation
- * genuinely hung or Reticle's own tracking had lost it — and the evidence said Reticle initiated the
- * request. Their words: "I could not disambiguate from the available tools." An instrument that names
- * itself as the cause of the thing it is measuring destroys the reading.
+ * `NON_APP_FRAME` matches on FILE NAME, which works only while Reticle is served under a path that
+ * still says `@reticlehq`. A bundler may rename the chunk (`/.vite/deps/chunk-ABC123.js`), after
+ * which the patched `fetch` reads as app code and is reported as the CALLER. An instrument that names
+ * itself as the cause of what it measures destroys the reading.
  */
 const DEPENDENCY_FRAME = /node_modules|\/\.vite\/deps\//i;
 
@@ -316,7 +309,7 @@ export function installNetwork(emit: Emit, opts: NetworkOptions = {}): Teardown 
   //
   // So it is reported rather than hidden, on the same contract as the cross-origin-iframe sensor —
   // say what we cannot see, so a green verdict never implies we saw it. `isOurs` keeps a re-install
-  // from blaming the app for our own wrapper.
+  // from blaming the app for Reticle's own wrapper.
   if (!isNativeFetch(origFetch) && !OURS.has(origFetch)) {
     emit(EventType.BLIND_SPOT, { kind: BlindSpotKind.WRAPPED_NETWORK, count: 1 });
   }
@@ -342,7 +335,7 @@ export function installNetwork(emit: Emit, opts: NetworkOptions = {}): Teardown 
     const initiatorStack = observeValue(() => initiatorFrame());
     const initiatorFields = initiatorStack === undefined ? {} : { initiatorStack };
     // Guarded: redaction runs over a URL the app supplied, and this is the LAST thing between the
-    // caller and their request. A throw here used to mean the fetch was never made at all.
+    // caller and their request. A throw here would mean the fetch was never made at all.
     observeSafely(() => {
       emit(EventType.NET_PENDING, {
         id,
@@ -463,8 +456,8 @@ export function installNetwork(emit: Emit, opts: NetworkOptions = {}): Teardown 
       throw error;
     }
   };
-  // Remember it, so a later install recognises our own wrapper instead of reporting the app.
-  // Our own wrapper, read the same way — it is a value we stored a line ago, not a method call.
+  // Remember it, so a later install recognises Reticle's own wrapper instead of reporting the app.
+  // Reticle's own wrapper, read the same way — it is a value we stored a line ago, not a method call.
   const patchedFetch = requireCapturedMethod<typeof window.fetch>(window, 'fetch');
   OURS.add(patchedFetch);
 
@@ -647,9 +640,9 @@ export function installNetwork(emit: Emit, opts: NetworkOptions = {}): Teardown 
           super.send(data);
           return;
         }
-        // The app's frame goes FIRST and outside the guard — storage.ts's ordering. Building the
-        // OUT payload (redacting the frame, projecting a Blob/ArrayBuffer) used to run before the
-        // send, so one throw meant the customer's message was never transmitted at all.
+        // The app's frame goes FIRST and outside the guard — storage.ts's ordering. Building the OUT
+        // payload (redacting the frame, projecting a Blob/ArrayBuffer) before the send would let one
+        // throw stop the app's message being transmitted at all.
         super.send(data);
         observeSafely(() => {
           emit(EventType.NET_STREAM, {
@@ -703,9 +696,9 @@ export function installNetwork(emit: Emit, opts: NetworkOptions = {}): Teardown 
   }
 
   // Document-initiated subresources (link/css/img/script/manifest): fetch and XHR patches never see
-  // these, so a `{net}` predicate over a favicon or manifest used to read `assertion_failed` — "your
-  // change is broken" — when the truthful answer is "not observable". A PerformanceObserver over
-  // `resource` entries reports them with no CDP. Status is the known gap: entries carry one only on
+  // these, so without this a `{net}` predicate over a favicon or manifest reads `assertion_failed` —
+  // "your change is broken" — when the truthful answer is "not observable". A PerformanceObserver
+  // over `resource` entries reports them with no CDP. Status is the known gap: entries carry one only on
   // newer Chromium, so the field is emitted ONLY when readable and the evaluation seam downgrades
   // status assertions it cannot verify instead of guessing.
   //

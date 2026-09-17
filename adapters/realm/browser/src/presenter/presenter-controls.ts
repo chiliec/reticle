@@ -13,8 +13,7 @@ import { getPresenterSettings } from './presenter-settings.js';
 import { mountWorkspaceSelector, workspaceRowHtml } from './presenter-workspace.js';
 import type { HeroIconBodyKey } from './icons/presenter-heroicons-data.js';
 // Live-control panel: the two-way control surface inside the floating HUD - Pause/Resume + End
-// (header), a message input + Send (footer), and the data-reticle-state visual machine. Split out of
-// presenter.ts to keep both files under the 500-line cap (mirrors the presenter-log.ts split).
+// (header), a message input + Send (footer), and the data-reticle-state visual machine.
 // All nodes carry data-reticle-* attrs so they're excluded from snapshots (see dom-ignore.ts). The
 // strings here are presenter-only UI; the control kinds + state values reuse protocol constants.
 /** data-reticle-state attribute on the overlay root; its value is always a SessionState. */
@@ -236,8 +235,8 @@ interface ControlPanelHost {
 
 /**
  * The live-control panel: owns the control element refs, the SessionState, the ended-fade timer,
- * the DOM wiring, and the data-reticle-state visual machine. Split out of Presenter to keep both files
- * under the 500-line cap. A click handler both emits a control AND optimistically applies state; the
+ * the DOM wiring, and the data-reticle-state visual machine. A click handler both emits a control
+ * AND optimistically applies state; the
  * server's PRESENTER echo re-syncs via setState only (never emits) so a control is delivered once.
  */
 export class ControlPanel {

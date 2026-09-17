@@ -22,11 +22,9 @@ import { MCP_SERVER_NAME } from '@reticlehq/core';
 /**
  * The registered command is STILL bare `npx` on every platform, deliberately.
  *
- * Windows is most of Reticle's users and, when this was written, had no CI. There is Windows CI
- * now, so the `cmd /c` fallback is testable. Defaulting the majority platform to that launch
- * command is still the riskier change: `.cmd` has spawn caveats in some hosts, and a registration
- * that works on the machines we can test can still fail in the hosts we cannot. So the fallback
- * stays documented rather than defaulted.
+ * Windows is the platform where this launch path matters most, and `cmd /c` is testable under
+ * Windows CI. Defaulting to it is still the riskier change: `.cmd` has spawn caveats in some hosts,
+ * so the fallback stays documented rather than defaulted.
  *
  * What DID change is when it is printed. `mcpManual` used to run only when the `claude` CLI was
  * absent. The reported Windows install had `claude mcp add` succeed, so the one paragraph that
@@ -53,9 +51,8 @@ const WINDOWS_SHELL_C = '/c';
  *
  * It would also freeze the agent's MCP server at whatever version was installed the day `init` ran,
  * for as long as that entry survives — and `reticle update` upgrades the CLI, not a global agent
- * config. Reticle's biggest measured problem is fixes not reaching people — a release carrying an
- * important fix can sit unadopted until something tells anyone it exists — and a permanent pin makes
- * that worse for every install, to close a window that lasts until the next npx cache miss.
+ * config. A permanent pin trades a window that lasts until the next npx cache miss for one that
+ * lasts forever.
  *
  * So it stays unpinned, and the skew is handled where it actually shows up: the contract fingerprint
  * makes a real mismatch loud on the next tool result (see version-skew), and a stale entry of our own

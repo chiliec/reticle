@@ -1,9 +1,9 @@
 /**
  * A role+name query is EXACT, and a miss said nothing about what was actually there.
  *
- * Reported from the field as "exact-only name matching costs real calls": a query for the button
- * named "Mesh" against a page whose button reads "2 Mesh" returns nothing, and the agent has to
- * spend a snapshot to discover a label it was one word away from.
+ * Exact-only name matching costs real calls: a query for the button named "Mesh" against a page
+ * whose button reads "2 Mesh" returns nothing, and the agent has to spend a snapshot to discover a
+ * label it was one word away from.
  *
  * Loosening the match itself is the wrong fix and a dangerous one. Substring matching on `name`
  * would make a query for "Save" also select "Save and close" and "Autosave", and the failure mode

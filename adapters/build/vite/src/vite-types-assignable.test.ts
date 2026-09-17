@@ -2,7 +2,7 @@
  * The documented install must not red-build a project that typechecks its own config.
  *
  * `reticle()` in a Vite plugin array failed `vue-tsc --noEmit` with TS2322: the real `ViteDevServer`
- * is not assignable to our structural stand-in. The cause is contravariance, and it is the opposite
+ * is not assignable to the structural stand-in. The cause is contravariance, and it is the opposite
  * of what the loose types look like they are doing — declaring `invalidateModule: (mod: object) =>
  * void` as a PROPERTY makes the parameter checked strictly, so a wider `object` in that position
  * makes the type STRICTER, not looser, and Vite's real `(mod: ModuleNode, …)` cannot satisfy it.
@@ -37,7 +37,7 @@ describe('public types stay consumable from a strict TS project', () => {
 });
 
 /**
- * The second half of the same defect, and the half our own repo cannot see: we develop against ONE
+ * The second half of the same defect, and the half Reticle's own repo cannot see: we develop against ONE
  * Vite major. `plugins: [reticle()]` typechecking here proves nothing about the majors users are on,
  * and two independent reporters could not adopt 2.13.1 because `tsc` / `svelte-check` rejected it.
  *

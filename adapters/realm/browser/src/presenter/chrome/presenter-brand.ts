@@ -9,7 +9,7 @@
  */
 /**
  * Brand marks, inlined. The SDK is bundled into someone else's page: it cannot read
- * `assets/logo/*.svg` from disk at runtime and must never fetch from our own domain, so the mark
+ * `assets/logo/*.svg` from disk at runtime and must never fetch from Reticle's own domain, so the mark
  * lives here as a string (same precedent as SEND_ICON in presenter-controls.ts).
  * Minified - editor metadata, clip paths, masks and sub-0.01 precision stripped - and painted
  * with `currentColor` so the mark tracks --reticle-fg instead of hardcoding the export's #FAFAFA.

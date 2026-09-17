@@ -5,10 +5,9 @@ import { URL_RAW } from './net.js';
  * Wire redaction rules — which field names carry credentials, and which VALUE shapes are secrets
  * regardless of the field they sit in.
  *
- * These live in core because they are a property of the wire, not of one side of it. They were
- * implemented in the browser SDK, which was the only consumer until the driven path began capturing
- * request bodies straight from the network stack — those are raw and unscrubbed, and duplicating a
- * security regex to redact them would be the worst possible place to have two copies drift.
+ * These live in core because they are a property of the wire, not of one side of it: the browser
+ * SDK and the driven path (which captures request bodies raw off the network stack) both redact
+ * with them, and a security regex is the worst possible place to have two copies drift.
  */
 // `pass[-_]?phrase` is the fourth spelling of the first three. There is no benign field called
 // `passphrase`: it is what an SSH key, a keystore, an encrypted backup and a wallet all call their
@@ -18,25 +17,21 @@ import { URL_RAW } from './net.js';
 // away, but the window in which one is useful is the window in which a drive is running, and the
 // journal is written to disk and read back later. `(otp|totp|mfa|recovery|backup)[-_]?codes?`
 // carries the camelCase spellings too, since `[-_]?` is optional and the rule is case-insensitive.
-// Bare `otp`/`totp` are boundary-anchored: unanchored they would fire inside ordinary words, and
-// this file's own history is a list of false positives that had to be walked back.
+// Bare `otp`/`totp` are boundary-anchored: unanchored they fire inside ordinary words.
 // `code` on its own is deliberately NOT here — `statusCode`, `postcode`, `couponCode` and
 // `countryCode` are ordinary app data an agent needs in order to reach a verdict.
 //
 // `token` must match auth CREDENTIALS, not compound design fields. Bare/separated `token(s)` and
 // auth-prefixed tokens (accessToken, auth_token, sessionToken, …) are redacted; `colorToken`,
-// `backgroundToken`, `tokenCount`, `designToken` are NOT — they were false-positives that redacted
-// legitimate reticle_inspect/reticle_state output.
-// `token` must match auth CREDENTIALS, not compound design fields (see note above). `cookie` is
-// boundary-anchored the same way: it targets the `Cookie` / `Set-Cookie` HTTP HEADER names (which
+// `backgroundToken`, `tokenCount`, `designToken` are NOT — redacting those blinds
+// reticle_inspect/reticle_state to legitimate app data. `cookie` is boundary-anchored the same way: it targets the `Cookie` / `Set-Cookie` HTTP HEADER names (which
 // bundle the session credential and were the one wire payload reaching the journal + the agent
 // unredacted), NOT any key that merely contains the substring — `scopecookie`, `cookieConsent`,
 // `cookiePolicy` are legitimate app values an agent may need to read, and stay visible.
-// Bare `card` and `pan` are boundary-anchored for the same reason, and were added because they were
-// MISSING: a checkout POST was captured as `{"planId":"team","card":"4111111111111111"}` and handed
-// to an agent in full, with `password` redacted in the request beside it. `credit_card` and
-// `card_number` were covered; `card` — what Stripe's own object is called, and the shortest thing
-// anybody names the field — was not. The anchors keep `discard`, `cardinality` and `panel` visible.
+// Bare `card` and `pan` are boundary-anchored for the same reason. Without them a checkout POST
+// reaches the agent as `{"planId":"team","card":"4111111111111111"}` — `credit_card` and
+// `card_number` are not the only spellings, and `card` is what Stripe's own object calls it. The
+// anchors keep `discard`, `cardinality` and `panel` visible.
 const SENSITIVE_KEY =
   /password|passwd|passcode|pass[-_]?phrase|(?:otp|totp|mfa|recovery|backup)[-_]?codes?|(?:^|[-_])(?:otp|totp)(?=$|[-_])|secret|(?:(?:access|refresh|auth|bearer|api|id|session|csrf|client)[-_]?tokens?|(?:^|[-_])tokens?(?=$|[-_]))|session[-_]?id|(?:^|[-_])(?:sid|pwd|jwt)(?=$|[-_])|authorization|(?:^|[-_])(?:set[-_])?cookie(?=$|[-_])|api[-_]?key|access[-_]?key|private[-_]?key|client[-_]?secret|credit[-_]?card|card[-_]?(?:number|num|no|pan)(?=$|[-_])|(?:^|[-_])(?:card|pan)(?=$|[-_])|cvv|cvc|ssn|(?:^|[-_])(?:signature|sig)$|(?:^|[-_])credential$|x-(?:amz|goog)-(?:signature|credential|security-token)$/i;
 

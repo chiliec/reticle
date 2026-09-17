@@ -26,9 +26,8 @@ import { creditNudge } from './nudge-credit.js';
  *
  * Replaces a plain `!==`, which told anyone on a version newer than the published one — a
  * prerelease, a local build, a rollback in progress — to "update" to something older. A nudge that
- * prompts a downgrade is one people learn to ignore, and this is the mechanism the entire adoption
- * story rests on. Numeric per segment, so 2.10.0 correctly beats 2.9.0 (string order does not), and
- * a bare release beats its own prerelease.
+ * prompts a downgrade is one people learn to ignore. Numeric per segment, so a 10 patch correctly
+ * beats a 9 (string order does not), and a bare release beats its own prerelease.
  */
 function isNewerVersion(candidate: string, current: string): boolean {
   const parse = (v: string): { parts: number[]; pre: boolean } => {
@@ -81,7 +80,7 @@ const MAX_LISTED_BREAKING = 4;
  * metadata nobody ever printed.
  *
  * Survivable while releases are additive; actively harmful for one that is not. An agent told only
- * "2.4.1 → 2.5.0" runs `reticle update` mid-task and discovers a retired environment variable and
+ * the two version numbers runs `reticle update` mid-task and discovers a retired environment variable and
  * six newly-strict parameters by breaking on them.
  *
  * Bounded on purpose: this rides on a tool result every turn until it is delivered, so a long
@@ -221,10 +220,8 @@ export function availableUpdate(currentVersion: string = SERVER_VERSION): string
 /**
  * What the nudge did this daemon run, for the session summary.
  *
- * The nudge has shipped for several releases and emitted nothing, so "did the agent get told about
- * a release, and did anything happen" was unanswerable — and it is the whole adoption mechanism for
- * a published fix. `versionChange.nudged` is the half that only ever arrives from machines that DID
- * update; the pinned cohort never fires `version_changed` at all.
+ * Without this, "did the agent get told about a release, and did anything happen" is unanswerable:
+ * `versionChange.nudged` is the half that only ever arrives from machines that DID update.
  *
  * Reads the same module state the delivery path uses rather than adding a counter beside it, so the
  * two cannot disagree. `shown` is the one-shot delivery flag: it means "an agent was told", never

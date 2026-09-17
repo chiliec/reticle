@@ -25,9 +25,9 @@ const sel = (role: string): string => `[${MARK_ATTR}="${role}"]`;
 /**
  * What the HUD is told about a mark the moment it is placed.
  *
- * The row used to get the note and the anchor's label - "generic: my feedback" - which names
- * neither the element nor which of several marks it is. The pin on the page is numbered, so the
- * row carries the same number, plus the source the anchor already resolved.
+ * The note plus the anchor's label alone - "generic: my feedback" - names neither the element nor
+ * which of several marks it is. The pin on the page is numbered, so the row carries the same number,
+ * plus the source the anchor already resolved.
  */
 interface MarkReport {
   note: string;
@@ -275,7 +275,7 @@ export class Annotator {
     if (!this.#active) return;
     // A click Reticle dispatched is the agent driving the app, not a person placing a mark. Without
     // this, expanding the HUD silently disabled every `reticle_act` click while the action still
-    // reported success — a false green in our own UI. See synthetic-input.ts.
+    // reported success — a false green in Reticle's own UI. See synthetic-input.ts.
     if (isSyntheticInput()) return;
     const raw = ev.target;
     if (!(raw instanceof Element)) return;

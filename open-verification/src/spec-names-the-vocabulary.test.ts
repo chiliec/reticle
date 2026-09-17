@@ -18,9 +18,9 @@ import * as ovp from './index.js';
  * who does not install the TypeScript, and a vocabulary value the document never mentions is a
  * value they will not implement.
  *
- * Matching is token-bounded rather than a substring. `includes('net')` is satisfied by the word
- * "network", and the first version of this measurement passed `bound` on the word "bounded" --
- * a check that cannot tell a term from a coincidence would have reported this file as clean.
+ * Matching is token-bounded rather than a substring: `includes('net')` is satisfied by the word
+ * "network" and `bound` by "bounded", and a check that cannot tell a term from a coincidence
+ * reports this file as clean whatever it says.
  */
 
 const SPEC = join(

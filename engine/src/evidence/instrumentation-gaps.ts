@@ -62,8 +62,6 @@ export interface ActionInstrumentationFacts {
   domMutated: boolean;
   /** How many app signals fired in the window. */
   signalsFired: number;
-  /** Did the route change in this action's window? */
-  /** Did anything signal that route change? */
   /**
    * Did a code change land since the last verdict with nothing declaring what it was for?
    *

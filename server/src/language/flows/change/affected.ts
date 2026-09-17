@@ -2,7 +2,7 @@
  * The file→flow reverse index — the heart of the unavoidable loop. When a file changes, which flows must
  * re-verify? A flow persists the source files its anchors were stamped from (its "sources manifest"); a
  * changed file that appears in a flow's manifest makes that flow affected. A flow with NO manifest
- * (recorded before v2.2, or un-stampable) is `unknown` — and unknown always means affected, never
+ * (recorded before source stamping, or un-stampable) is `unknown` — and unknown always means affected, never
  * silently skipped: the loop fails safe toward re-verifying.
  */
 

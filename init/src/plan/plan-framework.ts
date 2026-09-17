@@ -1,7 +1,7 @@
 /**
  * How each framework gets wired: the Vite plugin, the three Next files, the SvelteKit client hook.
- * Split out of `plan.ts` — that file is the plan's SHAPE (statuses, ordering, the agent/MCP steps),
- * this one is the per-framework detail, and they grow for different reasons.
+ * `plan.ts` is the plan's SHAPE (statuses, ordering, the agent/MCP steps); this is the per-framework
+ * detail, and they grow for different reasons.
  */
 
 import { bridgeWsUrl } from '@reticlehq/core';
@@ -449,14 +449,6 @@ export function nextSteps(input: PlanInput): Step[] {
   ];
 }
 
-/**
- * SvelteKit is WIRED but not SUPPORTED, and the plan says so out loud.
- *
- * There is no SvelteKit app in `apps/` and no CI gate for one, so nothing proves this hook still
- * registers a session — every other framework init offers (React, Next, Remix, Astro) has both. The
- * wiring is real and may well work; what is missing is anything that would tell us when it stops.
- * Silently emitting it reads as a support claim, which is the thing this project exists to not do.
- */
 /**
  * The one failure `init` cannot otherwise see: the bundler will not parse our SDK.
  *

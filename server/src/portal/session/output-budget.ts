@@ -2,7 +2,7 @@ import { CHURN_TYPES, type ReticleEvent } from '@reticlehq/core';
 
 /**
  * A self-budgeting hint returned on event-bearing tool results so the agent can decide whether to
- * narrow its next call (the report flagged 60KB+ results as a real token tax). `bytes` is the JSON
+ * narrow its next call (large results are a real token tax). `bytes` is the JSON
  * size of the payload; `droppedOldest` is present only when a cap actually truncated the timeline —
  * never a silent cap.
  */

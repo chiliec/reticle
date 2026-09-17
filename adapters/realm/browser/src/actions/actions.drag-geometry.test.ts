@@ -1,5 +1,5 @@
 /**
- * A drag has to carry coordinates, or it is a false green in our own tooling.
+ * A drag has to carry coordinates, or it is a false green in Reticle's own tooling.
  *
  * Reported by an agent driving a `@dnd-kit/core` board: `reticle_act { action: "drag" }` returned
  * `ok:true`, `dispatched:true`, `effect.domMutatedWithin:0` — and the card had not moved. dnd-kit

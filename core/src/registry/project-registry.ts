@@ -3,11 +3,11 @@ import { z } from 'zod';
 /**
  * Which directory a projectId lives in, on this machine.
  *
- * Config discovery answers the same question by walking out from the daemon's own working directory,
- * which is right whenever the daemon and the app share a tree. It cannot answer it at all when they
- * do not — a daemon started in one repo, driving an app in a sibling checkout, will never find that
- * app's `.reticle.json` however far it walks. That is not an edge case: an editor starts a
- * user-scoped MCP server wherever it likes, so it is the default arrangement.
+ * Config discovery answers the same question by walking out from the daemon's working directory,
+ * which works only when the daemon and the app share a tree. A daemon started in one repo, driving
+ * an app in a sibling checkout, never finds that app's `.reticle.json` however far it walks — and
+ * since an editor starts a user-scoped MCP server wherever it likes, that is the default
+ * arrangement.
  *
  * `init` holds both halves at the moment it runs — the directory it is initialising and the
  * projectId it has just written into that directory's `.reticle.json`. Recording the pair once makes

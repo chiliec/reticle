@@ -8,8 +8,7 @@
  *
  * That matters twice over. An agent that can read the corpus stops re-deriving what a colleague
  * proved last week; and because the read is attributed, the coverage map's fetch counts finally
- * measure something — they were zero across an entire real corpus, not because the knowledge was
- * useless but because consulting it was a separate act nobody performed.
+ * measure something rather than staying at zero because consulting the corpus was a separate act.
  */
 import { z } from 'zod';
 import { ReticleTool } from '@reticlehq/core';

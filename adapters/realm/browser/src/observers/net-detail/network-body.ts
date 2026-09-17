@@ -1,9 +1,7 @@
 /**
  * Response/request BODY projection for the network observer.
  *
- * Split out of network.ts, which had grown to hold URL redaction, body projection, fetch, XHR, SSE,
- * WebSocket and sendBeacon at once. This module owns exactly one question: given a body, what is safe
- * and affordable to report?
+ * One question: given a body, what is safe and affordable to report?
  */
 import { REDACTED_VALUE } from '@reticlehq/core';
 import { isSensitiveKey, safeStringify, scrubKnownSecrets } from '@/security/serialization.js';
@@ -58,16 +56,16 @@ export function isStreamingBody(contentType: string | null, contentLength: strin
  * Two layers protect the app. `text/event-stream` and friends are skipped outright, which covers the
  * common streaming case at zero cost. This deadline is the backstop for a body that streams WITHOUT
  * announcing it in its content type — chunked `application/json` from a token-streaming API. Gating on
- * `content-length` instead was tried and rejected: plenty of complete responses omit it (gzip, HTTP/2),
- * so that would silently stop capturing bodies for ordinary apps. A bounded half-second on a rare path
- * beats an unbounded hang, and beats losing capture everywhere.
+ * NOT gated on `content-length`: plenty of complete responses omit it (gzip, HTTP/2), so that
+ * silently stops capturing bodies for ordinary apps. A bounded half-second on a rare path beats an
+ * unbounded hang, and beats losing capture everywhere.
  */
 const BODY_READ_TIMEOUT_MS = 500;
 
 /**
  * Resolve with the body text, or `undefined` if it takes too long.
  *
- * The app is already awaiting our patched fetch, so any unbounded read here is a hang in the host app.
+ * The app is already awaiting the patched fetch, so any unbounded read here is a hang in the host app.
  * Losing an observation is always preferable to freezing the page being observed.
  */
 export async function withBodyDeadline(read: Promise<string>): Promise<string | undefined> {
@@ -200,11 +198,11 @@ export function projectBody(
   rawText: string,
   contentType: string | null,
 ): { body: string; truncated: boolean } {
-  // Bound the INPUT before any parsing or scanning. The cap used to be applied only at the end, so a
-  // large body was JSON.parsed in full, deep-walked, re-stringified, and swept by two global regexes
-  // before all but 8 KB of the result was thrown away — seconds of synchronous main-thread work for a
-  // fixed-size output. A 30 MB CSV export or a big HTML error page froze the app, which is the same
-  // class of host-app damage as the streaming hang, with the SDK still the cause.
+  // Bound the INPUT before any parsing or scanning. Capping only at the END means a large body is
+  // JSON.parsed in full, deep-walked, re-stringified and swept by two global regexes before all but
+  // 8 KB of the result is thrown away — seconds of synchronous main-thread work for a fixed-size
+  // output. A 30 MB CSV export or a big HTML error page freezes the app, which is the same class of
+  // host-app damage as the streaming hang.
   //
   // The slice is generous (a multiple of the output cap) so redaction still sees enough context to
   // recognise a secret that straddles the boundary, while the work stays bounded regardless of body size.

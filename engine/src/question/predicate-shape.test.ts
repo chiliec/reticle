@@ -1,7 +1,7 @@
 /**
  * A near-miss predicate must not cost a verdict.
  *
- * Predicate rejections are the largest named class of tool error in the field, and every one of them
+ * Predicate rejections are the largest named class of tool error, and every one of them
  * lands on `reticle_act_and_wait` / `reticle_wait_for` / `reticle_assert` — the only tools that
  * produce a verdict at all. A rejected predicate does not merely fail: nothing runs, so the drive
  * ends with no result. The agent then either retries blind or gives up and reports unverified.

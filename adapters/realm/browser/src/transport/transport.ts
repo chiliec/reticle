@@ -320,11 +320,10 @@ export class Transport {
     const command = result.data;
     // #sessionId is set in onopen, which always precedes any inbound command on the same socket.
     //
-    // A mismatch used to `return` — silently. The command then had no reply of any kind, so the agent
-    // waited out its full timeout and got "command timed out", which reads as a hung or suspended
-    // page. Measured on a Tauri shell: the session was connected and streaming events the whole time
-    // while every command vanished here, and three rounds of debugging went looking at the webview.
-    // A dropped command is a real fault, so it now says so and names both ids.
+    // A mismatch must NOT `return` silently: the command then has no reply of any kind, so the agent
+    // waits out its full timeout and gets "command timed out", which reads as a hung or suspended page
+    // while the session is connected and streaming events throughout. A dropped command is a real
+    // fault, so it says so and names both ids.
     if (command.sessionId !== undefined && command.sessionId !== this.#sessionId) {
       this.#sendRaw(
         safeStringify({

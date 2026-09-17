@@ -99,7 +99,7 @@ describe('stampSvelte', () => {
 describe('the stamp survives the Svelte compiler', () => {
   // The property that actually matters. Stamping source the compiler then discards would produce a
   // green unit test and no attribute in the DOM — precisely the false green this project exists to
-  // catch, and the reason this asserts on COMPILED output rather than on our own string surgery.
+  // catch, and the reason this asserts on COMPILED output rather than on Reticle's own string surgery.
   it('carries data-reticle-source into the generated client component', () => {
     const source = '<div class="card">\n  <button>Pay</button>\n</div>';
     const stamped = stampSvelte(source, 'src/Checkout.svelte') ?? '';

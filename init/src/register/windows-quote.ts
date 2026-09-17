@@ -1,39 +1,18 @@
 /**
- * Quote one argument for a Windows command line. Pure, and deliberately NOT platform-gated.
- *
- * The rule used to live inside a `process.platform === WINDOWS` branch in node-io.ts, which meant
- * the Windows path could not be exercised on a mac or in CI's Linux job — so it stayed wrong. A
- * pure function is most of the fix: it can be asserted anywhere, and it is.
- *
- * ## What was wrong
- *
- * ```ts
- * /[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg
- * ```
- *
- * Two independent holes, both reachable from an ordinary directory path:
- *
- * 1. **Backslashes were not escaped.** `C:\Users\ada\My Projects\` became
- *    `"C:\Users\ada\My Projects\"`, whose trailing `\"` reads as an ESCAPED quote — the quoted
- *    region never closes and the rest of the line is re-parsed by cmd.exe. CodeQL flagged this one
- *    (`js/incomplete-sanitization`, high).
- * 2. **The predicate only looked for whitespace and quotes.** An argument like `foo&whoami` has
- *    neither, so it was handed to cmd.exe completely unquoted. Correct backslash escaping does
- *    nothing for that; it needs the metacharacters in the trigger.
- *
- * ## The rule implemented here
+ * Quote one argument for a Windows command line. Pure, and deliberately NOT platform-gated, so the
+ * Windows rule can be asserted on a mac or in CI's Linux job.
  *
  * `CommandLineToArgvW`: a run of backslashes is literal unless it precedes a `"`, in which case the
- * run is doubled and the quote escaped; a run at the very end sits before the closing quote we add,
- * so it is doubled too. Correctly-terminated quotes also neutralise cmd.exe's metacharacters, which
- * it does not interpret inside a quoted region.
+ * run is doubled and the quote escaped; a run at the very end sits before the closing quote added
+ * here, so it is doubled too. An unescaped trailing `\` reads as an escaped quote and leaves the
+ * rest of the line re-parsed by cmd.exe. Correctly-terminated quotes also neutralise cmd.exe's
+ * metacharacters, so the trigger has to include them: `foo&whoami` contains no whitespace and no
+ * quote, and went through unquoted.
  *
- * ## Known limit, stated rather than papered over
- *
- * `%VAR%` is expanded by cmd.exe even inside quotes, and no quoting prevents it — only avoiding
- * `shell: true` does, which Windows needs so `pnpm.cmd`/`npx.cmd` resolve (see `shellOpt`). That is
- * variable substitution, not command execution, and every caller here passes paths and package
- * names rather than user prose.
+ * KNOWN LIMIT: `%VAR%` is expanded by cmd.exe even inside quotes, and no quoting prevents it — only
+ * avoiding `shell: true` does, which Windows needs so `pnpm.cmd`/`npx.cmd` resolve (see `shellOpt`).
+ * That is variable substitution, not command execution, and every caller here passes paths and
+ * package names rather than user prose.
  */
 
 /**

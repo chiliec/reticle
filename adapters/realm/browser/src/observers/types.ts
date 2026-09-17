@@ -13,7 +13,7 @@ export type Teardown = () => void;
  * as an SDK error — it propagates out of `localStorage.setItem` after the write already succeeded, out
  * of `history.pushState` (crashing a router's navigate), or out of `console.log` before the message
  * reaches the console. Guarding the transport hop alone is not enough: the payload is BUILT here too
- * (reading the old value, resolving the area, redacting), and any of that can throw on a hostile or
+ * (reading the prior value, resolving the area, redacting), and any of that can throw on a hostile or
  * exotic object.
  *
  * A dev-only observability SDK must never be able to break the app it is observing.

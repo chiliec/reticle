@@ -169,9 +169,8 @@ export function assertEnterprise(
   if (!ctx.requireLicense) return;
 
   // Resolved exactly as the env-entry point resolves it: BAKED first, env only as the dev/test
-  // hatch. This path used to read the environment alone, so on a real release, where the key is
-  // baked and no env var is set, it denied every valid licence with `no-issuer-key` while
-  // assertEnterpriseFromEnv allowed the same key on the same build. Two gates, one truth.
+  // hatch. Reading the environment alone denies every valid licence on a real release, where the key
+  // is baked and no env var is set. Two gates, one truth.
   const publicKey = ctx.publicKey ?? loadPublicKey(resolveIssuerPublicKeyPem(env, baked));
   if (publicKey === undefined) throw new EnterpriseLicenseError(feature, 'no-issuer-key');
 

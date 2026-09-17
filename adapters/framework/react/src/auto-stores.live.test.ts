@@ -2,7 +2,7 @@
  * Discovery against a REAL React tree, not a hand-built fiber.
  *
  * The first pass of these tests used fibers we constructed ourselves, which proved the classifier and
- * the walk agreed with our own idea of a fiber — and proved nothing about React's. The battery then
+ * the walk agreed with Reticle's own idea of a fiber — and proved nothing about React's. The battery then
  * failed on a Next app whose page rendered nothing but an error overlay, on a change every unit test
  * passed. A real `createRoot` render is the smallest thing that could have caught it.
  */

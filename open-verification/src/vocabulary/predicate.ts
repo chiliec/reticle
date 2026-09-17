@@ -5,20 +5,13 @@ import type { Observation } from './evidence.js';
 /**
  * The few predicate shapes this specification evaluates itself.
  *
- * ── WHY THIS EXISTS, GIVEN THAT `Assertion.predicate` IS DELIBERATELY OPAQUE ────────────────────
- * It still is. A general predicate language is a realm's business and the part of a specification
- * that ages worst, and nothing here narrows what an implementation may accept.
+ * `Assertion.predicate` stays OPAQUE -- a general predicate language is a realm's business and the
+ * part of a specification that ages worst -- and nothing here narrows what an implementation may
+ * accept. But an opaque field alone leaves the adjudicator's clause 4 ("the declared consequence
+ * did not hold") unreachable, because nobody can evaluate a predicate written in a language they do
+ * not speak, and two implementations cannot be COMPARED.
  *
- * What the opaque field could not do was let two implementations be COMPARED. The adjudicator's
- * clause 4 -- "the declared consequence did not hold" -- is unreachable unless somebody evaluates
- * the claim, and nobody can evaluate a predicate written in a language they do not speak. So
- * every conformance scenario described its condition in prose, every binding passed
- * `assertionsHeld: undefined`, and a claim that named a count could not be contradicted by two
- * writes. The same shape of defect as `impeaching`: a field defined, deferred to somebody, and
- * evaluated by nobody.
- *
- * These forms are therefore chosen to be the smallest set that makes the clause reachable, not a
- * language:
+ * These forms are therefore the smallest set that makes the clause reachable, not a language:
  *
  *   - they read only what an `Observation` carries in EVERY realm -- its channel, its summary,
  *     and its rendered value -- so a service, a robot and a browser answer them the same way;

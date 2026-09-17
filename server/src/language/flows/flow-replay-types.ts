@@ -5,13 +5,7 @@ import type { EvalResult } from '@reticlehq/engine/question/predicate/predicate.
 /**
  * The shapes a replay needs from whatever is driving it.
  *
- * A LEAF, and that is the whole point. These lived in `flow-replay.ts`, so `flow-step-runners.ts`
- * and `flow-success.ts` — both of which `flow-replay` imports — had to import back out of it to name
- * their own parameters. TypeScript erases a type-only import, so nothing was wrong at runtime; the
- * cycle was real to every tool that reads imports, and it made a large module look like the source
- * of shapes that are really just its vocabulary.
- *
- * A type that two collaborators both need belongs beside neither of them.
+ * A LEAF on purpose: a type two collaborators both need belongs beside neither of them.
  */
 
 /**

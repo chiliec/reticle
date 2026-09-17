@@ -1,17 +1,13 @@
 /**
  * What a verification run is DOING, while it is still doing it.
  *
- * ## Why this crosses a boundary at all
+ * A verification takes tens of seconds to minutes and the artifact only exists at the end, so
+ * without narration a run that is working and a run that has died look identical for the whole of
+ * its duration.
  *
- * A verification takes tens of seconds to minutes: a browser launches, flows replay one at a time
- * against a live app, and the artifact only exists at the end. Everything watching from outside —
- * a dashboard, a CI log, an editor — sees nothing until it finishes, so a run that is working and a
- * run that has died look identical for the whole of its duration. Somebody watching a hosted
- * dashboard sat on that ambiguity for fifteen minutes.
- *
- * These events are the narration. They are DERIVED from work that is already happening, never a
- * second source of truth: the run artifact remains the only record of what was proved, and nothing
- * here is ever graded, stored as evidence, or allowed to influence a verdict.
+ * These events are DERIVED from work that is already happening, never a second source of truth: the
+ * run artifact remains the only record of what was proved, and nothing here is ever graded, stored
+ * as evidence, or allowed to influence a verdict.
  *
  * ## The rules that keep it honest
  *

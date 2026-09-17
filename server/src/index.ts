@@ -600,8 +600,8 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
   // listen — the first status request cannot arrive until after the bind.
   let verifyHttp: { server: Server; port: number } | undefined;
   // `reticle status` GETs this for a live, at-a-glance view of connected tabs + their health.
-  // The same diagnosis agents get on an empty `reticle_sessions`, so `reticle status` — the
-  // most-run command in the field — stops answering "sessionCount: 0" and nothing else.
+  // It carries the same diagnosis agents get on an empty `reticle_sessions`, so an empty status
+  // answers WHY rather than just "sessionCount: 0".
   // `verifyPort` rides along so a later `serve --http` can tell whether this daemon already honours
   // the requested `--http-port` instead of silently ignoring the flag (#687).
   shared.attachStatus(() =>
@@ -784,7 +784,7 @@ export async function startDaemon(options: StartOptions = {}): Promise<RunningSe
   // connecting session's project (a shared daemon serves many apps; each panel shows only its own
   // flows + legacy untagged ones). Each chip carries a `start` hint (the first step's testid anchor)
   // so the HUD shows a flow only on the page it can begin from — the panel re-scopes per route.
-  // The first instrumented app of this daemon run — the funnel step nothing could measure before.
+  // The first instrumented app of this daemon run.
   // Inside the existing session-ready hook rather than beside it: this fires exactly when a page
   // carrying the SDK has completed its handshake, which is the definition of "instrumented", and
   // `reportAppInstrumented` is idempotent so later sessions cost a boolean check.

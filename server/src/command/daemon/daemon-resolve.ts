@@ -79,8 +79,8 @@ export function resolveDaemonForProject(
  * Two deliberate escape hatches, both of which keep an existing install working:
  *
  * A daemon that claims NO project was started somewhere without a `.reticle.json` — the global MCP
- * registration in a directory that is not an app, which is the majority of daemons in the field. It
- * belongs to nobody, so it belongs to whoever asks; refusing would break every user running Reticle
+ * registration in a directory that is not an app, which is how Reticle is documented to be
+ * installed. It belongs to nobody, so it belongs to whoever asks; refusing would break every user running Reticle
  * globally, which is how it is documented to be installed.
  *
  * A caller with no project of its own has no identity to defend and nothing to be confused about, so

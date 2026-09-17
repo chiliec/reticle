@@ -10,7 +10,7 @@
  * It works because the thing it reads is React's, not Reticle's: React stamps `__reactFiber$…` on
  * every host element regardless of what instrumentation is present. This is the same hook
  * react-devtools-mcp uses, which is exactly the tool the zero-install tier exists to reach parity
- * with — reusing our own algorithm rather than adopting theirs.
+ * with — reusing Reticle's own algorithm rather than adopting theirs.
  *
  * What it CANNOT recover is the SDK-exclusive surface, and that limit is honest and load-bearing: no
  * custom signals (the app never emitted them), no registered store by name (`registerStore` was never

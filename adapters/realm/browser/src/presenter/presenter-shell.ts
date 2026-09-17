@@ -78,11 +78,10 @@ export class HudShell {
    * which also needs a live session and an expanded HUD — this is the half the user controls, and
    * conflating the two is why there was no way to keep the HUD open without annotating.
    *
-   * OFF until asked for. It began as `true` to preserve the old behaviour where expanding the HUD
-   * silently entered annotate mode, and that is exactly what made the toolbar icon look permanently
-   * lit: the toolbar is only visible while expanded, so an intent that defaults to on is on every
-   * time you can see it. Annotate mode also captures clicks, so defaulting it on means a click lands
-   * as a mark before anyone asked for one. It is a mode now, and modes are entered deliberately.
+   * OFF until asked for. Defaulting it to `true` makes the toolbar icon look permanently lit — the
+   * toolbar is only visible while expanded, so an intent that defaults to on is on every time you can
+   * see it — and annotate mode captures clicks, so a click lands as a mark before anyone asked for
+   * one. Modes are entered deliberately.
    */
   #annotateOn = false;
   #toggleSync: MutationObserver | undefined;
@@ -441,11 +440,11 @@ export class HudShell {
   /**
    * A click on the page dismisses the SETTINGS popover - and nothing else.
    *
-   * The chat used to close here too, which was wrong from three directions: Reticle's own clicks
-   * land on the page (synthetic in-page, or a genuine OS event when it drives through CDP), a click
-   * in annotate mode is placing a mark, and a person clicking around their app while watching the
-   * log is not asking for the log to go away. The chat has three deliberate ways out - its minimise
-   * button, the toolbar toggle, and Escape - and that is all it needs.
+   * NOT the chat, which would be wrong from three directions: Reticle's own clicks land on the page
+   * (synthetic in-page, or a genuine OS event when it drives through CDP), a click in annotate mode is
+   * placing a mark, and a person clicking around their app while watching the log is not asking for
+   * the log to go away. The chat has three deliberate ways out - its minimise button, the toolbar
+   * toggle, and Escape.
    */
   #onDocPointerDown = (e: PointerEvent): void => {
     if (this.#root === undefined || this.#dock === undefined) return;

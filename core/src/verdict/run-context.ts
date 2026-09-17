@@ -1,43 +1,22 @@
 /**
  * What a run has established, held so the agent can ASK for it back.
  *
- * Verification is multi-step, and the only thing holding the thread together is the agent's own
- * context window. When that compacts, or the turn ends, or a sub-agent takes over, the thread is
- * gone and the work restarts. The shape of that shows in the field without needing the theory: long
- * runs of the same read-only call, an agent searching by exhaustion because it no longer remembers
- * what it already saw.
+ * PULLED, NEVER PUSHED. Riding along on every tool response duplicates context the agent still has,
+ * on every call. The value is not that Reticle remembers MORE, it is that Reticle's copy does not
+ * degrade when the agent's does — so the agent asks once, at the moment its own memory is gone.
+ * That is why nothing here returns `undefined` for an empty run: a pull was asked a question, and
+ * "nothing established yet" is the answer the asker needs.
  *
- * ## Pulled, never pushed
+ * It must SHRINK, not grow: superseding facts REPLACE rather than append, and both blocks are
+ * capped.
  *
- * An earlier version of this rode along on every tool response. It cost +136% on a verdict and was
- * cut, because the agent still had most of that context most of the time: we paid on every call to
- * duplicate what it already knew. The asymmetry that makes the feature work is not that Reticle
- * remembers MORE, it is that Reticle's copy does not degrade at the moment the agent's does. So the
- * agent asks, at the moment it knows its own memory is gone, and pays once.
+ * A fact that can be wrong is worse than no fact, so every one carries the document AND the edit
+ * epoch it was observed under and is dropped the moment either moves — `isSameDocument` /
+ * `isSameEditEpoch`, no grace period.
  *
- * That inversion is why nothing here returns `undefined` for an empty run. A push had to stay silent
- * when it had nothing to say; a pull was asked a question, and "nothing established yet" is the
- * answer the asker needs.
- *
- * ## Two rules stop it becoming the thing it prevents
- *
- * **It must shrink, not grow.** Superseding facts REPLACE rather than append, and both blocks are
- * capped. A context object that accumulates is a token bomb, and read-only payloads are already the
- * largest thing this product emits.
- *
- * **Memory that can be wrong is worse than no memory.** A stale established fact is precisely the
- * false-green mechanism this product exists to prevent, and stale refs are already the most common
- * error an agent sees from us. So every fact carries the document AND the edit epoch it was observed
- * under, and is dropped the moment either moves: no grace period, no probably-fine. The comparison
- * is `isSameDocument`/`isSameEditEpoch` rather than a third rule written beside them.
- *
- * ## What may never go in
- *
- * Only what Reticle OBSERVED. Never what the agent intends, plans, or believes: that is not ours to
- * hold, it is unbounded, and a verification tool that remembers what an agent was thinking is
- * inventing evidence. `remaining` is the one forward-looking field and it is derived mechanically
- * from declared bindings, so it remains a report of a fact — which bindings are undischarged — and
- * not a prediction.
+ * Only what Reticle OBSERVED goes in, never what the agent intends or believes: that is unbounded,
+ * and remembering it would be inventing evidence. `remaining` is the one forward-looking field and
+ * is derived mechanically from declared bindings, so it reports a fact rather than a prediction.
  */
 
 import { isSameDocument } from '@/identity/document-identity.js';

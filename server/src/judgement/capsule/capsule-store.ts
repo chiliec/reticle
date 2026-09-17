@@ -16,8 +16,7 @@ import { reticleDirPaths } from '@/memory/project/dir/reticle-dir.js';
 
 /**
  * The capsule file-format version. Declared ABOVE the schema so the schema, the writer and this
- * constant cannot disagree: the number was previously written as a bare `1` in three places — here,
- * in the schema literal, and in act-capsule's writer — with the named one used by nobody.
+ * constant cannot disagree about the number.
  */
 export const CAPSULE_VERSION = 1;
 

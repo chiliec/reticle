@@ -173,7 +173,7 @@ export const HelloMessageSchema = z.object({
    * for anything that is not a browser to do -- can never produce a matching hash, and was therefore
    * reported as skewed on every call forever.
    *
-   * Absent means "compare the fingerprint", which is what every build in the field does today.
+   * Absent means "compare the fingerprint", which is what a build predating this field does.
    */
   contractParts: z
     .object({

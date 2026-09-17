@@ -34,8 +34,7 @@ export {
 } from './predicate-eval-kit.js';
 
 // The predicate SHAPE — the discriminated union, its aliases and its zod schema — lives in
-// predicate-schema.ts. Re-exported here so every existing importer of this module is unaffected:
-// the two halves are one public surface, split only because the file outgrew the size backstop.
+// predicate-schema.ts, and is re-exported here: the two halves are ONE public surface.
 export * from './predicate-schema.js';
 
 /**
@@ -72,7 +71,7 @@ function describeCall(e: ReticleEvent): string {
 
 /**
  * What a miss should say when the displayed URL was redacted. Matching uses `urlRaw` when present;
- * an older SDK has no copy, and this is the sentence both reporters asked for.
+ * an older SDK has no copy, so the miss has to say which of the two it is.
  */
 const REDACTED_PATH_HINT =
   'this path segment was redacted — the literal you matched may be here, try bodyContains';
@@ -320,10 +319,10 @@ function unobservedChannelReason(
  * was watching yet".
  *
  * The gap is routine rather than exotic: a `fetch` from an effect in a root provider, or a classic
- * `<script>` at the end of `<body>`, fires before a deferred module script has run. Reported from
- * the field, the verdict then read as proof the request was never made, and reporters went looking
- * for the defect in code that was working — restarting dev servers and re-reading providers to
- * establish the request was invisible rather than absent.
+ * `<script>` at the end of `<body>`, fires before a deferred module script has run. Read as proof
+ * the request was never made, that sends a reader looking for a defect in code that works —
+ * restarting dev servers and re-reading providers to establish that the request was invisible rather
+ * than absent.
  *
  * Same argument as DOCUMENT_ONLY_SUFFIXES one axis over: that one is a channel Reticle does not
  * watch, this is a stretch of TIME it was not yet watching.

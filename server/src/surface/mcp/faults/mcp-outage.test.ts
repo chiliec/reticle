@@ -89,11 +89,11 @@ describe('the reason stays a closed vocabulary', () => {
 /**
  * An outage nobody could feel is not the same as one that killed a call.
  *
- * In the field almost every `mcp_connection_lost` event was `stage: first` with
- * `attempts: 1`** — the SSE stream ended once and the proxy reconnected. For an agent with nothing
- * in flight that is invisible. Reading 321 as "the agent lost its tools 321 times" overstates the
- * problem by nearly the whole number and buries the ONE drop that mattered (61 attempts, budget
- * spent). `pendingLost` is the part an agent can actually feel: calls answered `-32001`.
+ * Almost every `mcp_connection_lost` event is `stage: first` with `attempts: 1` — the SSE stream
+ * ended once and the proxy reconnected, which for an agent with nothing in flight is invisible.
+ * Reading the raw count as "the agent lost its tools that many times" overstates the problem by
+ * nearly the whole number and buries the drops that mattered. `pendingLost` is the part an agent can
+ * actually feel: calls answered `-32001`.
  */
 describe('an outage reports how many in-flight calls it actually killed', () => {
   beforeEach(() => {

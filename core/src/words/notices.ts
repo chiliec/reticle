@@ -157,13 +157,11 @@ export const LEASE_IS_INVISIBLE_NOTE =
 /**
  * A DESKTOP window that has gone to the background, which is a different problem with a different fix.
  *
- * The web answer — acquire a lease, or run `reticle drive <url>` — is unavailable here and saying it
- * is worse than saying nothing. A lease opens a headless BROWSER context; an Electron or Tauri app's
- * window IS the client, and a browser pointed at the same dev-server URL is a different program with
- * no main process, no preload and no Rust commands. Driven on MarkText, a shipped Electron editor:
- * its window went behind, the session reported hidden+throttled, and the only advice offered was the
- * one thing that could not be done — while the thing that works, bringing the window forward, went
- * unsaid.
+ * The web answer — acquire a lease, or run `reticle drive <url>` — is unavailable here, and saying
+ * it is worse than saying nothing: a lease opens a headless BROWSER context, while an Electron or
+ * Tauri app's window IS the client, so a browser pointed at the same dev-server URL is a different
+ * program with no main process, no preload and no Rust commands. The thing that works is bringing
+ * the window forward.
  *
  * No `reticle_lease` and no `reticle drive` in this sentence, deliberately. Both are checked by test.
  */
@@ -181,11 +179,9 @@ export const HIDDEN_TAB_RECOMMENDATION =
  * stale only means no health heartbeat arrived inside the window. For a tab that is not hidden that
  * usually means nothing worse than a quiet page, and such a tab is very often driveable.
  *
- * Split out because the old single message treated this as equivalent to hidden and it is not.
- * Measured in the field: a session flagged throttled took a sign-in and two clean net-grade verdicts
- * with no retries, while the recommendation had already sent the agent into a lease the watching
- * human could not see. One flag produced advice that cost the product's main trust surface and
- * bought nothing.
+ * Treating it as equivalent to hidden costs the drive for nothing: a throttled tab routinely takes
+ * a sign-in and grades clean net verdicts with no retries, while advice to lease sends the agent
+ * into a context the watching human cannot see.
  *
  * So this reports the uncertainty honestly — it MAY be slow, timing-sensitive work is what suffers —
  * and offers the precise instrument for that (`refuseWhenThrottled`) rather than a different

@@ -8,8 +8,8 @@
  * message even told people to run `reticle update` to fix an outdated SDK, which could not work.
  *
  * Pinned to an exact version for the same reason `init` pins: an unpinned `add` can resolve out of a
- * stale registry cache and reinstall the skew being fixed. Measured once as pnpm taking 2.2.1 while
- * npm took 2.3.0 in the next project over.
+ * stale registry cache and reinstall the skew being fixed — two package managers on one machine can
+ * resolve the same unpinned range to different releases.
  */
 
 import { installCommandParts, type PackageManager } from '@reticlehq/init';

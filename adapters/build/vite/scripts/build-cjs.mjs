@@ -3,10 +3,9 @@
  * plugin at all.
  *
  * Without that field Vite bundles the config as CJS and `require`s it, and an ESM-only plugin cannot
- * be required — so the import `reticle init` writes could not be loaded and the dev server refused to
- * start. The app served nothing until the user deleted our line, which is the worst shape a setup
- * failure can take: it looks like Reticle broke their project, because from where they are sitting it
- * did.
+ * be required — so the import `reticle init` writes cannot be loaded and the dev server refuses to
+ * start. The app then serves nothing until the user deletes that line, which looks exactly like
+ * Reticle having broken their project.
  *
  * A second artefact rather than a change to the first: `"type": "module"` is correct for this package
  * and for every app that has it, and the ESM build stays the one those apps load. The usual

@@ -60,9 +60,8 @@ const firstSegment = (path: string): string | undefined => {
      *
      * A `net` predicate's `urlContains` is frequently a filter rather than a URL —
      * `category=vulnerability%2Csevere`, `projectId=storefront` — and with no `?` to split on, the
-     * whole thing survived as a "path" and was slugified into a subject. Measured on a real corpus:
-     * six of thirty-four subjects were query values, one record each, and together they made the
-     * coverage map read as a product with two dozen tiny unrelated areas.
+     * whole thing survived as a "path" and was slugified into a subject, one record each — enough of
+     * them to make the coverage map read as a product with two dozen tiny unrelated areas.
      *
      * Skipped rather than aborting the walk, so a binding that asserts a filter AND a route still
      * finds the route.
@@ -132,9 +131,8 @@ const GENERIC_DIRS: ReadonlySet<string> = new Set([
  * The feature a file belongs to: the deepest directory that names something.
  *
  * A codebase already groups itself by feature, and the directory a file sits in is that grouping
- * stated by the people who wrote it — structural evidence, not an inference from prose. Measured
- * against the alternative before being written: 29 unsorted records carried a testid, and using the
- * testid's prefix would have produced `confirm`, `new` and `delete` — verbs rather than areas.
+ * stated by the people who wrote it — structural evidence, not an inference from prose. The
+ * alternative, a testid's prefix, yields `confirm`, `new` and `delete`: verbs rather than areas.
  */
 const featureOfFile = (file: string): string | undefined => {
   // Windows paths arrive from Windows machines; splitting on `/` alone leaves one long segment.

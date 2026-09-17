@@ -18,8 +18,8 @@ import { Framework, PackageManager } from './detect/detect.js';
 const EXISTING_CONTRACT = '# CLAUDE.md\n\nThe rules of this repository.\n';
 
 /**
- * The smallest input that reaches the agent-rule steps. Deliberately local rather than shared with
- * `plan.test.ts`: that file is already past the 1000-line cap, and this asks one narrow question.
+ * The smallest input that reaches the agent-rule steps. Local rather than shared with
+ * `plan.test.ts`, because this asks one narrow question.
  */
 function planInput(over: Partial<PlanInput>): PlanInput {
   return {

@@ -8,11 +8,10 @@ import { storeNames } from './stores.js';
 /**
  * The two halves of the capability report the app no longer has to write down.
  *
- * `testids` and `stores` used to be *declarations* — strings copied into a generated file by `init`
- * and then expected to stay true. Both are now read from the thing they describe: the testids from
- * the DOM, the store names from the registry (which the React adapter fills by discovery). What the
- * app declares is still merged in and still wins nothing away: `signals` and `flows` cannot be
- * observed and remain the app's to state.
+ * `testids` and `stores` are READ from the thing they describe — the testids from the DOM, the store
+ * names from the registry (which the React adapter fills by discovery) — rather than copied into a
+ * generated file by `init` and expected to stay true. What the app declares is merged in and wins
+ * nothing away: `signals` and `flows` cannot be observed and remain the app's to state.
  */
 function liveTestids(): string[] {
   if ('undefined' === typeof document) return [];
@@ -137,11 +136,10 @@ export function declaredTestids(): string[] {
 /**
  * Whether the app has a testable surface at all (used in the HELLO flag).
  *
- * Answered over the OBSERVED surface as well as the declared one. It used to be answerable only by
- * declaration, so an app with two hundred testids in its DOM and a live Redux store reported
- * `hasCapabilities: false` until somebody typed those facts into a config file — and the agent
- * reading that flag concluded, correctly by the flag and wrongly in fact, that there was nothing to
- * drive.
+ * Answered over the OBSERVED surface as well as the declared one. By declaration alone, an app with
+ * two hundred testids in its DOM and a live Redux store reports `hasCapabilities: false` until
+ * somebody types those facts into a config file — and the agent reading that flag concludes,
+ * correctly by the flag and wrongly in fact, that there is nothing to drive.
  */
 export function hasCapabilities(): boolean {
   return (

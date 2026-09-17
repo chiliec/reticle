@@ -87,8 +87,8 @@ const DEFAULT_SYNC_INTERVAL_MS = 60_000;
 /**
  * How a key is named out loud: enough to match it against the dashboard, never enough to use.
  *
- * The same shape the console shows (`displayPrefix`), so the two surfaces name one key identically
- * and somebody can tell at a glance which row this repo is using.
+ * The same shape the web console shows, so the two name one key identically and somebody can tell
+ * at a glance which row this repo is using.
  */
 const KEY_HINT_CHARS = 16;
 const keyHint = (key: string): string =>
@@ -332,10 +332,10 @@ const cmdLink = async (argv: readonly string[]): Promise<number> => {
     /*
      * A repo is named after itself, not "Default".
      *
-     * Every repo used to bind to one project called "Default" — measured, two unrelated checkouts on
-     * one account merged their runs, issues and impact into a single bucket, and the dashboard's
-     * per-project view described nothing. It is also what let two TENANTS collide, since a
-     * credential slot built from a project id is only as distinct as the ids are.
+     * When every repo binds to one project called "Default", two unrelated checkouts on one account
+     * merge their runs, issues and impact into a single bucket and the per-project view describes
+     * nothing. It is also what lets two TENANTS collide, since a credential slot built from a
+     * project id is only as distinct as the ids are.
      */
     const fallback = defaultProjectFor(
       basename(process.cwd()),
@@ -351,8 +351,7 @@ const cmdLink = async (argv: readonly string[]): Promise<number> => {
      * `link` was idempotent about the BINDING and not about the KEY: two runs against one project
      * left two live `reticle-cli` keys on the account, each valid, neither identifiable to a repo.
      * Agents retry — that is what agents do — so it accumulates silently until somebody has a key
-     * list they cannot reason about and revokes the wrong one. Measured: proving an unrelated fix
-     * with two `link` runs created exactly that.
+     * list they cannot reason about and revokes the wrong one.
      *
      * Validated before trusting, because a stored key can have been revoked or rotated from the
      * dashboard and a stale credential must not strand the repo. The check is the whoami call the

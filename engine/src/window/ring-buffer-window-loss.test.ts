@@ -15,10 +15,10 @@ import { RingBuffer } from './ring-buffer.js';
  *     keeps scarce evidence alive, and it is a success, not a loss.
  *
  * So on a live app the flag was essentially always true, and `decideVerified` turned it into
- * `verified: "unknown" / unclean_capture`. In the field this became the dominant cause of every
- * `unknown` verdict: Reticle drove the app, saw the whole window, and refused to report what it saw.
+ * `verified: "unknown" / unclean_capture` — the dominant cause of `unknown`: Reticle drove the app,
+ * saw the whole window, and refused to report what it saw.
  *
- * The honest question is narrow: did we evict a NON-CHURN event that belonged to this window?
+ * The honest question is narrow: was a NON-CHURN event that belonged to this window evicted?
  */
 function ev(type: ReticleEvent['type'], t: number): ReticleEvent {
   return { t, type, sessionId: 's', data: {} };

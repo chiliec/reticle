@@ -38,7 +38,7 @@ export const LicenseActivation = {
   INVALID: 'invalid',
   /**
    * A key that verified but whose expiry has passed. The renewal signal: this arriving from a machine
-   * that used to report `active` is a lapse we can see BEFORE the customer reports it, and it is the
+   * previously reporting `active` is a lapse visible BEFORE the customer reports it, and it is the
    * whole reason status is reported separately from identity — a lapsed customer stops sending
    * `licenseId`, so on identity alone a lapse and a churn look identical.
    */

@@ -274,8 +274,8 @@ export function advertisedTools(
   // survives: every input schema on a trimmed surface is LEAN, and `{ names: [...] }` is the only
   // way to get a tool's full parameters — which matters more here than anywhere, because a merged
   // tool's schema is the union of its members' fields with all of them optional. Recovery messages
-  // across this server also say "Call reticle_tools", and a surface without it turns our own advice
-  // into a dead end (see surface-sizes.test.ts — `full` used to be exactly that).
+  // across this server also say "Call reticle_tools", and a surface without it turns that advice
+  // into a dead end (see surface-sizes.test.ts).
   // A surface with no `reticle_run` can invoke only what it advertises, so the catalogue is told to
   // list exactly that. Anything else is a menu of names the agent cannot order from.
   const advertisedHere = filterTools([...ours], surface);

@@ -1,11 +1,10 @@
 /**
  * Which document an observation belongs to.
  *
- * Evidence used to be scoped by time and by ring-buffer capacity and by nothing else. A request
- * observed under a PREVIOUS document — or under a previous run of the application entirely — could
- * therefore be counted against an action taken now. Field reports describe exactly that, including
- * one where the failing request Reticle cited named a database row that no longer exists: true about
- * the bytes, false about the world, which is the worst kind of wrong a verification tool can be.
+ * Evidence scoped by time and ring-buffer capacity alone lets a request observed under a PREVIOUS
+ * document — or under a previous run of the application entirely — be counted against an action
+ * taken now. That is a citation that is true about the bytes and false about the world, which is
+ * the worst kind of wrong a verification tool can be.
  *
  * A document id is minted once per real document and dies with it. A full navigation replaces the
  * document and so replaces the id. An SPA route change does NOT, which is correct rather than a

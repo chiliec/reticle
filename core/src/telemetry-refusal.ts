@@ -1,10 +1,9 @@
 /**
  * Refusals — why a tool could not do what was asked, and the row that reports one.
  *
- * Split out of telemetry.ts at the 1000-line cap, alongside telemetry-feedback.ts which was split
- * for the same reason. The seam is real: telemetry.ts is the session wire, and this is the refusal
- * vocabulary that `error-recovery.ts` is graded against. `NoSessionReason` lives in its own module
- * again, because it refines exactly one member of the enum below.
+ * `telemetry.ts` next door is the session wire; this is the refusal vocabulary that
+ * `error-recovery.ts` is graded against. `NoSessionReason` has its own module because it refines
+ * exactly one member of the enum below.
  */
 
 import { z } from 'zod';
@@ -20,8 +19,8 @@ import { NoSessionReason } from './words/no-session-reason.js';
  *
  * The five that matter belong to four different owners, which is the whole reason for splitting
  * them: `no_session` is the install's second half never happening, `bad_args` is the agent's own
- * call, `not_ready` is the environment, and `no_match` / `unsupported` are the app and our own
- * capability surface. One undifferentiated "the agent stopped" number cannot be acted on by anyone.
+ * call, `not_ready` is the environment, and `no_match` / `unsupported` are the app and Reticle's
+ * own capability surface. One undifferentiated "the agent stopped" number cannot be acted on by anyone.
  */
 export const RefusalReason = {
   /** There was no app to reach: nothing connected, no session by that id, or several with none named. */
@@ -58,7 +57,7 @@ export const ToolRefusalSchema = z.object({
    * Reported on the RETRY rather than on the first refusal, because the first refusal has to be sent
    * at the moment it happens: deferring it until the next call is known would lose it entirely for
    * the agent that gives up, and that agent is the whole population this event exists to describe.
-   * So count `retried: true` for retries; the ratio against all refusals is whether our diagnosis
+   * So count `retried: true` for retries; the ratio against all refusals is whether the diagnosis
    * gets anybody unstuck.
    */
   retried: z.boolean(),

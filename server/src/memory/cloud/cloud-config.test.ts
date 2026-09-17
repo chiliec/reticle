@@ -135,10 +135,9 @@ describe('resolveProjectCloud — per-project cloud binding + sync policy', () =
 
   describe('a credential belongs to the cloud that minted it', () => {
     /*
-     * The collision, measured on a real machine: `reticle link` names every project "default", so a
-     * repo on a self-hosted install and a repo on the hosted service both claimed the slot
-     * `default`. The production key overwrote the local one and was then sent to localhost, which
-     * answered 401.
+     * The collision: `reticle link` names every project "default", so a repo on a self-hosted
+     * install and a repo on the hosted service both claimed the slot `default`. The production key
+     * overwrote the local one and was then sent to localhost, which answered 401.
      *
      * Same class as sending a session token to a host that did not issue it, and the same answer:
      * no credential at all beats one belonging to somewhere else.

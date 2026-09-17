@@ -57,10 +57,10 @@ export function installStoreState(emit: Emit): Teardown {
   const active = new Map<string, () => void>();
   const watch = ([name, getter, subscribe]: [string, StoreGetter, StoreSubscribe]): void => {
     // A re-registration under the same name is the HMR cycle: the store INSTANCE is replaced (new
-    // getter + new subscribe). Skipping it (the old `seen` guard) left the subscription bound to the
-    // DEAD getter forever and the live store invisible until a full reload. Rebind: drop the previous
-    // subscription for this name, then subscribe the new tuple. Guard the old unsubscribe — if it throws
-    // (a misbehaving store), the rebind must still proceed, or the live store stays invisible.
+    // getter + new subscribe). Skipping it — a `seen` guard — would leave the subscription bound to
+    // the DEAD getter forever and the live store invisible until a full reload. Rebind: drop the
+    // previous subscription for this name, then subscribe the new tuple. Guard that unsubscribe — if
+    // it throws (a misbehaving store), the rebind must still proceed.
     try {
       active.get(name)?.();
     } catch {

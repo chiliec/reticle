@@ -1,11 +1,9 @@
 /**
  * When an app carrying the SDK first reaches this daemon.
  *
- * This is the step the whole funnel turns on, and the one nothing could measure. Registering the MCP
- * server and instrumenting an app are separate acts, done by different commands, and the data says
- * almost everybody does the first and almost nobody does the second — but proving that required
- * inferring it from a window counter that resets on every flush, and which therefore reported fewer
- * instrumented users than there were users calling tools.
+ * Registering the MCP server and instrumenting an app are separate acts, done by different commands.
+ * This event marks the second one. It must not be inferred from a window counter, which resets on
+ * every flush and so reports fewer instrumented installs than there are installs calling tools.
  *
  * Once per daemon run, on the FIRST app connect only. A page that reloads, or an app that opens five
  * tabs, must not read as five instrumented installs — the question is "did this install ever get an
@@ -66,16 +64,12 @@ export function reportAppInstrumented(
         msToFirstApp: daemonStartedAt === undefined ? 0 : Math.max(0, now() - daemonStartedAt),
       },
     });
-    // The same fact, in the funnel's vocabulary.
+    // The same fact, as an ordered step rather than a once-per-run flag, so it sits in the same
+    // series as the steps either side of it. Reported here, at the one site that already knows,
+    // rather than by a second listener that could drift from it.
     //
-    // `app_instrumented` answers "did this install EVER wire an app" once per daemon run, which is
-    // the adoption question. The funnel asks a different one — where in the sequence people stop —
-    // and needs this step in the same ordered series as the ones either side of it. Reported here,
-    // at the one site that already knows, rather than by a second listener that could drift from it.
-    //
-    // This is the step the whole funnel exists for: `instrumented` means files were written, and
-    // THIS means a page actually dialled the bridge. Every silent install bug so far has lived in
-    // the gap between those two.
+    // `instrumented` means files were written; THIS means a page actually dialled the bridge. Every
+    // silent install bug so far has lived in the gap between those two.
     void reportOnboardingStep({
       phase: OnboardingPhase.FIRST_RUN,
       step: 'app_connected',

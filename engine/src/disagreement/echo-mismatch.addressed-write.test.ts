@@ -1,7 +1,7 @@
 /**
  * An ADDRESSED write says "set the field named X to V". Its `value` key is a container, not a field.
  *
- * Measured in the field, and it produced a FALSE RED on an assertion that had passed. The request
+ * That produced a FALSE RED on an assertion that had passed. The request
  * asked `{"slot":"_dim","value":"3D"}`. The server applied it: `brief.dim: "3D"`, and the interview
  * advanced from `{kind:"question"}` to `{kind:"geometry", payload:{module:"fluids", dim:"3D"}}`.
  * `write-field-ignored` reported "its own echo shows 1 field(s) NOT applied — value: asked 3d, got

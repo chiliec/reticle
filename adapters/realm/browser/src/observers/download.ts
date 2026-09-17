@@ -32,9 +32,9 @@ interface PendingBlob {
    *
    * A PROMISE rather than a value, because the ordering is against us: `blob.text()` is async and the
    * anchor click that carries the FILENAME fires immediately after `createObjectURL`. Reading a
-   * settled value at click time therefore always found nothing, and the first version reported every
-   * export with `lines: undefined` — the filename without the contents, which is exactly half of what
-   * makes "25 rows in a file called 128-rows" visible.
+   * settled value at click time therefore always finds nothing and reports every export with
+   * `lines: undefined` — the filename without the contents, which is exactly half of what makes
+   * "25 rows in a file called 128-rows" visible.
    */
   text: Promise<string | undefined>;
 }

@@ -34,7 +34,7 @@ export function installContextOpen(emit: Emit): Teardown {
   const patchedOpen = openPatch as typeof window.open;
   window.open = patchedOpen;
   return () => {
-    // Restore ONLY if the slot still holds our wrapper — the rule route.ts states: something that
+    // Restore ONLY if the slot still holds Reticle's wrapper — the rule route.ts states: something that
     // wrapped `window.open` AFTER connect() (a popup blocker shim, an analytics SDK) keeps its
     // instrumentation instead of being silently uninstalled by ours.
     if (window.open === patchedOpen) window.open = originalOpen;

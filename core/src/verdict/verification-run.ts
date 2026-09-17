@@ -33,8 +33,8 @@ const RUN_FILE_VERSION_BEFORE_ONE_VOCABULARY = 1;
  *
  * Version 2 recorded a check as `pass` or `fail` and nothing else, so a check nobody could evaluate
  * had no spelling and was dropped on the way in. That is the exact loss this whole system exists to
- * prevent, committed by our own artifact: "I could not see" left the document silently, and a reader
- * counting checks counted our blind spots as the app's clean bill of health.
+ * prevent, committed by Reticle's own artifact: "I could not see" left the document silently, and a
+ * reader counting checks counted blind spots as the app's clean bill of health.
  *
  * Files already on disk are still read. `pass` and `fail` translate to `yes` and `no`, which is what
  * they always meant.
@@ -109,23 +109,18 @@ export type RunFlowStatus = (typeof RunFlowStatus)[keyof typeof RunFlowStatus];
 /**
  * The kind of standalone assertion captured outside a flow.
  *
- * This is `PredicateKind` -- the vocabulary assertions are written in -- and not a second list.
- * There used to be one here, and the two had already drifted: the same idea was spelled `net` in an
- * assertion and `network` in the artifact, and `layout` existed here and in nothing anybody could
- * write, so it could never be recorded. Re-exported under the old name so the places that read it
- * from this file still can.
+ * This is `PredicateKind` -- the vocabulary assertions are written in -- and not a second list: two
+ * lists drift, and an artifact can only record what somebody can actually assert. Re-exported so
+ * the places that read it from this file still can.
  */
 export { PredicateKind };
 
 /**
  * What a check came out as.
  *
- * `Verified` and not a second list. There used to be a binary one here, and the two had already
- * done what two vocabularies for one thing always do: a verdict was four-valued everywhere it was
- * decided and two-valued the moment it was written down, so `unknown` and `no-fault` -- the two the
- * specification says make the other two mean anything -- could not be recorded at all.
- *
- * Re-exported so the places that read it from this file still can.
+ * `Verified` and not a second list. A binary one here would lose `unknown` and `no-fault` -- the
+ * two the specification says make the other two mean anything -- at the moment the verdict is
+ * written down. Re-exported so the places that read it from this file still can.
  */
 export { Verified };
 

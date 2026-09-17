@@ -33,8 +33,7 @@ interface RunStateInput {
 
 /**
  * Compute the exported run-state from the controller's live fields: per-kind + pass/fail counts over
- * the activity log, the session duration, and the current capability surface. Extracted from
- * presenter.ts so the controller stays under the size cap; the counting is the same as before.
+ * the activity log, the session duration, and the current capability surface.
  */
 export function buildRunState(input: RunStateInput): PresenterRunState {
   const start = input.startMs ?? input.now;

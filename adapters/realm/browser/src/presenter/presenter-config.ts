@@ -1,9 +1,8 @@
 import type { HumanControlKind } from '@reticlehq/core';
 
 /**
- * Presenter tunables + option surface. Split out of presenter.ts so that file is just the controller
- * under the size cap; these are pure declarations (interfaces + named constants), no behavior. None
- * cross the browser↔bridge↔agent wire, so they live here, not in @reticlehq/core.
+ * Presenter tunables + option surface: pure declarations (interfaces + named constants), no
+ * behavior. None cross the browser↔bridge↔agent wire, so they live here, not in @reticlehq/core.
  */
 
 /**
@@ -93,8 +92,8 @@ export const IDLE_AFTER_MS = 700;
 export const HEARTBEAT_MS = 1000;
 /**
  * After this much quiet, the act strip stops showing the last action and starts a LIVE, ticking
- * "◌ idle · {duration} since last action" - so a watcher can tell a 3s think from a dead agent
- * (the killer gap: a frozen panel used to look identical whether the agent paused or stopped).
+ * "◌ idle · {duration} since last action" - so a watcher can tell a 3s think from a dead agent. A
+ * frozen panel otherwise looks identical whether the agent paused or stopped.
  */
 export const IDLE_NOTICE_MS = 4000;
 /**
@@ -107,9 +106,8 @@ export const IDLE_NOTICE_MS = 4000;
  *             session is alive and something will happen next.
  *   STOPPED   nothing is coming. The session ended, by the idle window or on purpose.
  *
- * Collapsing those into one word is the failure this strip was built to fix: a frozen panel used to
- * look identical whether the agent paused or died. Calling both of them "idle" brings that back in
- * wording after the timer had solved it in behaviour.
+ * Collapsing those into one word is the failure this strip exists to prevent. Calling both "idle"
+ * restates it in wording after the timer has solved it in behaviour.
  */
 export const ACT_STRIP = {
   READY: 'Ready',
@@ -169,9 +167,9 @@ export const MARK_COUNT_ATTR = 'data-reticle-mark-count';
 /**
  * Turn annotation on and off from the toolbar.
  *
- * Annotation used to be reachable only as a side effect of expanding the HUD, which meant there was
- * no way to keep the HUD open and stop annotating, and nothing on screen said the mode existed at
- * all. It is a mode the user chooses, so it gets a control they can see and press.
+ * Reachable only as a side effect of expanding the HUD, there is no way to keep the HUD open and
+ * stop annotating, and nothing on screen says the mode exists. It is a mode the user chooses, so it
+ * gets a control they can see and press.
  */
 export const ANNOTATE_BTN_ATTR = 'data-reticle-annotate-btn';
 /** Minimise the agent chat back to the toolbar, without collapsing the whole HUD. */

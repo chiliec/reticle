@@ -1,8 +1,7 @@
 /**
  * Watching a STREAMED response body to its end, so `settled` cannot pass mid-stream.
  *
- * Split out of network.ts, which was already at its line cap. One question: when did this response
- * actually finish arriving?
+ * One question: when did this response actually finish arriving?
  */
 import { EventType, StreamDirection, StreamTransport } from '@reticlehq/core';
 import type { Emit } from './types.js';

@@ -38,12 +38,11 @@ describe('blur → focusout (React commit-on-blur)', () => {
    * verified in this jsdom and true in every browser — so synthesizing a second one made React's
    * delegated root listener run `onBlur` TWICE.
    *
-   * Reported from the field on React 19 + Vite: one `onBlur={() => mutate(...)}`, one render site,
-   * no StrictMode, and Reticle reported a `duplicate-request` contradiction. The double submit was
-   * ours. That is the worst failure this product has — a defect we invent and hand to a human as
-   * real — and it also makes every `net.count` assertion around a blur-to-save form untrustworthy.
+   * On React 19, a single `onBlur={() => mutate(...)}` then double-submits and Reticle reports a
+   * `duplicate-request` contradiction against a defect it invented — and every `net.count` assertion
+   * around a blur-to-save form is untrustworthy.
    *
-   * The old assertion was `toHaveBeenCalled()`, which is true for one call and for two.
+   * `toHaveBeenCalled()` does not cover this: it is true for one call and for two.
    */
   it('fires focusout ONCE on a focused element — not once natively and once synthetically', () => {
     document.body.innerHTML = '<input />';
@@ -438,12 +437,11 @@ describe('click holdMs — hold-to-confirm controls', () => {
 /**
  * An `upload` whose file was never described is a FAILED call, not a request for a placeholder.
  *
- * The branch built `new File([asString(args.content, 'reticle test file')], asString(args.name,
- * 'file.txt'))`, so a call whose keys were all unrecognised — the field report sent `args.files` —
- * uploaded a 17-byte text file and returned ok:true. The server answered 200, the UI refreshed, and
- * every signal the agent could read said the pipeline had processed its PDF. That is a manufactured
- * green on the write path, and it is the same shape `drag` already refuses one branch below: an act
- * that reports success over something it never did.
+ * Defaulting to `new File([asString(args.content, 'reticle test file')], asString(args.name,
+ * 'file.txt'))` means a call whose keys are all unrecognised (say `args.files`) uploads a placeholder
+ * text file and returns ok:true. The server answers 200, the UI refreshes, and every signal the agent
+ * can read says the pipeline processed its PDF. That is a manufactured green on the write path, the
+ * same shape `drag` refuses one branch below.
  *
  * The refusal names the keys upload accepts, so a caller that guessed can correct in one turn
  * instead of guessing again.
@@ -560,11 +558,11 @@ describe('upload refuses to invent a file nobody asked for', () => {
 /**
  * The destructive-action guard classifies the ELEMENT, never the form around it.
  *
- * The context string used to include `el.closest('form')?.textContent`, so the whole form's rendered
- * text decided the verdict for every control inside it. Any CRUD form with per-row "Remove" buttons
- * made its own Save button read as destructive — intermittently, because it depended on whether the
- * rows had rendered yet. The field report's answer was to pass confirmDangerous:true on every click,
- * which is the real cost: a guard that fires on everything is a guard that gets switched off.
+ * Including `el.closest('form')?.textContent` would let the whole form's rendered text decide the
+ * verdict for every control inside it: any CRUD form with per-row "Remove" buttons reads its own Save
+ * button as destructive, intermittently, depending on whether the rows have rendered. The way past
+ * that is confirmDangerous:true on every click, and a guard that fires on everything gets switched
+ * off.
  */
 describe('destructive-action guard reads the element, not the form around it', () => {
   it('does not block a harmless submit because a sibling row says "Delete"', async () => {

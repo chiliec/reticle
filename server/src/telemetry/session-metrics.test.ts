@@ -314,10 +314,9 @@ describe('the session summary says WHY the daemon exited', () => {
  * `#startedAt` and never resets. So `daemon_stopped` — the event whose docstring promises "the whole
  * session in a single event" — described a long session that made no calls.
  *
- * In the field almost every `daemon_stopped` row carried `toolCalls: 0`, at a median
- * duration of 30.5 minutes, while `session_progress` for the same daemons carried real histograms.
- * Every funnel computed off the end-of-session event therefore read zero at the exact step this
- * release exists to raise.
+ * A `daemon_stopped` row carrying `toolCalls: 0` for a long session, while `session_progress` for
+ * the same daemon carries real histograms, is that residue. Anything computed off the end-of-session
+ * event then reads zero at the step it is meant to measure.
  */
 describe('a final summary reports the whole session, not the last window', () => {
   it('counts tool calls made BEFORE a flush', () => {

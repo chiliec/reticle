@@ -64,10 +64,10 @@ export function describeParam(name: string, value: unknown): string {
 /**
  * Parameters that carry no information about how the tool is USED, and so are not counted.
  *
- * `sessionId` is accepted by nearly every tool and passed on nearly every call, so counting it
- * produced a row per tool saying only "the agent addressed a session" — in one real day's export it
- * was a third of the toolParams block. This histogram exists to answer "is anyone using the argument
- * we shipped last release", and a parameter every call carries can never answer it.
+ * `sessionId` is accepted by nearly every tool and passed on nearly every call, so counting it adds
+ * a row per tool saying only "the agent addressed a session", for a large share of the whole
+ * `toolParams` block. This histogram exists to answer "is anyone using the argument shipped last
+ * release", and a parameter every call carries can never answer it.
  */
 const UNINFORMATIVE_PARAMS: ReadonlySet<string> = new Set(['sessionId']);
 

@@ -216,11 +216,10 @@ describe('installProxyResilience — the MCP server must outlive its own bugs', 
 /**
  * A refused connect is not a crash.
  *
- * In the field **every `runtime_crashed` event carried one fingerprint** —
- * `connect ECONNREFUSED`, `unhandled_rejection`, actor `agent`. The proxy is designed to tolerate a
- * daemon that has not booted: it serves the catalog from cache and wakes one on the next request. So
- * the crash metric spent two days reporting a designed, recovered-from condition, which is the same
- * as having no crash metric at all.
+ * `runtime_crashed` used to fire on a single fingerprint — `connect ECONNREFUSED`,
+ * `unhandled_rejection`, actor `agent`. The proxy is DESIGNED to tolerate a daemon that has not
+ * booted: it serves the catalog from cache and wakes one on the next request. So the crash metric
+ * reported a designed, recovered-from condition, which is the same as having no crash metric.
  */
 describe('a daemon that is not up yet is not a crash', () => {
   function errno(code: string, message: string): NodeJS.ErrnoException {

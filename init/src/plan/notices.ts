@@ -6,9 +6,7 @@
  * container, an MCP registration Windows will not take, a UI library no gate covers. Reticle is
  * not going to fix any of them and the user is better off knowing.
  *
- * They moved out together when `plan.ts` crossed the 1000-line cap on merging 2.14.0. The cap is
- * a cohesion backstop rather than a budget, so the answer is a split along a real seam and not a
- * larger number.
+ * They live together because that shared test is a real seam.
  */
 import { CONTAINERISED_TITLE, containerisedDevServerNote } from '@/diagnose/containerised-dev-server.js';
 import { mcpWindowsNote } from '@/register/mcp.js';

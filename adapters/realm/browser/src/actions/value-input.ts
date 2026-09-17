@@ -4,9 +4,8 @@ import { valuePrototypeOf } from '@/dom/realm.js';
 /**
  * Writing a value into a field, and the two preconditions that make it honest.
  *
- * Lifted out of actions.ts when that file hit the 600-line cap. It is a cohesive unit: every export
- * here exists so that a value write either lands as a real user's edit would, or is refused with a
- * reason — never forced through while reporting success.
+ * Every export here exists so that a value write either lands as a real user's edit would, or is
+ * refused with a reason — never forced through while reporting success.
  */
 
 /**

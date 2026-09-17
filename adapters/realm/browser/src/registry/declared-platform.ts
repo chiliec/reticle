@@ -72,8 +72,8 @@ export const SERVED_COMMANDS: readonly string[] = [
   ReticleCommand.CAPTURE,
   ReticleCommand.NAVIGATE,
   ReticleCommand.REFRESH,
-  // Bridge -> page pushes. Served like any other command, and previously missing from this list,
-  // which the guard beside this file caught on its first run.
+  // Bridge -> page pushes. Served like any other command, so they belong in this list; the guard
+  // beside this file is what holds that.
   ReticleCommand.FLOWS,
 ];
 

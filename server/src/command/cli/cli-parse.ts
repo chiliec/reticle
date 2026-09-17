@@ -1,8 +1,7 @@
 /**
  * Pure CLI argument parsing — the command/flag grammar, the CliResult union, and parseCliArgs.
- * Split out of cli.ts (which keeps the side-effecting handlers + dispatch) to stay under the
- * file-size cap and keep the parser pure + unit-testable. Re-exported from cli.ts so existing
- * imports are unchanged.
+ * The parser stays pure and unit-testable; `cli.ts` owns the side-effecting handlers and dispatch,
+ * and re-exports this surface.
  */
 import { TutorialAudience } from './tutorial.js';
 import { parseFeedbackArgs, type ParsedFeedback } from './cli-parse-feedback.js';
@@ -805,9 +804,8 @@ export function parseCliArgs(
        *
        * The shell script does the three things that cannot be Node (is there a runtime, put the CLI
        * on the machine, hand over) and nothing else, because a .sh and a .ps1 holding the same logic
-       * drift the first time somebody fixes a bug in one of them — the rule setup/reticle.sh already
-       * states. The timings arrive as flags because only the shell could measure them: they span the
-       * period before this binary existed.
+       * drift the first time somebody fixes a bug in one of them. The timings arrive as flags
+       * because only the shell could measure them: they span the period before this binary existed.
        */
       if ('install' === what) {
         return {

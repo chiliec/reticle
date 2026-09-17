@@ -9,9 +9,9 @@
  * question asked mechanically: perturb the subject, replay the flow, and grade the FLOW by whether it
  * went red. One that does not is demoted — it is not a test, it is a click sequence.
  *
- * The figure this produces is the one nobody in this space publishes. Not "how many bugs do we
- * catch", which is a claim about the subject, but "what fraction of our own suite would notice if
- * the feature broke", which is a claim about ourselves.
+ * The figure this produces is not "how many bugs were caught", which is a claim about the subject,
+ * but "what fraction of the suite would notice if the feature broke", which is a claim about the
+ * suite.
  */
 
 import { z } from 'zod';

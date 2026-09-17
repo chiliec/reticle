@@ -28,8 +28,8 @@ import { pageTornDownWhileOn } from './page-teardown.js';
  * The channels a claim needed that the implementation never declared.
  *
  * Empty when the implementation declared nothing, which is not the same as declaring nothing
- * observable. Every SDK in the field today says nothing, and reading that silence as "observes
- * nothing" would turn every verdict everywhere into `unknown`. Absent means unknown, never false --
+ * observable. No SDK declares its channels yet, and reading that silence as "observes nothing"
+ * would turn every verdict everywhere into `unknown`. Absent means unknown, never false --
  * the same convention the handshake uses throughout.
  */
 function undeclaredChannels(inputs: VerifiedInputs): string[] {
@@ -102,11 +102,11 @@ interface VerifiedInputs {
    *
    * This is the epistemic core of the tool: a declaration made before the action cannot be
    * rationalised after it. When such a declaration HOLDS, settlement is corroboration, not a veto —
-   * so the two clauses that answer "the app had not gone quiet" step aside for it. Measured in the
-   * field on three different apps: the expected text was on screen, the write returned 204, the
-   * nested verdict passed with evidence, and the verdict was `unknown` because the SPA polls, or
-   * because the tab was hidden and a hidden tab never fires the animation frame `settled` is read
-   * from. A hidden tab is the NORMAL state for agent-driven verification, so a signal that is always
+   * so the two clauses that answer "the app had not gone quiet" step aside for it. Otherwise the
+   * expected text is on screen, the write returned 204, the nested verdict passes with evidence —
+   * and the verdict still reads `unknown` because the SPA polls, or because the tab was hidden and
+   * a hidden tab never fires the animation frame `settled` is read from. A hidden tab is the NORMAL
+   * state for agent-driven verification, so a signal that is always
    * false there cannot be a precondition for a verdict.
    *
    * Narrow on purpose. It steps aside for settlement ONLY: an absence-derived finding about what the
@@ -118,7 +118,8 @@ interface VerifiedInputs {
   /**
    * A net the caller named is still open. `waitForPredicate` reports that as `pass: false` ("no
    * request to …") the instant the budget ends, which made a cold backend `assertion_failed` and a
-   * warm one `proved`. Absence of a settle is not evidence the request never happened — see #669.
+   * warm one `proved`. Absence of a settle is not evidence the request never happened: the budget
+   * ending is a statement about the clock, not about the network (#669).
    */
   namedRequestInFlight?: boolean;
   /**
@@ -328,8 +329,8 @@ export function decideVerified(inputs: VerifiedInputs): VerifiedVerdict {
   // moment the predicate first passes. Reproduced on the bench app: `auth:granted` fired with
   // matching data, state changed, the token was stored, the capture was clean and the grade was
   // `signal`, and the verdict was still NO because one POST was in flight. That inverts the grade
-  // hierarchy — a timing observation beat a consequence observation — and it is the shape of half of
-  // every `no` verdict in the field. See ABSENCE_DERIVED_CONTRADICTIONS for why a false negative
+  // hierarchy — a timing observation beat a consequence observation. See
+  // ABSENCE_DERIVED_CONTRADICTIONS for why a false negative
   // costs more than it looks: it makes an agent redo work that succeeded, or stop believing the
   // verdict channel, which is the product.
   // Advisory findings are dropped from the decision entirely, at both tiers below. They are true and

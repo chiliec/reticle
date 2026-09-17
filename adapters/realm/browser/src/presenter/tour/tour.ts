@@ -157,10 +157,10 @@ export interface TourDeps {
   /**
    * Copying is a capability, not a guarantee — an insecure origin has no clipboard.
    *
-   * It reports whether the text actually landed, which is the part that used to be thrown away. The
-   * call was `void`, so a page with a working clipboard and a page with none were the same event as
-   * far as this file could tell, and the button said the same thing about both by saying nothing.
-   * `false` is what lets the tour fall back to selecting the text so it can still be copied by hand.
+   * It reports whether the text actually landed. A `void` call makes a page with a working clipboard
+   * and a page with none the same event as far as this file can tell, so the button says the same
+   * thing about both by saying nothing. `false` is what lets the tour fall back to selecting the text
+   * so it can still be copied by hand.
    */
   readonly copy?: (text: string) => Promise<boolean> | boolean;
   /** Selecting the prompt is the fallback when there is no clipboard. Injected for the same reason. */

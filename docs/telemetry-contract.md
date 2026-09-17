@@ -92,7 +92,7 @@ The single exception is `daemon_stopped`, which is **awaited**, because the proc
 | --- | --- | --- |
 | `reticle_installed` | first-ever run on a machine | install count, and the new-user curve |
 | `cli_command_run` | a human ran a `reticle` subcommand | human intent: `verify`/`gate` mean something very different from `status`. Never emitted for the internal `_daemon` spawn |
-| `daemon_started` | the daemon came up | active sessions, DAU/WAU/MAU |
+| `daemon_started` | the daemon came up | active sessions |
 | `daemon_stopped` | clean exit | the rich session roll-up. **Count sessions with this one**; see below |
 | `session_progress` | periodic flush from a LIVE daemon | same payload, `final: false`. Sum work across both |
 | `verification_completed` | a verdict was produced | the product's reason to exist: was an app actually verified |

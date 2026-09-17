@@ -115,16 +115,16 @@ const DIST_ENTRY = join(PACKAGE_ROOT, 'dist', 'index.js');
  *
  * The cheaper alternative was considered and rejected: `StepEffect` itself was first put in
  * `flow-constants.ts`, which the recorder imports for `FLOW_FILE_VERSION`, and that shipped the
- * whole enum to every page. It moved to a leaf of its own and bought back exactly 1 byte, which is
- * how we know the cost is the SCHEMA and not the vocabulary. Splitting the flow schemas further is
+ * whole enum to every page. Moving it to a leaf of its own bought back exactly 1 byte, so the cost
+ * is the SCHEMA and not the vocabulary. Splitting the flow schemas further is
  * the way to stop paying it, and that is its own commit rather than a line in this one.
  */
 /*
  * 237_760 -> 238_100, for the first-run tour to exist at all. 171 B measured.
  *
- * The tour is a carousel drawn over the user's own app the first time it loads instrumented — the
- * onboarding stage that, before it, reached nobody: a pointer somebody had to choose to follow,
- * then a `process.stdout.isTTY` check that is `undefined` through every pipe.
+ * The tour is a carousel drawn over the user's own app the first time it loads instrumented. What it
+ * replaces reached nobody: a pointer somebody had to choose to follow, behind a
+ * `process.stdout.isTTY` check that is `undefined` through every pipe.
  *
  * What is NOT in this number is the point. The slides, their prose and ~3 kB of CSS sit behind a
  * dynamic `import('./presenter/tour/tour.js')` inside the block that already lazy-loads the panel,

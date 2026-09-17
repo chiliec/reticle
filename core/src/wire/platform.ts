@@ -10,7 +10,7 @@
  * behaved identically. Code that branches on the surface names `webview` once.
  *
  * There are no dependencies here on purpose. A third-party implementation says which of these it is
- * and needs nothing else from us to say it.
+ * and needs nothing from this package to say it.
  *
  * Absent on the wire means `web`. That is the back-compat convention used throughout the handshake:
  * a field nobody sent means what everything meant before the field existed.

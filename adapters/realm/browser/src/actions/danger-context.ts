@@ -1,11 +1,10 @@
 /**
  * WHICH TEXT decides whether an action is destructive.
  *
- * Split out of actions.ts, which sits at the size backstop, and split here because it is a different
- * question from how an action is performed: this file decides what the control SAYS, and the answer
- * has been wrong in both directions at once. It blocked a CFD engineer for typing "pressure drop"
- * into a textarea, and it did not block Enter in a form whose submit button said "Delete account" —
- * one defect, classifying the wrong text.
+ * A different question from how an action is performed: this file decides what the control SAYS, and
+ * the answer can be wrong in both directions at once — blocking a textarea that contains "pressure
+ * drop", and not blocking Enter in a form whose submit button says "Delete account". One defect,
+ * classifying the wrong text.
  *
  * The pattern itself lives in core (`isDangerousActionText`) and is deliberately narrow. This file
  * only chooses what to hand it.
@@ -31,10 +30,9 @@ const LABEL_VALUED_INPUT_TYPES: ReadonlySet<string> = new Set([
  * Does this control's own text belong to the USER rather than to the app?
  *
  * A button's text is its label, so classifying it is the whole point. A text entry's content is
- * DATA, and classifying that is how the guard came to block a CFD engineer for typing the words
- * "pressure drop" — `\bdrop\b` is in the destructive-label pattern, and it matched the sentence the
- * agent had just filled in, not any label on the page. Reported from the field; the agent got past
- * it with `confirmDangerous: true`, which is precisely how a safety guard becomes decorative.
+ * DATA, and classifying that blocks a user for typing the words "pressure drop": `\bdrop\b` is in the
+ * destructive-label pattern and matches the sentence just filled in, not any label on the page. The
+ * way past such a block is `confirmDangerous: true`, which is how a safety guard becomes decorative.
  */
 function holdsUserText(el: HTMLElement): boolean {
   if (el.isContentEditable) return true;

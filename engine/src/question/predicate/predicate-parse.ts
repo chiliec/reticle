@@ -1,16 +1,14 @@
 /**
  * One readable sentence when a predicate does not parse — never the zod array.
  *
- * In the field a meaningful share of all tool errors were **a serialized zod issue array**, all on
- * `reticle_act_and_wait`, `reticle_wait_for` and `reticle_assert` — the three tools that produced
- * every action-derived finding in the dataset. The least readable error we emit was landing on the
- * highest-value path, and an agent had to `JSON.parse` an error string to learn which field it got
- * wrong.
+ * `PredicateSchema.parse()` throws a `ZodError` whose `.message` IS the raw issue array, and three
+ * handlers call it directly — `reticle_act_and_wait`, `reticle_wait_for` and `reticle_assert`, which
+ * are also the three that produce every action-derived finding. So the least readable error emitted
+ * anywhere lands on the highest-value path, and an agent has to `JSON.parse` an error string to learn
+ * which field it got wrong.
  *
- * `PredicateSchema.parse()` throws a `ZodError` whose `.message` IS that array, and three handlers
- * call it directly. This wraps it once, so every caller gets the same shape rather than each
- * growing its own catch — the pattern #108 asks for: name the parameter, say whether anything ran,
- * show a valid call.
+ * This wraps it once, so every caller gets the same shape rather than each growing its own catch —
+ * the pattern #108 asks for: name the parameter, say whether anything ran, show a valid call.
  */
 
 import { z } from 'zod';

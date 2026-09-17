@@ -18,10 +18,8 @@ import { refs } from '@/dom/addressing/refs.js';
  * entire purpose is catching false greens was manufacturing one: `dispatched: true`, a visibly
  * ticked box, and an app that never heard about it.
  *
- * Reported from the field, where the agent lost calls to it and briefly suspected an app bug that
- * did not exist, then worked around it by using `click` instead — which is exactly what this now
- * does, because `HTMLElement.click()` runs the element's ACTIVATION BEHAVIOUR (the native toggle)
- * as well as firing the event, which `dispatchEvent` does not.
+ * So this uses `click`: `HTMLElement.click()` runs the element's ACTIVATION BEHAVIOUR (the native
+ * toggle) as well as firing the event, which `dispatchEvent` does not.
  */
 function box(attrs: Partial<HTMLInputElement> = {}): HTMLInputElement {
   const el = document.createElement('input');

@@ -57,7 +57,7 @@ export function installConsole(emit: Emit): Teardown {
     const wrapper = (...args: unknown[]): void => {
       // The message reaches the console FIRST, outside the guard — storage.ts's ordering, and for the
       // same reason. `stringifyArgs` walks arbitrary app objects, so one hostile getter or revoked
-      // proxy used to throw out of the app's own `console.log` before it had logged anything.
+      // proxy would otherwise throw out of the app's own `console.log` before it had logged anything.
       callOriginal(...args);
       observeSafely(() => {
         // Only console.error carries a stack — the diagnosis case; log/warn stay lean.
@@ -125,7 +125,7 @@ export function installConsole(emit: Emit): Teardown {
 
   return () => {
     for (const [method, original] of originals) {
-      // Restore only if console[method] still holds our wrapper — a logging SDK (Sentry, LogRocket)
+      // Restore only if console[method] still holds Reticle's wrapper — a logging SDK (Sentry, LogRocket)
       // that wrapped console AFTER connect() must keep its instrumentation on teardown.
       if (console[method] === patched.get(method)) console[method] = original as typeof console.log;
     }

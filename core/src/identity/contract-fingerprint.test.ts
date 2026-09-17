@@ -2,15 +2,15 @@
  * The contract fingerprint — what makes "these two pieces disagree" a DERIVED fact.
  *
  * Reticle ships as pieces installed separately: the SDK in the page, the daemon, the MCP server the
- * agent spawns. They drift constantly, and until now the only signal was package-version equality,
- * which is wrong in both directions. It fires on 2.4.0-vs-2.4.1 where nothing changed — so every
- * patch release makes every un-upgraded app cry wolf, and a warning that usually means nothing gets
- * trained into background noise. And it CANNOT fire on the case that matters most: two builds of the
- * same version number, which is exactly what a stale daemon or a cached npx package is.
+ * agent spawns. They drift constantly, and package-version equality is wrong in both directions. It
+ * fires on two adjacent patch releases where nothing changed — so every patch release makes every
+ * un-upgraded app cry wolf, and a warning that usually means nothing gets trained into background
+ * noise. And it CANNOT fire on the case that matters most: two builds of the same version number,
+ * which is exactly what a stale daemon or a cached npx package is.
  *
  * So the fingerprint hashes the thing that actually has to agree — core's wire vocabulary, the
  * commands and message kinds and event types both sides speak. Both sides compute it from their OWN
- * copy of core, so equal hashes mean "we share a contract" no matter what the package.json says.
+ * copy of core, so equal hashes mean the contract is shared no matter what the package.json says.
  *
  * DERIVED, never hand-bumped: a hand-maintained contract number is one someone forgets to raise, and
  * a forgotten bump is silent skew — the exact failure being fixed. Rename a command and the hash

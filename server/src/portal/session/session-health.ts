@@ -19,10 +19,7 @@ interface HealthSubject {
   throttled(): boolean;
 }
 
-/**
- * The health block spliced onto act/assert results. Defined here rather than in session.ts: this is
- * the module that builds it, and session.ts was over the file-size cap.
- */
+/** The health block spliced onto act/assert results. Defined here because this is what builds it. */
 export interface SessionHealth {
   lastSeenMs: number;
   throttled: boolean;
@@ -32,22 +29,18 @@ export interface SessionHealth {
   /**
    * How long the OLDEST unanswered request has been in flight, when that is long enough to matter.
    *
-   * Present only past `PENDING_NAVIGATION_NOTICE_MS`, so a healthy session costs nothing. Both
-   * reporters on the hung-server issue said this alone would have been enough for them: one sat on
-   * an RSC fetch stuck pending for 170+ seconds across many calls, the other on a dev server that
-   * accepted connections and never sent a body. Reticle held the evidence both times and the truth
-   * was eventually established with `curl`.
+   * Present only past `PENDING_NAVIGATION_NOTICE_MS`, so a healthy session costs nothing. Without
+   * it, a fetch stuck pending forever and a dev server that accepts connections and never sends a
+   * body both look exactly like an app that is merely slow — while the daemon holds the evidence.
    */
   pendingNavigationMs?: number;
   /**
    * Present only when the page's SDK version differs from the daemon's — see version-skew.ts.
    *
    * On the HEALTH block, not only on `reticle_sessions`, because skew causes SILENT action failures
-   * and the fields it contradicts ride on the act result. Reported from the field: `act_and_wait`
-   * returning `dispatched: true, settled: true, domMutatedWithin: 12-40ms` while React state never
-   * changed, across eight attempts and three interaction strategies. The banner existed the whole
-   * time — on `reticle_sessions` and `reticle_lease`, which is not the surface an agent reads on
-   * every call.
+   * and the fields it contradicts ride on the act result: `act_and_wait` can report `dispatched`,
+   * `settled` and a DOM mutation while framework state never changed. A banner an agent only sees
+   * on `reticle_sessions` or `reticle_lease` is not on the surface it reads every call.
    */
   versionSkew?: string;
 }
@@ -190,14 +183,14 @@ const STARVED_WAIT_NOTE =
  * returned untouched — starvation is context for a failure, not a reason to doubt a hold. Pure and
  * generic over the verdict shape so assert/wait_for/act_and_wait share one rule.
  *
- * The sentence FOLLOWS the field, and does not decide for itself. `annotateThrottledMiss`
- * (predicate.ts) owns the question of whether this failure was reached by not having seen
- * something, which is the only reading a starved tab casts doubt on; it stamps
- * `THROTTLED_STARVED_NOTE` when it was. Deciding again here got two answers to one question:
- * an `absent: true` assertion that MATCHED 13 elements was graded honestly in the field an agent
- * gates on, and told in prose that the tab may never have rendered. It also doubled up on a failure
- * that already carried a more specific reason (an unreadable locator, a superseded window), where
- * the concrete diagnosis is the one that should lead.
+ * The note FOLLOWS the stamped field and does not decide for itself. `annotateThrottledMiss`
+ * (predicate.ts) owns the question of whether this failure was reached by NOT HAVING SEEN
+ * something, which is the only reading a starved tab casts doubt on, and stamps
+ * `THROTTLED_STARVED_NOTE` when it was. Deciding again here gives two answers to one question: an
+ * `absent: true` assertion that failed because it MATCHED elements is not in doubt, and must not be
+ * told in prose that the tab may never have rendered. The same applies to a failure that already
+ * carries a more specific reason (an unreadable locator, a superseded window): the concrete
+ * diagnosis leads.
  */
 export function annotateStarvedFailure<
   V extends { pass?: boolean; failureReason?: string; inconclusive?: string },

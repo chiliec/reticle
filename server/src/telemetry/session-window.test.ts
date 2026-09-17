@@ -1,26 +1,21 @@
 /**
- * Three defects in the session-summary path, all measured against the exported PostHog data
- * (`plan/export-2026-08-07-205221.csv`, 1,468 events, one day).
+ * Three defects in the session-summary path.
  *
  * 1. AN EVENT NAMED `daemon_stopped` IS EMITTED WHILE THE DAEMON IS RUNNING.
- *    The 30-minute periodic flush emits `DAEMON_STOPPED` with `final: false`. In the export, 98
- *    `daemon_stopped` events are 73 real exits + 25 mid-session flushes. Counting them as sessions
- *    over-states by 34%, and the two populations are OPPOSITES: every one of the 25 flushes had
- *    tool calls, and not one of the 73 exits did. Any funnel drawn over the raw event is not
- *    slightly off, it is describing a different thing at each end. (Our own funnel analysis made
- *    exactly this mistake.)
+ *    The periodic flush emits `DAEMON_STOPPED` with `final: false`, so the raw event mixes real
+ *    exits with mid-session flushes. Counting them as sessions over-states, and the two populations
+ *    are OPPOSITES — a flush happens because a tool was called, an idle exit happens because none
+ *    was. Anything drawn over the raw event describes a different thing at each end.
  *
  * 2. `#seenBugKinds` IS CLEARED BY THE FLUSH.
  *    It is not a window counter — it is the session-lifetime memory that decides `repeat` on
- *    `bug_found`. Clearing it every 30 minutes makes the same defect, found again, report as a new
- *    distinct one. Sessions in the export run to 11.5 hours, i.e. 23 chances to double-count.
+ *    `bug_found`. Clearing it on every flush makes the same defect, found again, report as a new
+ *    distinct one, once per flush for the life of the session.
  *
  * 3. THE LAST WINDOW OF AN ACTIVE DAEMON IS NEVER REPORTED.
  *    A daemon that served a tool never idle-exits (correctly — it is doing a job), and nothing else
- *    calls shutdown, so its final partial window dies with the process. Measured: 0 of 73 final
- *    summaries carry a single tool call; all 400 tool calls, 13 bugs and 2 verifications in the
- *    dataset arrived via flushes. The unreported tail is bounded by the flush interval, which is why
- *    a 30-minute interval is the wrong bound for a median 28-minute session.
+ *    calls shutdown, so its final partial window dies with the process. Every tool call therefore
+ *    has to arrive by flush, and the unreported tail is bounded by the flush interval.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -64,8 +59,8 @@ describe('the flush must not forget which defects it has already reported', () =
 
 describe('the unreported tail is bounded by the flush interval', () => {
   it('is short enough to survive a median session', () => {
-    // Median session in the export is 28 minutes. A 30-minute interval means the median session
-    // reports nothing at all until it is nearly over, and loses whatever came after its last tick.
+    // An interval on the order of a whole session means the typical session reports nothing at all
+    // until it is nearly over, and loses whatever came after its last tick.
     expect(SESSION_FLUSH_MS).toBeLessThanOrEqual(5 * 60 * 1000);
   });
 });
@@ -77,9 +72,8 @@ describe('the unreported tail is bounded by the flush interval', () => {
  * closed laptop, OOM, `kill -9`, a force-quit editor — reaches no shutdown handler and has emitted
  * nothing, so the entire session is invisible.
  *
- * In the field `daemon_started` outran `daemon_stopped` by a wide margin: **a meaningful share of
- * sessions never reported a summary at all.** Every "did anyone use Reticle" figure is computed only
- * on the survivors and undercounts by an unknown amount.
+ * A session that never reports a summary is invisible, so every figure computed over the survivors
+ * undercounts by an unknown amount.
  */
 describe('the first roll-up does not wait for the periodic interval', () => {
   it('fires well before the periodic flush', () => {

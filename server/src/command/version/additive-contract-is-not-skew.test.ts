@@ -12,9 +12,8 @@
  * So the structural branch was dead on the only peer that matters, every page fell through to the
  * hash, and the hash cannot tell an ADDITION from a RENAME. This release added `scroll`, `tap` and
  * `zoom` to `ActionType` — three names an older page never needs to know — which moves the
- * fingerprint. Every user upgrading from 2.14.0 with a pinned SDK would have been told, on their
- * first session, that "tools will behave in ways neither side reports", about a change that breaks
- * nothing.
+ * fingerprint. Anyone upgrading with a pinned SDK would be told, on their first session, that
+ * "tools will behave in ways neither side reports", about a change that breaks nothing.
  *
  * `subset-is-not-skew.test.ts` next door already covers the RULE. This covers the WIRING: that the
  * names reach the comparison at all, and what the remaining hash-only case is allowed to claim.

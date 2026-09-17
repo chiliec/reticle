@@ -10,10 +10,10 @@ function e(type: EventType, data: Record<string, unknown>): ReticleEvent {
 
 /**
  * A store that ends consistent can have been inconsistent on the way there, and a from→to pair
- * cannot say so. Measured on a real merchant dashboard: an account switch moved `accountId`
- * immediately and `payments` 160 ms later, so for 160 ms the header named one tenant while the rows
- * belonged to another. Both diffs were reported and nothing said they were 160 ms apart — and
- * waiting for the page to settle is, by construction, waiting for that evidence to disappear.
+ * cannot say so. An account switch moved `accountId` immediately and `payments` 160 ms later, so
+ * for 160 ms the header named one tenant while the rows belonged to another. Both diffs were
+ * reported and nothing said they were 160 ms apart — and waiting for the page to settle is, by
+ * construction, waiting for that evidence to disappear.
  */
 describe('state diffs carry WHEN, so settling cannot hide a transient', () => {
   const at = (t: number, path: string, from: unknown, to: unknown): ReticleEvent => ({

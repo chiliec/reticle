@@ -137,12 +137,11 @@ function sanitize(value: unknown, state: SanitizeState, depth: number, key?: str
     if (Array.isArray(value)) {
       // Truncate by dropping whole ITEMS, never by corrupting them.
       //
-      // The node budget used to run out mid-collection, so later items kept their shape while
-      // individual fields became the string "[TRUNCATED]" — an array field turned into a string, a
-      // boolean into a string. Consumers declare output schemas over these payloads, so that was not
-      // a degraded answer: validation rejected the whole message and the caller received NOTHING. On
-      // a page with thousands of matches that is a total loss of the query tool, in exactly the
-      // conditions where it matters most.
+      // A node budget running out mid-collection leaves later items with their shape while individual
+      // fields become the string "[TRUNCATED]" — an array field turned into a string, a boolean into a
+      // string. Consumers declare output schemas over these payloads, so that is not a degraded
+      // answer: validation rejects the whole message and the caller receives NOTHING. On a page with
+      // thousands of matches that is a total loss of the query tool.
       //
       // Stopping BEFORE an item that will not fit keeps every survivor whole and type-correct. The
       // collection's true size travels separately as a scalar (serialized first), so "how many" stays
@@ -222,10 +221,10 @@ function sanitize(value: unknown, state: SanitizeState, depth: number, key?: str
 /**
  * What the transport caps removed from a value, if anything.
  *
- * Truncation used to be entirely silent: a 1,000-entity store came back as ~142 entities with no
- * marker and no count, and a caller comparing it against expected data would conclude the app had
- * lost the rest. A partial answer that cannot be distinguished from a complete one is the precise
- * shape of a false green — the failure this project exists to prevent — so the caps now report.
+ * Silent truncation returns a 1,000-entity store as ~142 entities with no marker and no count, and a
+ * caller comparing that against expected data concludes the app lost the rest. A partial answer that
+ * cannot be distinguished from a complete one is the precise shape of a false green, so the caps
+ * report.
  */
 export interface TruncationReport {
   /** Whole collection items not included, either past the item cap or past the node budget. */

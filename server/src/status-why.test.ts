@@ -1,15 +1,10 @@
 /**
- * `reticle status` is where humans land at the exact point the funnel dies.
+ * `reticle status` must answer WHY nothing is connected, not just `sessionCount: 0`.
  *
- * It is the most-run command in the field, and `init`'s closing line sends people to it. With no app
- * connected it answered `sessionCount: 0` and stopped — the same dead end `reticle_sessions` used to
- * be for agents, at the same moment: the daemon is up, the MCP server is registered, and the app has
- * never arrived. Agents got the diagnosis in 2.7.0. A human running the command we tell them to run
- * deserves the same sentence.
- *
- * The daemon already computes it. This only stops it being thrown away between the bridge and the
- * printed line — which is the same defect shape as the telemetry block that reached the wire through
- * none of its four lists: computed correctly, declared nowhere, silently dropped.
+ * `init`'s closing line sends people to this command, and the daemon already computes the same
+ * diagnosis agents get from an empty `reticle_sessions`. This pins that it is not thrown away
+ * between the bridge and the printed line: computed correctly and dropped on the way out is a
+ * silent failure, so it needs a test rather than a reader.
  */
 
 import { describe, expect, it } from 'vitest';

@@ -46,11 +46,9 @@ function publishedRules(): string[] {
  * Comments, because this repository has had a source-matching guard pass on a comment that
  * quoted the code it replaced. A rule named in prose has not been executed.
  *
- * Imports, because the first version of this guard did not strip them and its own negative
- * control exposed it: deleting every call to `canProve` and leaving a comment behind still
- * passed, since the name survived in the `import { canProve, ... }` line. A guard that accepts
- * an unused import is a guard that accepts exactly the state it exists to forbid -- the rule was
- * imported, never run, and looked proved.
+ * Imports, because a name survives in `import { canProve, ... }` after every call to it is
+ * deleted. A guard that accepts an unused import accepts exactly the state it exists to forbid:
+ * the rule imported, never run, and looking proved.
  */
 function testCode(): string {
   const files = execFileSync('git', ['ls-files', 'src'], { cwd: PACKAGE, encoding: 'utf8' })

@@ -41,7 +41,7 @@ export function hitTestOccluder(el: Element, rect: DOMRect): Element | null {
   if (typeof doc.elementFromPoint !== 'function') return null;
 
   /*
-   * `elementsFromPoint` when the browser has it, so our own chrome cannot hide what is under it.
+   * `elementsFromPoint` when the browser has it, so Reticle's own chrome cannot hide what is under it.
    *
    * The singular form returns only the TOPMOST element, so anything sitting above the occluder —
    * including Reticle's own presenter — would be skipped as "ours" and the real blocker never seen.

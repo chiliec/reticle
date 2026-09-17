@@ -2,8 +2,8 @@
  * Pure, conservative patchers for the two files a Next app needed edited BY HAND: `next.config.*`
  * (wrap the export in `withReticle`) and `app/layout.tsx` (mount `<ReticleDev />`). Same contract as
  * the Vite patcher — recognise the obvious shape, bail to `manual` on anything ambiguous, never
- * half-edit. Leaving these manual is why Next connected 0% of the time: both edits are silent when
- * skipped, and one of them is JSX.
+ * half-edit. These must not be left manual: both edits fail silently when skipped, and one of them
+ * is JSX.
  */
 
 import { PatchKind, type SourcePatch } from './patch-kind.js';

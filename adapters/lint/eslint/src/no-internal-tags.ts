@@ -5,15 +5,8 @@
  * the FILE AND DIRECTORY NAMES of the module itself, so a reader of the source never meets a token
  * that only means something in a document they cannot see.
  *
- * Those four surfaces are the ones the project rule names, and the rule enforced two of them. A path
- * is the first thing a reader meets, before any comment, so `n5-ring-buffer.ts` is the shape this
- * exists to prevent stated in the loudest available place.
- *
- * This rule exists because the prose version of it did not hold. An audit of the codebase found the
- * machine-checked rules at ~100% compliance and every prose-only rule violated — 59 tracking codes
- * across the library packages alone, including in the contract package and in test descriptions, plus
- * codes that leaked into user-facing docs. The gap was enforcement, not intent, so the rule is now a
- * lint error rather than a paragraph.
+ * A path is the first thing a reader meets, before any comment, so `n5-ring-buffer.ts` is the shape
+ * this bans in the loudest available place.
  *
  * Deliberately narrow, to avoid punishing legitimate prose:
  *   - a bare `W11`, `B37`, `N5`, `M8` style token (one or two capitals + digits) standing alone;
@@ -35,44 +28,32 @@ const PATH_TAG_MESSAGE =
   "Internal reference '{{tag}}' does not belong in a file or directory name. It means nothing to a reader without the design doc — name the module after what it does.";
 
 /**
- * `(W11)`, `B37`, `W10.3`, `N5:` — a short capital-prefixed code used as a label.
- *
- * The optional trailing lower-case letter is how a design document tells sibling parts apart, and it
- * was missing here: the pattern demanded a non-alphanumeric character straight after the digits, so
- * `P5` was caught and `P5a` was not. Four of those were sitting in shipped source while this rule was
- * switched on and reporting nothing. The suffixed form is the one most likely to appear, not the
- * least, because it is what a document uses once a section has more than one piece.
- *
- * Exactly ONE letter, and lower case. Two would start matching ordinary identifiers, and an upper-case
- * one would catch things like `UTF8B` that are names rather than references.
+ * `(W11)`, `B37`, `W10.3`, `N5:`, `P5a` — a short capital-prefixed code used as a label. The optional
+ * trailing letter is how a design document tells sibling parts apart. Exactly ONE, and lower case:
+ * two would start matching ordinary identifiers, and an upper-case one would catch names like `UTF8B`.
+ * Exempted by `ALLOWED` below.
  */
 const TRACKING_CODE = /(?<![A-Za-z0-9])[A-Z]{1,2}\d{1,2}(?:\.\d{1,2})?[a-z]?(?![A-Za-z0-9])/g;
 /**
- * `§4.3` — a design-doc section reference.
- *
- * Defaults to FLAGGING and exempts only a citation of a NAMED EXTERNAL spec. The first version did the
- * reverse — it exempted any § preceded by a word — which silently permitted `see PLAN §4.3`, the very
- * shape being banned. For a ban rule the default must be "flag", or the exemption swallows the rule.
+ * `§4.3` — a design-doc section reference. Flags by default and exempts only a citation of a NAMED
+ * EXTERNAL spec (`EXTERNAL_SPECS`); exempting any § preceded by a word would permit `see PLAN §4.3`,
+ * the very shape being banned.
  */
 const SECTION_REF = /§\s?\d+(?:\.\d+)*/g;
 /** Specs whose section numbers are real references a reader can follow. */
 const EXTERNAL_SPECS =
   /\b(RFC|WCAG|ECMA|ISO|IEEE|W3C|WHATWG|HTML|CSS|ARIA|HTTP|OAuth|JSON-LD)\b[^§]{0,20}$/i;
 /**
- * `v2.2.0` — an INTERNAL version string.
- *
- * Same inversion: flag by default, exempt only a version attributed to a NAMED third party. Exempting
- * "any capitalised preceding word" permitted `new in Reticle v2.2.0` — our own product name made the
- * banned string legal.
+ * `v2.2.0` — an INTERNAL version string. Flags by default and exempts only a version attributed to a
+ * NAMED third party (`THIRD_PARTY`); exempting any capitalised preceding word would make
+ * `new in Reticle v2.2.0` legal.
  */
 const VERSION_STRING = /(?<![A-Za-z0-9])v\d+\.\d+\.\d+(?![A-Za-z0-9])/g;
 /**
- * The same two shapes over a PATH, case-insensitively.
- *
- * File names here are kebab-case, so a code that would read `N5` in a sentence reads `n5` in a path
- * and the upper-case patterns above cannot see it. The boundaries do the work that case was doing:
- * `e2e`, `utf8`, `http2` and `base64` all fail them, because each needs a non-alphanumeric on both
- * sides of a letters-then-digits token.
+ * The same two shapes over a PATH, case-insensitively: file names here are kebab-case, so `N5` in a
+ * sentence reads `n5` in a path and the upper-case patterns above cannot see it. The boundaries do the
+ * work that case was doing — `e2e`, `utf8`, `http2` and `base64` all need a non-alphanumeric on both
+ * sides of a letters-then-digits token, and so fail them.
  */
 const PATH_TRACKING_CODE = /(?<![A-Za-z0-9])[A-Za-z]{1,2}\d{1,2}(?:\.\d{1,2})?(?![A-Za-z0-9])/g;
 const PATH_VERSION_STRING = /(?<![A-Za-z0-9])v\d+\.\d+\.\d+(?![A-Za-z0-9])/gi;
@@ -80,7 +61,6 @@ const PATH_VERSION_STRING = /(?<![A-Za-z0-9])v\d+\.\d+\.\d+(?![A-Za-z0-9])/gi;
 const THIRD_PARTY =
   /\b(React|Vite|Node|TypeScript|Playwright|Chrome|Chromium|Firefox|Safari|Zod|Vitest|ESLint|pnpm|MCP)\b[^v]{0,12}$/i;
 
-/** Tokens that look like codes but are established technical terms. */
 /** Test-block callees whose first argument is a human-readable description. */
 const TEST_BLOCKS = new Set(['describe', 'it', 'test', 'suite', 'bench']);
 
@@ -107,13 +87,11 @@ const ALLOWED = new Set([
   'Q4', // quarters
   'L1',
   'L2', // cache levels
-  // The JavaScript engine. Omitting it made the rule fire on ordinary writing about heap growth and
-  // GC in a JavaScript codebase — the most likely place this rule runs, and the fastest way to get it
-  // switched off. Found by running the rule over directories the linter had never reached.
+  // The JavaScript engine — without it the rule fires on ordinary writing about heap growth and GC.
   'V8',
   'H4',
   'H5',
-  'H6', // heading levels — H1-H3 were already here; stopping at 3 was an oversight, not a rule
+  'H6', // heading levels
 ]);
 
 export const noInternalTags = createRule({
@@ -199,9 +177,8 @@ export const noInternalTags = createRule({
       },
 
       /**
-       * TEST DESCRIPTIONS are string literals, not comments, so a comment-only rule could not see them
-       * — and the project rule names them explicitly. Seven violations survived a repo-wide cleanup that
-       * claimed to have removed them, precisely because nothing mechanical was looking here.
+       * TEST DESCRIPTIONS are string literals, not comments, so a comment-only rule cannot see them —
+       * and the project rule names them explicitly.
        */
       CallExpression(node): void {
         const callee = node.callee;

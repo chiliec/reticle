@@ -76,7 +76,7 @@ function specToCase(
 }
 
 /**
- * FLOW2SPEC — register one vitest test per flow under `source`. The agent-readable map (.reticle/flows)
+ * Register one vitest test per flow under `source`. The agent-readable map (.reticle/flows)
  * becomes the executable suite: a passing flow registers a green `it`, a malformed file registers a
  * loudly-failing ERROR `it`, an empty dir registers nothing. `getSession` is the seam — the
  * `reticle drive` launched session in CI, a fake in unit tests. MUST be awaited at module top level so

@@ -1,7 +1,6 @@
 /**
  * What a verification can FIND — the vocabulary of faults and contradictions shared by the crawl,
- * the contradiction hunter and the tools that report them. Split out of constants.ts to keep that
- * file under the size cap.
+ * the contradiction hunter and the tools that report them.
  */
 
 import { ChannelId, disagreementCanConvict } from '@/wire/channel.js';
@@ -54,7 +53,7 @@ export const ContradictionKind = {
    * "dispatched but the app did NOTHING (no DOM/net/route/signal)", so firing a signal was enough to
    * rescue a control that did nothing at all. That is the hole. An app whose signal is emitted from
    * the value it was ASKED for rather than the one it COMMITTED gets a verdict at signal grade —
-   * the strongest we award — for a click that changed nothing. Measured on the bench fixture: a
+   * the strongest grade there is — for a click that changed nothing. On the bench fixture: a
    * modal that never opened came back `verified: "yes" / proved`.
    *
    * Absence-derived on purpose (see below). "Nothing corroborated it" is not "it did not happen":
@@ -135,7 +134,7 @@ export const ContradictionKind = {
    * PATCH honouring a subset, an enum falling back to a default. The status is 2xx, the body reports
    * no failure, the UI advanced, the page settled — so every channel except the payload agrees the
    * save worked, and the screen goes on showing the value the user typed rather than the value that
-   * was stored. Measured on a preferences write that asked for `locale: fr` and echoed `locale: en`.
+   * was stored — a write asking for `locale: fr` and echoing `locale: en`.
    */
   WRITE_FIELD_IGNORED: 'write-field-ignored',
   /** The UI advanced while a request was still in flight, so `settled` was reported over a live call. */
@@ -242,26 +241,22 @@ export type ContradictionKind = (typeof ContradictionKind)[keyof typeof Contradi
 /**
  * Contradictions inferred from the ABSENCE of evidence in a window whose end Reticle itself chose.
  *
- * The distinction is not cosmetic — it decides whether Reticle is entitled to say an action FAILED.
- * The other kinds are things we positively observed: a request came back 500 while the UI advanced,
- * a signal fired carrying data that disagrees with the DOM, a written field echoed a different
- * value. Those are evidence AGAINST the action, and they must keep outranking a passing assertion,
- * because a green assertion sitting on top of a failed write is the entire bug class this product
- * exists to catch.
+ * The distinction decides whether Reticle is entitled to say an action FAILED. The other kinds are
+ * POSITIVELY observed — a request came back 500 while the UI advanced, a signal fired carrying data
+ * that disagrees with the DOM, a written field echoed a different value — and they must keep
+ * outranking a passing assertion, because a green assertion on top of a failed write is the bug
+ * class this product exists to catch.
  *
- * These five are different. Each says "the thing I expected to see had not happened YET when I
- * stopped looking" — and the window closes the moment the predicate first passes, which on an app
- * that navigates optimistically is routinely before the network drains. Reproduced on the bench app:
- * `auth:granted` fired WITH matching data, application state changed, the token was stored, capture
- * integrity was clean and the honesty grade was `signal` — our strongest evidence class — and the
- * verdict was still `no`, because one POST had not settled. A timing observation overruled a
- * consequence observation, which inverts the grade hierarchy the verifier is built on.
+ * These five say only "the thing I expected had not happened YET when I stopped looking", and the
+ * window closes the moment the predicate first passes — on an app that navigates optimistically,
+ * routinely before the network drains. Letting one assert NO makes a timing observation overrule a
+ * consequence observation, which inverts the grade hierarchy the verifier is built on: the bench app
+ * produces a `no` over a fired signal with matching data, changed state, a stored token and a clean
+ * capture, because one POST had not settled.
  *
  * A false negative is not the mirror of a false positive here. A false positive stops an agent
  * early; a false NEGATIVE makes it redo work that already succeeded, or stop trusting the verdict
- * channel — and the verdict channel is the product. `bug.attribution` was deleted for exactly this
- * reason: every `attribution: 'app'` on `request-never-settled` turned out to be a misattribution.
- * We removed the field and left the verdict.
+ * channel — and the verdict channel is the product.
  *
  * So these downgrade a verdict to UNKNOWN rather than asserting NO. The finding is still reported in
  * `contradictions` either way — nothing is hidden, and an agent that wants to wait and re-check has
@@ -340,13 +335,14 @@ export const FindingTier = {
   OBSERVED: 'observed',
   /**
    * Inferred from something NOT having happened yet, in a window whose end Reticle chose. It may
-   * become true a moment later. It is a statement about our timing at least as much as about the app.
+   * become true a moment later. It is a statement about the window's timing at least as much as
+   * about the app.
    */
   ABSENCE_DERIVED: 'absence-derived',
   /**
    * True, reported, and not about the question asked. Traffic the assertion never named.
    *
-   * Distinct from ABSENCE_DERIVED, which IS about the declared consequence and says our timing was
+   * Distinct from ABSENCE_DERIVED, which IS about the declared consequence and says the timing was
    * inconclusive about it. This one is about something else entirely, so downgrading on it answers a
    * question nobody put.
    */

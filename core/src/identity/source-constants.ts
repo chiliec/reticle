@@ -1,9 +1,9 @@
 /**
  * Source mapping: how a DOM node is traced back to the line of code that rendered it.
  *
- * Split out of `constants.ts` — these two are read by the build plugins, the browser SDK and the
- * React adapter together, and they change for one reason (the source-pointer feature) rather than
- * for the dozen reasons the wire contract does.
+ * These two are read by the build plugins, the browser SDK and the React adapter together, and they
+ * change for one reason (the source-pointer feature) rather than for the dozen reasons the wire
+ * contract does.
  */
 
 /**

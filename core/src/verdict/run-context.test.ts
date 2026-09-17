@@ -154,9 +154,9 @@ describe('the fold supersedes within one batch, not only against a prior one', (
    * existing rows it would never apply at all — and the contract this envelope advertises is that
    * `key` is the subject and re-observing it replaces rather than appends.
    *
-   * Observed on a real driven session before this was fixed: the same ref twice, the same proven
-   * claim three times. Duplicates in the one payload whose entire purpose is a CHEAP context
-   * restore, and a report that contradicts its own declared schema.
+   * Without it the same ref appears twice and the same proven claim three times: duplicates in the
+   * one payload whose entire purpose is a CHEAP context restore, and a report that contradicts its
+   * own declared schema.
    */
   it('keeps one row per subject when a batch observes the same subject twice', () => {
     const out = foldEstablished(

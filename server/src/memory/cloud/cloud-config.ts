@@ -136,10 +136,10 @@ function credentialFor(
    * The ORG slot first, because cloud + project is still not an identity.
    *
    * `link` names every project "default", so two ACCOUNTS on one cloud both claimed the slot
-   * `<url>::default` and the last link won. Measured on a laptop: a brand-new workspace ran
-   * `reticle login` and was handed a stored key belonging to a different organisation — valid, so
-   * every validation passed, and every run it pushed would have landed in a stranger's dashboard.
-   * Keying by cloud fixed two clouds colliding; only keying by ORG fixes two tenants colliding.
+   * `<url>::default` and the last link won: a new workspace could be handed a stored key belonging
+   * to another organisation — valid, so every validation passed, and every run it pushed would land
+   * in a stranger's dashboard. Keying by cloud fixed two clouds colliding; only keying by ORG fixes
+   * two tenants colliding.
    */
   const orgScoped = orgId === undefined ? undefined : store[credentialSlot(url, projectId, orgId)];
   if ('string' === typeof orgScoped && orgScoped.length > 0) return orgScoped;

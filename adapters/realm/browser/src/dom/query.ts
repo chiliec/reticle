@@ -452,12 +452,11 @@ export function matchQuery(
   state?: ElementState,
   limit: number = MAX_DESCRIBED,
 ): MatchResult {
-  // NO blanket try/catch here. It used to turn ANY exception during candidate-finding into
+  // NO blanket try/catch here. It would turn ANY exception during candidate-finding into
   // `elements = []`, which is the same lie as the `default` arm above: a query that could not run
-  // reported that the element is not on the page. The one failure it was plausibly guarding -
-  // a scope selector that matches nothing - is already handled explicitly and distinctly, as
-  // `scopeMissing`, so what remained was a net that could only convert real faults into false
-  // negatives.
+  // reporting that the element is not on the page. The one failure it would plausibly guard - a scope
+  // selector that matches nothing - is already handled explicitly and distinctly, as `scopeMissing`,
+  // so all that is left is a net that converts real faults into false negatives.
   const found = findCandidates(query);
   const elements: HTMLElement[] = found.candidates;
   const scopeMissing = found.scopeMissing;
@@ -688,8 +687,8 @@ function buildEmptyHint(query: ElementQuery): QueryEmptyHint {
  * Resolve a query to descriptors for the `query` MCP tool.
  *
  * `count` is carried through deliberately: the server reports match totals from it rather than from
- * the array, because the array is capped in transit. Dropping it here - which this function used to
- * do - silently put the server back to counting survivors and calling that the answer.
+ * the array, because the array is capped in transit. Dropping it here silently puts the server back
+ * to counting survivors and calling that the answer.
  */
 export function runQuery(query: ElementQuery, limit?: number): QueryResult {
   const result = matchQuery(query, undefined, limit);

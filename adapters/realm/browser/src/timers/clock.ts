@@ -159,12 +159,12 @@ export function advanceClock(ms: number): void {
 /**
  * Restore the real timers AND hand back everything the app queued while frozen.
  *
- * The queue used to be discarded (`tasks = []`). Restoring the native functions is only half the job:
- * the callbacks the app scheduled during the freeze live in the virtual queue, and dropping them leaves
- * the app quietly broken in a new way — a toast that never dismisses, a retry that never fires, a
- * session-expiry check that never runs. `Date.now()` and future timers look healthy, so nothing points
- * at the cause. That matters most on the path this is called from: an agent freezes the clock, the
- * bridge dies, and the developer is left with an app that was never un-frozen deliberately.
+ * Restoring the native functions is only half the job: the callbacks the app scheduled during the
+ * freeze live in the virtual queue, and discarding them (`tasks = []`) leaves the app quietly broken
+ * in a new way — a toast that never dismisses, a retry that never fires, a session-expiry check that
+ * never runs. `Date.now()` and future timers look healthy, so nothing points at the cause. That
+ * matters most on the path this is called from: an agent freezes the clock, the bridge dies, and the
+ * developer is left with an app that was never un-frozen deliberately.
  *
  * Pending work is re-scheduled onto REAL timers with its remaining virtual delay (a 5s toast frozen 2s
  * in still has ~3s to go), and the ids the app is holding keep working — see the translation note.

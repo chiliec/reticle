@@ -1,13 +1,10 @@
 /**
  * The documented profile sizes must match the real ones.
  *
- * Three generations of prose got them wrong, each time in a comment that had just finished promising
- * not to restate them — the historical "here is what it used to say" clause goes stale exactly like
- * the claim it corrects. So no count is written down in this file except EXPECTED_SIZE, and none is
- * written down in the docs except the one gated table in SKILL.md.
- *
- * Prose cannot be trusted to stay in step with a list that grows every release, so the numbers live
- * here where a gate reads them, and every other file points at this one.
+ * Prose cannot be trusted to stay in step with a list that grows every release, and a historical
+ * "here is what it used to say" clause goes stale exactly like the claim it corrects. So no count is
+ * written down in this file except EXPECTED_SIZE, none is written down in the docs except the one
+ * gated table in SKILL.md, and every other file points here, where a gate reads them.
  */
 
 import { readFileSync } from 'node:fs';
@@ -103,8 +100,8 @@ describe('advertised surface sizes', () => {
   });
 
   it("EVERY profile can look up a tool's parameters", () => {
-    // Recovery messages across the server say "Call reticle_tools { names: [...] }". A profile that
-    // does not advertise it turns our own advice into a dead end — `full` used to be exactly that.
+    // Recovery messages across the server say "Call reticle_tools { names: [...] }". A surface that
+    // does not advertise it turns that advice into a dead end.
     for (const profile of Object.values(TOOL_SURFACE)) {
       const names = advertisedTools(profile).map((t) => t.name);
       expect(names, profile).toContain('reticle_tools');

@@ -59,9 +59,8 @@ interface IntentDebt {
  * How old an open intent may be and still be THIS run's debt.
  *
  * The ledger is project-scoped and outlives every session, so without a horizon a verdict's honesty
- * block reports the whole standing backlog. Measured on a real drive: 32 intents, oldest 18 days,
- * 142 tokens on EVERY passing verdict — 24.9% of the response and the largest field in it, to say
- * something the same sentence admitted was "probably not what this run is about".
+ * block reports the whole standing backlog — weeks of it, on every passing verdict, to say something
+ * the same sentence admitted was "probably not what this run is about".
  *
  * A day, matching the age threshold the gap already used to decide a backlog was stale. Anything
  * older is not silently forgiven: it is exactly what `reticle_context` lists, which is where the

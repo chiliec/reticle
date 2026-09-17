@@ -5,8 +5,8 @@
  * the dial URL was correct, and the app never connected because a strict `connect-src` excluded
  * `ws://localhost:<port>`. The browser blocks the WebSocket and says so in its own console, which
  * nothing on the Reticle side reads — so `status` and `doctor` reported perfect health at an app
- * that could not connect at all, forever. A setup step that exits 0 while leaving the user broken is
- * the worst failure mode this repo has.
+ * that could not connect at all. A setup step that exits 0 while leaving the user broken is the
+ * failure mode this file exists to prevent.
  *
  * A TEXT SCAN, deliberately. `headers()` is a function; `init` cannot execute a user's Next config
  * without importing their whole app, and the thing worth finding is the policy string a developer

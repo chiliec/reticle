@@ -65,16 +65,16 @@ export function isReticleOverlay(el: Element): boolean {
  * True iff the element is part of Reticle's OWN UI - the presenter overlay, the HUD, the synthetic
  * cursor, the glow, or the annotator's marks - or lives inside one of them.
  *
- * The rule used to be "any ancestor carries a data-reticle* attribute", which is wrong twice over.
+ * NOT "any ancestor carries a data-reticle* attribute", which is wrong twice over.
  * `data-reticle-mark-active` sits on <html> while annotate mode is live, so the whole document
- * answered yes; and `data-reticle-source` is stamped by the Vite/Babel plugins on every element the
- * APP renders, so in an instrumented app - which is the only kind there is - most of the page
- * answered yes too. Those attributes describe page content; they do not make it ours.
+ * answers yes; and `data-reticle-source` is stamped by the Vite/Babel plugins on every element the
+ * APP renders, so in an instrumented app - which is the only kind there is - most of the page answers
+ * yes too. Those attributes describe page content; they do not make it Reticle's.
  *
- * Two things read this and both failed silently. `pageElementAt` (annotator) skipped every stamped
- * element and anchored the note to the outermost unstamped ancestor, i.e. the app shell instead of
- * the control under the cursor. `occlusion.ts` reads a yes as "nothing to report", so occlusion
- * detection - a bug class Reticle advertises catching - came back clean wherever the stamp reached.
+ * Two things read this and both fail silently under that rule. `pageElementAt` (annotator) skips
+ * every stamped element and anchors the note to the outermost unstamped ancestor, i.e. the app shell
+ * instead of the control under the cursor. `occlusion.ts` reads a yes as "nothing to report", so
+ * occlusion detection comes back clean wherever the stamp reaches.
  */
 export function isReticleUi(node: Element | null): boolean {
   return node !== null && node.closest(RETICLE_OVERLAY) !== null;

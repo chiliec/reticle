@@ -25,8 +25,8 @@ import {
  * is defense-in-depth for a later commit, not a correctness gate here.
  *
  * ponytail: append-per-batch, no retention yet. Bounded-disk pruning (cap session dirs / file size,
- * "pruned like runs/") is a dedicated follow-up — see the build ledger. Perf ceiling: if the <3%
- * main-thread overhead budget is threatened at high event rates, coalesce batches behind a flush timer.
+ * "pruned like runs/") is a dedicated follow-up. Perf ceiling: if main-thread overhead becomes
+ * visible at high event rates, coalesce batches behind a flush timer.
  */
 export class SessionJournal {
   readonly #fs: FileSystemPort;

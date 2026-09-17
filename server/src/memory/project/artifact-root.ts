@@ -11,37 +11,25 @@ import type { ConfigDiscovery } from '@/command/cli/config/config-discovery.js';
  * Which `.reticle/` a session's artifacts belong in.
  *
  * Everything Reticle persists — flows, the capability contract, baselines, capsules, the cross-run
- * project memory — used to resolve against the DAEMON's own `process.cwd()`. That is a statement
- * about where the daemon was launched and it was being read as a statement about which project is
- * being verified. Those are not the same thing and are usually not even the same tree: a user-scoped
- * MCP registration is the common case, and the editor that spawns it starts it wherever it likes.
- *
- * Three field shapes, one defect: `cwd=/` gave `ENOENT: mkdir '/.reticle'`; a daemon started in
- * project A wrote project B's flow into A's checkout and reported success without naming the path;
- * and `verify_change` could only answer "unknown" because no flow could be persisted for it to match
- * against.
- *
- * ## Two sources, one rule
+ * project memory — used to resolve against the DAEMON's own `process.cwd()`, which says where the
+ * daemon was launched and not which project is being verified. Usually not even the same tree: a
+ * user-scoped MCP registration is the common case, and the editor that spawns it starts it wherever
+ * it likes. Three shapes of the same defect: `cwd=/` gave `ENOENT: mkdir '/.reticle'`; a daemon
+ * started in project A wrote project B's flow into A's checkout and reported success without naming
+ * the path; and `verify_change` could only answer "unknown" because no flow could be persisted.
  *
  * Candidates arrive from config discovery (which walks out from the daemon's own directory) and from
  * the user-level project registry (which `init` writes, and which reaches checkouts discovery cannot
- * see). This function takes the merged list and does not know or care which source an entry came
- * from — a privileged source would be a second rule, and two rules for one question is how the
- * answers start disagreeing.
+ * see). This function does not know which source an entry came from: a privileged source would be a
+ * second rule for one question.
  *
- * ## Why matching on projectId, and not a new wire field
+ * Matched on `projectId` because HELLO already stamps it and `.reticle.json` already declares it, so
+ * the join works for every SDK already in the field. A `root` on HELLO would move the wire contract
+ * and strand every older SDK on the fallback.
  *
- * HELLO already stamps `projectId`, and `.reticle.json` already declares the same id sitting next to
- * the code it configures. The join is therefore available today, for every SDK already in the field.
- * Adding a `root` to HELLO would move the wire contract, strand every older SDK on the fallback, and
- * buy nothing this does not already give.
- *
- * ## Why it can decline to answer
- *
- * Every non-matching branch returns the daemon root and SAYS which branch it was. A wrong root is
- * worse than no root — it writes a caller's evidence into a tree they never drove — so the ambiguous
- * case refuses rather than picks, exactly as `discoverProjectConfigs` refuses to pick one config.
- * The reason travels with the answer so callers can report the surprise instead of hiding it.
+ * It can DECLINE: every non-matching branch returns the daemon root and says which branch it was. A
+ * wrong root writes a caller's evidence into a tree they never drove, so the ambiguous case refuses
+ * rather than picks, and the reason travels with the answer.
  */
 
 /** Why the root below is the root. Travels with the answer so a caller can say what happened. */

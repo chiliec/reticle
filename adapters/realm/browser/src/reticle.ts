@@ -511,8 +511,8 @@ export class Reticle {
               reticleParamsFromSearch(window.location.search).projectId ?? window.location.origin,
             isDriving: () => PresenterMode.IDLE !== panel.mode,
             // The stamp Reticle puts on every page it opens for itself. `isDriving` cannot answer
-            // this yet at mount — the presenter is IDLE until the agent's first command — so the
-            // tour used to mount over a leased page and its scrim swallowed the drive.
+            // this yet at mount — the presenter is IDLE until the agent's first command — so without
+            // the stamp the tour mounts over a leased page and its scrim swallows the drive.
             search: window.location.search,
             // Reports whether it landed, so the button can say so. `clipboard` is absent outright
             // on an insecure origin, and `writeText` still rejects on a page without permission.
@@ -657,9 +657,9 @@ export class Reticle {
       adapters: adapterNames(),
       ...(this.#token === undefined ? {} : { token: this.#token }),
       hasCapabilities: hasCapabilities(),
-      // The protocol's first assertion, and one this implementation did not used to make. A claim
-      // reading a channel absent from this list is `unknown` before an action is spent on it,
-      // rather than after -- and "nothing was watching" stops reading like "it did not happen".
+      // The protocol's first assertion. A claim reading a channel absent from this list is `unknown`
+      // BEFORE an action is spent on it rather than after -- and "nothing was watching" stops reading
+      // like "it did not happen".
       channels: declaredChannels(),
       // The other two halves of the same declaration. What kind of place this is, and what it
       // will answer — so a decider learns at connect time which requests would be refused,

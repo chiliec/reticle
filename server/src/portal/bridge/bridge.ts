@@ -594,11 +594,10 @@ export class Bridge {
             runtime: attached.runtime,
           });
           if (replaced !== undefined) {
-            // Name the newcomer. A field report had a live session vanish during `reticle_lease` and the
-            // only evidence was "session replaced by a newer connection" in the page console — which
-            // says a replacement happened but not BY WHAT, so the cause had to be inferred. A session
-            // is only ever replaced by one carrying the SAME id, and knowing which URL claimed it is
-            // the difference between a diagnosis and a guess.
+            // Name the newcomer. "session replaced by a newer connection" says a replacement
+            // happened but not BY WHAT, so the cause has to be inferred. A session is only ever
+            // replaced by one carrying the SAME id, and knowing which URL claimed it is the
+            // difference between a diagnosis and a guess.
             log('session_replaced', {
               sessionId: session.id,
               byUrl: session.url,

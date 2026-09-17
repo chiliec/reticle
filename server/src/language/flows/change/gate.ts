@@ -51,7 +51,7 @@ export function gateDecision(input: GateInput): GateResult {
   }
   // Downgrades and deleted coverage BLOCK. Flakiness is quarantined because a flake is not the agent's
   // doing; a weakened or deleted assertion is — surfacing it without blocking would leave the gate
-  // trivially gameable, which is the exact failure exists to prevent.
+  // trivially gameable, which is the exact failure this gate exists to prevent.
   const downgraded = [...(input.downgraded ?? [])];
   const deleted = [...(input.deleted ?? [])];
   return {

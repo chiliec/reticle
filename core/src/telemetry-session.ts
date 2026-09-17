@@ -1,11 +1,9 @@
 /**
  * How a SESSION and a PROJECT measured — the two big rollup payloads and the types they are built from.
  *
- * Split out of `telemetry.ts` because they are a different kind of thing from the event contract next
- * door: that file answers "what happened", these answer "how much, how long, and on what". They are
- * also where nearly all the growth is — every new thing worth measuring lands in one of these two
- * shapes — so keeping them here is what stops the event contract itself from drifting past its cap
- * every time a counter is added.
+ * A different kind of thing from the event contract next door: `telemetry.ts` answers "what
+ * happened", these answer "how much, how long, and on what". Nearly all the growth lands here —
+ * every new thing worth measuring lands in one of these two shapes.
  */
 import { z } from 'zod';
 
@@ -94,10 +92,10 @@ export type ToolTiming = z.infer<typeof ToolTimingSchema>;
 /**
  * Attempts, successes and failure reasons for one kind of connection.
  *
- * The first version of this counted only successes — and counted them inconsistently, incrementing
- * before the await on one path and after it on another, so the CDP number was attempts and the others
- * were successes and nobody could have told from the data. A connection metric that cannot express
- * FAILURE is close to useless: the whole question is how often people cannot get a browser.
+ * Attempts AND successes, because a connection metric that cannot express FAILURE is close to
+ * useless — the whole question is how often a browser cannot be got. Every path must increment
+ * `attempts` on the same side of its await, or one connector's number means something different
+ * from the next one's and the data cannot say which.
  */
 export const ConnectionStatsSchema = z.object({
   attempts: z.number().int().nonnegative(),
@@ -108,7 +106,7 @@ export const ConnectionStatsSchema = z.object({
 export type ConnectionStats = z.infer<typeof ConnectionStatsSchema>;
 
 /**
- * Why a browser/lease connection failed, classified into causes we can act on.
+ * Why a browser/lease connection failed, classified into causes somebody can act on.
  *
  * A raw message would be both high-cardinality and unsafe (it can carry a URL or a path). These are
  * the distinct THINGS THAT GO WRONG, each with a different fix: a missing Chromium is a docs problem,
@@ -142,8 +140,8 @@ export const SessionSummarySchema = z.object({
   /** Total MCP tool calls served. */
   toolCalls: z.number().int().nonnegative(),
   /**
-   * Calls per tool name — `{ "reticle_act": 40 }`. Tool names are a fixed, low-cardinality set we
-   * define ourselves, so this is safe to send whole and is queryable in HogQL with JSONExtract.
+   * Calls per tool name — `{ "reticle_act": 40 }`. Tool names are a fixed, low-cardinality set
+   * defined in this repository, so this is safe to send whole and is queryable with JSONExtract.
    */
   toolCounts: z.record(z.string(), z.number().int().nonnegative()),
   /** Tool calls that ended in an error, and the distinct error shapes behind them. */
@@ -170,7 +168,7 @@ export const SessionSummarySchema = z.object({
   /**
    * Which PARAMETERS agents actually passed, per tool: `{"reticle_act": {"ref": 40, "action:click": 31}}`.
    *
-   * Names only, with one narrow exception for parameters whose values are enums we define ourselves
+   * Names only, with one narrow exception for parameters whose values are enums defined here
    * (`action:click`). Never a raw value: `reticle_act`'s `args` carries the text being typed into the
    * app, which on a login form is a password. See argument-shape.ts for the allowlist.
    */
@@ -195,13 +193,13 @@ export const SessionSummarySchema = z.object({
   browserCommands: z.number().int().nonnegative().optional(),
   /** The most tool calls in flight at once — parallel agents, or one agent fanning out. */
   peakConcurrentTools: z.number().int().nonnegative().optional(),
-  /** Calls for a tool name that does not exist. A non-zero value means our surface is confusing. */
+  /** Calls for a tool name that does not exist. A non-zero value means the surface is confusing. */
   unknownToolCalls: z.number().int().nonnegative().optional(),
   /**
    * WHICH tools the agent reached for that do not exist, with counts.
    *
-   * The count alone said "our surface confused someone" and could never say what they wanted. The
-   * name is a feature request in the agent's own vocabulary — and it is a NAME, from our own tool
+   * The count alone says "the surface confused someone" and can never say what they wanted. The name
+   * is a feature request in the agent's own vocabulary — and it is a NAME, from Reticle's own tool
    * namespace, carrying no app data, so it is safe under the send-names-never-values rule.
    *
    * Bounded and truncated: a guess is a short identifier, and anything longer is not one.
@@ -211,10 +209,8 @@ export const SessionSummarySchema = z.object({
    * Tool calls that failed because there was no app to reach — no session connected, no session by
    * that id, or several with none named.
    *
-   * The single biggest drop-off in the funnel, and it used to be reachable only by unpacking
-   * `errors[]` in HogQL. Most daemons never call a tool at all, and of the sessions that made
-   * exactly one call, most bounced on precisely this. Absent when it never happened, so the field's
-   * PRESENCE is the signal.
+   * The single biggest drop-off in the funnel, counted here rather than left to be unpacked out of
+   * `errors[]` by a query. Absent when it never happened, so the field's PRESENCE is the signal.
    */
   noSessionErrors: z.number().int().nonnegative().optional(),
   /**
@@ -254,9 +250,9 @@ export const SessionSummarySchema = z.object({
   /**
    * Client name -> version. The other half of `clients`, and the half that explains regressions.
    *
-   * MCP's `clientInfo` carries a name AND a version; we read both at the handshake and kept only
-   * the name. A product whose users are agents needs to slice every rate by which agent, on which
-   * build — a single global figure hides the finding entirely.
+   * MCP's `clientInfo` carries a name AND a version, and both are read at the handshake. A product
+   * whose users are agents needs to slice every rate by which agent, on which build — a single
+   * global figure hides the finding entirely.
    *
    * NOT the model: `clientInfo` has no concept of one, so the transport genuinely cannot report it.
    * Agents self-report it on feedback, which is the only mechanism there is.
@@ -264,8 +260,8 @@ export const SessionSummarySchema = z.object({
   clientVersions: z.record(z.string().max(64), z.string().max(32)).optional(),
   /**
    * Which tool surface was live. The 18-tool default and the 48-tool full surface are different
-   * products from inside an agent's context window, and comparing outcomes across them is how we
-   * learn whether the trim helps or hurts.
+   * products from inside an agent's context window, and comparing outcomes across them is the only
+   * way to tell whether the trim helps or hurts.
    */
   surface: z.string().max(32).optional(),
   /**
@@ -273,8 +269,8 @@ export const SessionSummarySchema = z.object({
    *
    * Zero here is the single most diagnostic number in the payload: the daemon ran and no app ever
    * connected, which is a BROKEN INSTALL. Non-zero with no tool calls is the opposite problem — the
-   * install works and the agent never asked. Before this field those two were the same row, and
-   * they have opposite fixes, and before this field we could not say which case a row was.
+   * install works and the agent never asked. Without this field those two are the same row, and
+   * they have opposite fixes.
    *
    * A counter rather than an event because the SDK reconnects on every page reload — an event per
    * connect would be high volume for a question one number answers.
@@ -305,26 +301,24 @@ export const SessionSummarySchema = z.object({
   /**
    * How often Reticle invited the agent to send feedback.
    *
-   * The denominator for `feedback_submitted`. A prompt nobody acts on is decoration, and without
-   * this we could never tell the difference between "agents have nothing to report" and "our
-   * invitation is invisible". Instrumenting our own nudge is what makes it a designed system
-   * rather than a hope.
+   * The denominator for `feedback_submitted`: without it a low submission count cannot be told
+   * apart from an invitation that never appeared.
    */
   feedbackPrompted: z.number().int().nonnegative().optional(),
   /**
-   * Tool errors bucketed by WHOSE defect they are: `schema` (our grammar failed to explain itself),
-   * `state` (the world moved), `refusal` (we said no on purpose), `other` (a blind spot).
+   * Tool errors bucketed by WHOSE defect they are: `schema` (the grammar failed to explain itself),
+   * `state` (the world moved), `refusal` (a deliberate no), `other` (a blind spot).
    *
-   * `toolErrors` is one number over three failures with three different fixes. Only the `schema`
-   * bucket is fixable by writing better descriptions, and it was indistinguishable from the rest.
+   * `toolErrors` alone is one number over three failures with three different fixes, and only the
+   * `schema` bucket is fixable by writing better descriptions.
    */
   errorClasses: z.record(z.string().max(16), z.number().int().nonnegative()).optional(),
   /**
    * Errors after which the agent's NEXT call succeeded — the message worked.
    *
-   * The best measure of an error message is what the agent does next, and we had the loop
-   * (`consecutiveRepeats`) and the shape (`errors[]`) but never the join. This is the most
-   * agent-specific metric in the payload: a human would sigh, a log would show nothing.
+   * The best measure of an error message is what the agent does next. `consecutiveRepeats` has the
+   * loop and `errors[]` has the shape; this is the join. The most agent-specific metric in the
+   * payload: a human would sigh, a log would show nothing.
    */
   errorsRecovered: z.number().int().nonnegative().optional(),
   /** Errors whose very next call failed again — the message did not land. */
@@ -348,9 +342,9 @@ export const SessionSummarySchema = z.object({
    *
    * The nudge is the entire adoption mechanism for a published fix — it rides the tool-result
    * envelope once per daemon process — and it emitted NOTHING, so the one question it exists to
-   * answer could not be asked. `versionChange.nudged` is the other half and only reaches us from
-   * machines that DID update; the cohort pinned three releases back never fires `version_changed` at
-   * all, which is exactly the cohort worth understanding.
+   * answer cannot be asked without it. `versionChange.nudged` is the other half and arrives only
+   * from machines that DID update; a machine pinned several releases back never fires
+   * `version_changed` at all, which is exactly the cohort worth understanding.
    *
    * Crossed against this same installId's `version` on a later day it separates the two causes,
    * which need opposite fixes: `false` for run after run means the nudge is not firing for them (a
@@ -365,7 +359,7 @@ export const SessionSummarySchema = z.object({
   /**
    * The newer version this daemon knew about, when it knew about one.
    *
-   * OUR OWN published version number, so it is low-cardinality and carries nothing about the
+   * Reticle's own published version number, so it is low-cardinality and carries nothing about the
    * machine. Without it `updateNudged: false` is two facts at once — nothing was available, or
    * something was and the nudge did not fire — and only the second is a defect.
    */
@@ -406,8 +400,8 @@ export type ProjectSize = (typeof ProjectSize)[keyof typeof ProjectSize];
  * Why a profile carries no `stack`, when it carries none.
  *
  * `stack` unknown is one of the largest buckets on the profile, and an empty field is not a cause:
- * it collapses "the daemon was started somewhere that is not a project" with "we read this app's
- * manifest and did not recognise what it uses", which need opposite fixes — the first is a
+ * it collapses "the daemon was started somewhere that is not a project" with "this app's manifest
+ * was read and nothing in it was recognised", which need opposite fixes — the first is a
  * discovery problem, the second is a one-line addition to the dependency table.
  *
  * Derived from the branches of `detectStack` rather than computed beside them. A reason assembled
@@ -451,9 +445,8 @@ export const ProjectProfileSchema = z.object({
    * WHERE the stack was found — and therefore how much to trust the absence of one.
    *
    * `cwd` means the daemon was sitting in the app. `workspace` means it was not, and discovery had
-   * to walk down to find it. The split is the diagnostic: it says how often our inference needs
-   * help, which is the question that decides whether an agent-correction surface is worth building
-   * at all.
+   * to walk down to find it. The split is the diagnostic: it says how often the inference needs
+   * help, which decides whether an agent-correction surface is worth building at all.
    *
    * Before discovery existed here, stack was detected on **none of the projects where Reticle was
    * demonstrably set up**, and none of the large ones either. A detector
@@ -503,7 +496,7 @@ export const ProjectProfileSchema = z.object({
    *
    * This is the first of the two bits that split it, and it is on `project_profiled` deliberately:
    * that event fires once per daemon start whatever happens afterwards, so it is the only place a
-   * fact about a project reaches us for the users who never instrument anything. `app_instrumented`
+   * fact about a project is reported at all for an install that never instruments anything. `app_instrumented`
    * carries the same field and cannot answer this, because it only exists when the answer is moot.
    */
   initialized: z.boolean().optional(),

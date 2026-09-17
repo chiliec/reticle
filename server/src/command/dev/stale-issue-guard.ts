@@ -1,16 +1,10 @@
 /**
  * An issue we have already fixed must not still read as available work.
  *
- * Three contributor PRs died on arrival in one week for this. #373 was filed at 09:52 and fixed by
- * us at 12:33 the same day, then left open for three more days — somebody started on it on day two.
- * #398 shipped and stayed open; a second contributor rebuilt it from scratch. `GITHUB.md` already
- * documents the same failure costing three contributors before either of those, which makes this the
- * third recurrence of a defect we have written down and asked ourselves to remember.
- *
- * Remembering is not a mechanism, and this is the smallest one that works: a commit saying it closes
- * an issue is a claim that the issue is done. If that issue is still open and unlabelled afterwards,
- * the tracker is lying to whoever reads it next — and the person it lies to is by definition someone
- * looking for something to work on.
+ * A commit saying it closes an issue is a claim that the issue is done. If that issue is still open
+ * and unlabelled afterwards, the tracker is lying to whoever reads it next — and the person it lies
+ * to is by definition someone looking for something to work on. Remembering is not a mechanism; this
+ * is the smallest one that works.
  *
  * ## Why `fixed-pending-release` is an accepted answer
  *

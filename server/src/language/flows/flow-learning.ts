@@ -47,19 +47,13 @@ export async function persistLearning(
 /**
  * Replay a flow AND keep what it learned. The entry point every ordinary replay should use.
  *
- * ── THE DEFECT ──────────────────────────────────────────────────────────────────────────────────
- * `persistLearning` had one call site, on `reticle_flow_replay`. `replayNamedFlow` had eight. The
- * six that mattered did not persist — including both branches of `reticle_flow_verify`, whose own
- * description calls it "the autonomous regression check to run after a build/change".
- *
- * That is the whole v3 promise, inert on the path a team actually automates. Promotion needs
- * CONSECUTIVE clean runs, so a suite that never writes `learned` back starts from zero every time
- * and promotes nothing, forever — while the result it returns still REPORTS `learned` and
- * `promoted`, so nothing looked wrong.
+ * Every replay path must route through here, not `replayNamedFlow` — promotion needs CONSECUTIVE
+ * clean runs, so a path that skips the write-back promotes nothing while still reporting `learned`
+ * and `promoted`.
  *
  * Wrapped here rather than inside `replayNamedFlow`, for the reason `persistLearning` above gives:
- * persisting from inside it put a second writer in the middle of the replay's own intent
- * bookkeeping and turned `proved` back into `bound`.
+ * persisting from inside it puts a second writer in the middle of the replay's own intent
+ * bookkeeping and turns `proved` back into `bound`.
  *
  * ── WHO MUST NOT USE THIS ───────────────────────────────────────────────────────────────────────
  * Two callers replay deliberately BROKEN conditions and call `replayNamedFlow` directly on purpose:

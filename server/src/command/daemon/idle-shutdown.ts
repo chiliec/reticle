@@ -111,9 +111,9 @@ export function resolveIdleCheckMs(raw: string | undefined): number {
  * The disable is NOT implemented here — 0 is passed through as 0, and `IdleShutdown` treats
  * `graceMs <= 0` as "never self-shut-down" in both `start()` and `check()`. Said out loud because
  * this docblock had drifted onto the function above it, leaving this one undocumented next to a
- * bare `Math.floor`: a reviewer driving 2.5.0 read it as a documented option with no branch
- * implementing it and filed the gate that depends on it as inverted. The behaviour was correct in
- * every build; only the code was readable as broken.
+ * bare `Math.floor`. A reader then meets a documented option with no branch implementing it, and
+ * files the gate that depends on it as inverted — the behaviour is correct, only the code reads as
+ * broken.
  */
 export function resolveIdleShutdownMs(raw: string | undefined): number {
   if (raw === undefined || '' === raw.trim()) return SESSION_LIFECYCLE.DAEMON_IDLE_SHUTDOWN_MS;

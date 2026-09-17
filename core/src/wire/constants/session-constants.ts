@@ -1,6 +1,5 @@
 /**
- * Session lifecycle, health, control, and lease constants. Split out of constants.ts to keep each
- * file under the cohesion cap; re-exported from the package index, so importers are unaffected.
+ * Session lifecycle, health, control, and lease constants. Re-exported from the package index.
  */
 
 /**

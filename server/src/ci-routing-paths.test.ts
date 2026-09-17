@@ -18,8 +18,6 @@ import { REPO_ROOT } from './machine/repo-root.js';
  * paths were not on the list. That was a missing entry. This test covers the other direction, a
  * STALE entry, which looks identical from the outside and is what a refactor produces.
  *
- * It matters most right now because the v3 work moves several of the exact files named below.
- *
  * What this checks is deliberately narrow: does the path exist? It cannot tell whether the list is
  * COMPLETE -- no test can, since that means knowing what a future job ought to care about. Catching
  * the stale half is cheap and worth having on its own.

@@ -9,11 +9,10 @@ import type { Emit, Teardown } from './types.js';
  * defining request happened before it existed. Nothing patched `fetch` or `XMLHttpRequest` for that
  * request, because the browser made it, so the net channel had no record of it at all.
  *
- * Measured in the field on a Django MPA: a click was verified on route and heading, and the `net`
- * clause naming the destination document MISSED — "after a full page load the SDK reconnects and
- * never sees the document navigation". The verdict came back `unknown`. The request had succeeded;
- * the observer that would have seen it did not exist yet. The same shape covers Rails, Laravel, PHP,
- * plain server-rendered HTML, and any Next.js or Astro route that falls back to a document load.
+ * So on an MPA a click can verify on route and heading while the `net` clause naming the destination
+ * document MISSES and the verdict comes back `unknown`: the request succeeded, and the observer that
+ * would have seen it did not exist yet. Covers Django, Rails, Laravel, PHP, plain server-rendered
+ * HTML, and any Next.js or Astro route that falls back to a document load.
  *
  * The browser keeps the answer. `PerformanceNavigationTiming` is the new document's own record of
  * how it was fetched — URL, duration, transfer size, and on Chromium the response status. Reading it

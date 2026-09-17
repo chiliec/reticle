@@ -66,13 +66,6 @@ interface SessionEndDeps {
    */
   now?: () => number;
   /**
-   * The tape store and the flow store, so a drive can be saved as a flow at teardown.
-   *
-   * Optional, like `now`, so every existing construction keeps working — and absent means the
-   * capture simply does not run rather than throwing at teardown, which is the rule every step in
-   * this handler follows.
-   */
-  /**
    * Take this session's ambient tape, closing it. Bound by the CALLER, which is the half that
    * already holds the recorder — teardown needs the data, not the recorder, and reaching two
    * directories into `language/flows/recording/tape/` for a constant and two types was a dependency
@@ -84,6 +77,13 @@ interface SessionEndDeps {
    * reach guard is right that it should not grow a dependency on the telemetry tree to say so.
    */
   reportStep?: (step: OnboardingStep) => Promise<boolean>;
+  /**
+   * The flow store, so a drive can be saved as a flow at teardown.
+   *
+   * Optional, like `now`, so every existing construction keeps working — and absent means the
+   * capture simply does not run rather than throwing at teardown, which is the rule every step in
+   * this handler follows.
+   */
   flows?: {
     save: (program: DriveProgram, annotations?: undefined, projectId?: string) => Promise<unknown>;
   };

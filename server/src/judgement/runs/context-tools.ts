@@ -15,27 +15,8 @@ import type { ToolDef, ToolDeps } from '@/surface/tools/tool-kit.js';
  * turn, at the handover to a sub-agent. Reticle's does not disappear at the same moment. So this is
  * not a competing memory; it is the ground truth compaction destroyed, handed back on request.
  *
- * ## Why it is PULLED
- *
- * The same content was once pushed onto every session-bound tool response. It cost +136% on a
- * verdict and was cut, because most of the time the agent still had the context and we were paying
- * on every call to duplicate what it knew. Nobody but the agent can tell when that stops being true.
- * So the agent asks, once, at the moment it knows its own memory is gone, and pays once.
- *
- * ## Why it is on the EXTENDED surface rather than the default
- *
- * The default surface is a hard COUNT — editors budget tools across every connected MCP server, so a
- * slot taken here is taken from a tool that has already earned it, and nothing on that list has been
- * demoted for this. The claim behind this tool is unmeasured, which is the same test `reticle_intent`
- * and the `reticle_capabilities` demotion were held to, and it fails that test today.
- *
- * The reachability argument is also stronger here than for most of the cold tail. The caller is,
- * by construction, an agent that has just lost its context and is re-reading the tool list it was
- * handed this turn — so `reticle_tools` (advertised on every surface) is exactly the call it is
- * already going to make, and this tool is one `reticle_run` hop behind it. A tool that is only useful
- * after a discovery step, to a caller who is already performing a discovery step, is the cheapest
- * possible thing to leave off the hot list. It moves to the default surface when a measurement says
- * the pull happens often enough to be worth a permanent slot, and not before.
+ * PULLED, not pushed onto every session-bound tool response: only the agent knows when its context
+ * is gone, so it asks once at that moment and pays once.
  */
 
 /** What the run has established, and where each part of it came from. */

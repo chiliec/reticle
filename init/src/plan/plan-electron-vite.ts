@@ -1,9 +1,8 @@
 /**
  * The plan's electron-vite half: the renderer plugin, capabilities, and the two Electron steps.
  *
- * Its own module rather than more of `plan-framework.ts`, which was at the 1000-line backstop.
- * Cohesive on its own terms: this is the only framework whose wiring reaches outside the renderer,
- * into a preload and a main process that the web frameworks have no equivalent of.
+ * Its own module because this is the only framework whose wiring reaches outside the renderer, into
+ * a preload and a main process the web frameworks have no equivalent of.
  */
 
 import { StepStatus, type PlanInput, type Step } from './plan-types.js';

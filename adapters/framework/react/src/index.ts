@@ -66,8 +66,8 @@ interface Fiber {
   elementType: unknown;
   /**
    * NULLABLE, not merely absent. React writes `_debugSource: null` on fibers it has no JSX source
-   * for — the old `?: DebugSource` type said "missing or a DebugSource", so `!== undefined` let the
-   * null straight through to a dereference. Typing the null is what makes the compiler catch it.
+   * for, and a `?: DebugSource` type would say "missing or a DebugSource", letting `!== undefined`
+   * pass the null through to a dereference. Typing the null is what makes the compiler catch it.
    */
   _debugSource?: DebugSource | null;
   memoizedState?: unknown; // for a function component this is the head of the hook list
@@ -170,10 +170,10 @@ export function identify(el: Element): ComponentInfo | null {
       if (!isFrameworkNoise(name) && stack[stack.length - 1] !== name) stack.push(name);
     }
     // `identify()` is on the ACT path as well as the inspect path, so one null fiber anywhere in
-    // this walk used to take out reticle_act / reticle_act_and_wait / reticle_inspect for the whole
-    // app: the read-only tools kept working, so the agent could see the app perfectly and could not
-    // touch it. The throw also pre-empted the React 19 attribute fallback below, which would have
-    // produced the source anyway.
+    // this walk takes out reticle_act / reticle_act_and_wait / reticle_inspect for the whole app —
+    // the read-only tools keep working, so the agent can see the app perfectly and cannot touch it.
+    // A throw here would also pre-empt the React 19 attribute fallback below, which produces the
+    // source anyway.
     const debugSource = fiber._debugSource;
     if (source === undefined && debugSource !== undefined && debugSource !== null) {
       source = { file: relativeToRoot(debugSource.fileName), line: debugSource.lineNumber };
@@ -316,13 +316,11 @@ let installed = false;
 /**
  * Wire up React support: the adapter for `reticle.inspect`, and the render meter.
  *
- * The meter used to be an export nobody called. `docs/usage.md` advertises
- * `reticle_state({ store: "__reticle_renders", path: "commits" })` for React commit counts, and the
- * store was never registered on any app — measured on two independent ones, `stores` listed only the
- * app's own. An agent asking for render counts got silence, indistinguishable from an idle page.
- *
- * It belongs here because this is the one function an app calls to say "I am React". Requiring a
- * second, separately-imported call for a documented capability is how a feature ships dead.
+ * The meter is installed HERE, not left as a separate export: `docs/usage.md` advertises
+ * `reticle_state({ store: "__reticle_renders", path: "commits" })` for React commit counts, and this
+ * is the one function an app calls to say "I am React". Requiring a second, separately-imported call
+ * for a documented capability is how a feature ships dead — an agent asking for render counts gets
+ * silence, indistinguishable from an idle page.
  */
 export function install(): void {
   if (installed) return;
@@ -356,7 +354,7 @@ export {
 export { createCommitAggregator, type CommitAggregator } from './commit-aggregator.js';
 
 // Zero-install component read: a self-contained fiber walker that runs INSIDE a page over CDP, for a
-// page that never installed the SDK. react-devtools-mcp parity, reusing our own algorithm.
+// page that never installed the SDK. react-devtools-mcp parity, reusing Reticle's own algorithm.
 export {
   readComponentAt,
   buildReaderExpression,

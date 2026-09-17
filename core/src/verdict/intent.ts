@@ -9,31 +9,20 @@ import { z } from 'zod';
  * holding the DOM, the diff, and no intent. So it asserts what it can SEE rather than what was
  * MEANT, and what it can see is almost always weaker. That gap is where a false green comes from.
  *
- * ## Why the prose is captured early and the predicate late
+ * ## Prose early, predicate late
  *
- * Intent has two properties that move in opposite directions over the life of a task.
- *
- * **Fidelity** is highest the moment the human asks and decays from there; every later restatement
- * is a lossy re-derivation. **Bindability** — whether it can be written as something checkable — is
- * near zero then, because there is no route, no ref and often no code, and rises as the code
- * appears.
- *
- * Capture at either end alone loses one of them. Demanding a predicate at declare time collects
- * MECHANISMS, which is what assertions already are. Waiting until drive time collects a
- * RE-DERIVATION, which is the weak artifact this exists to replace — by then the agent has already
- * forgotten, and that is the entire premise.
- *
- * So: `statement` is prose and mandatory. `binding` is a predicate, optional, and may arrive later
- * or never. An intent that stays `declared` and never becomes `bound` is not a failure — it is the
- * most interesting row in the ledger, because it names something the team meant that nothing can
- * currently prove.
+ * Fidelity is highest the moment the human asks and decays from there. Bindability — whether it can
+ * be written as something checkable — is near zero then and rises as the code appears. So
+ * `statement` is prose and mandatory, and `binding` is a predicate, optional, arriving later or
+ * never. An intent that stays `declared` is not a failure: it names something the team meant that
+ * nothing can currently prove.
  *
  * ## Amendments are append-only
  *
- * A long build changes its mind, so an intent must be amendable. But an amendable intent is also how
- * an agent could quietly rewrite what it meant to match what it can already prove. Keeping the
- * previous statement makes a NARROWING visible in the git diff, which is the only real defence —
- * and it is a partial one, stated here rather than papered over.
+ * A long build changes its mind, so an intent must be amendable — and an amendable intent is also
+ * how an agent could quietly rewrite what it meant to match what it can already prove. Keeping the
+ * previous statement makes a NARROWING visible in the git diff. That is a PARTIAL defence and the
+ * only one there is.
  */
 
 export const INTENT_FILE_VERSION = 1;
@@ -125,7 +114,7 @@ export function dischargeIntent(
 }
 
 /**
- * Add or amend an intent, keeping what it used to say.
+ * Add or amend an intent, keeping the previous statement in its history.
  *
  * An amendment is recorded only when the statement actually changed — re-declaring the same intent
  * unchanged is what a re-run does, and filling the history with identical rows would bury the one

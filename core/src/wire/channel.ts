@@ -81,9 +81,8 @@ export function channelsRead(kind: PredicateKind): readonly ChannelId[] {
 /**
  * The independence rule, and where it lives.
  *
- * It is not defined here. It is defined in `open-verification`, which is the specification
- * this codebase implements, and re-exported so the rest of the repository can reach it by the name
- * it has always used.
+ * It is not defined here. It is defined in `open-verification`, the specification this codebase
+ * implements, and re-exported here so the rest of the repository can reach it.
  *
  * That direction is the point. A rule this load-bearing, defined in the product and described in
  * the spec, is two definitions of one contract -- and the two would drift the way every such pair

@@ -4,11 +4,10 @@
  * A browser tab is captured through CDP. A desktop webview has no CDP endpoint, so the pixels have
  * to come from the shell — and the shell is the only party that can produce them CORRECTLY.
  *
- * Capturing a screen *region* instead was tried and rejected: it photographs the glass, so an app
- * window sitting behind the editor yields a picture of the editor, saved as a visual baseline that a
- * later diff would trust. A screenshot tool that can silently return another window's pixels is
- * worse than one that returns nothing — it manufactures exactly the false green Reticle exists to
- * eliminate. Electron's `webContents.capturePage()` reads the window's own backing store instead:
+ * NOT a screen *region* capture: that photographs the glass, so an app window sitting behind the
+ * editor yields a picture of the editor, saved as a visual baseline a later diff would trust. A
+ * screenshot tool that can silently return another window's pixels is worse than one that returns
+ * nothing. Electron's `webContents.capturePage()` reads the window's own backing store instead:
  * correct while occluded, correct while backgrounded, and needing no screen-recording permission.
  *
  * Both desktop runtimes can do this, each through its own shell API — `webContents.capturePage()` on

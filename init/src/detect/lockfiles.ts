@@ -1,8 +1,7 @@
 /**
  * Which lockfile decides the package manager `init` will tell the user to run.
  *
- * Split out of `run.ts` when that file crossed the 1000-line cap: this is one self-contained
- * question with its own test block, and `run.ts` is the orchestration around it.
+ * One self-contained question with its own test block; `run.ts` is the orchestration around it.
  */
 import { dirname, join } from 'node:path';
 import { namesAPackageManager } from './detect.js';

@@ -1,9 +1,9 @@
 /**
  * The step titles `init` emits, and which of them decide whether the app can dial the daemon.
  *
- * Lifted out of `plan.ts` when that file reached the size backstop. A cohesive unit on its own
- * terms: one question, asked of a step title, with one consequence — a manual step in this set makes
- * `init` exit non-zero instead of reporting a success over an app that can never connect.
+ * A cohesive unit on its own terms: one question, asked of a step title, with one consequence — a
+ * manual step in this set makes `init` exit non-zero instead of reporting a success over an app that
+ * can never connect.
  *
  * The membership used to be matched against free strings written out a second time here, so
  * renaming a step in `plan-framework.ts` silently dropped it out of the set and nothing went red.

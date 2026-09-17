@@ -1,31 +1,20 @@
 /**
  * Publish a drive's evidence while the drive is still happening.
  *
- * ── THE DEFECT THIS EXISTS FOR ──────────────────────────────────────────────────────────────────
- * A session drove an app all morning. Every verdict landed, every defect was found, and the
- * dashboard showed nothing until the tab was closed — because the run artifact those verdicts live
- * in was written by session TEARDOWN and nowhere else, and the sync daemon can only push artifacts
- * that exist. Reported as "syncing is not happening", diagnosed as "the agent forgets to sync", and
- * neither was true: there is no sync command for an agent to forget. The evidence was simply not on
- * disk yet.
+ * The run artifact a drive's verdicts live in used to be written by session TEARDOWN and nowhere
+ * else, and the sync daemon can only push artifacts that exist — so the dashboard showed nothing
+ * until the tab closed, and a dashboard that is correct only after you stop working is one nobody
+ * looks at while working. (`drive-run.ts` fixed the step before this: a live drive produced no
+ * artifact at all, because only flow replay wrote one.)
  *
- * It is the same defect `drive-run.ts` was written to fix, one step further along. That one found
- * that a live drive produced NO artifact at all, because only flow replay wrote one. This one is
- * that a live drive produces one too LATE to be worth having — and a dashboard that is correct only
- * after you stop working is a dashboard nobody looks at while working.
+ * SAFE TO CALL REPEATEDLY, not a second writer racing the first. `recordDriveRun` derives its run id
+ * from the SESSION (`driveRunId(session.id)`) so a tab that reconnects appends to the same ledger,
+ * which makes the write idempotent: the same session rewrites its own run and the cloud supersedes
+ * by run id.
  *
- * ── WHY THIS IS SAFE TO CALL REPEATEDLY ─────────────────────────────────────────────────────────
- * It is not a second writer racing the first. `recordDriveRun` derives its run id from the SESSION
- * (`driveRunId(session.id)`), which was already a deliberate choice for a different reason — a tab
- * that reconnects appends to the same ledger, and a random id would publish two overlapping rows.
- * That made the write idempotent: the same session rewrites its own run and the cloud supersedes by
- * run id. Calling it mid-session takes advantage of a property that was already true.
- *
- * ── WHY IT IS DEBOUNCED ─────────────────────────────────────────────────────────────────────────
- * The fold reads the whole journal and rewrites the whole artifact, so doing it per verdict would
- * make a fast drive quadratic in its own length. A trailing debounce collapses a burst into one
- * write, which is what a burst deserves: the value is "the dashboard is current within seconds",
- * not "within microseconds".
+ * DEBOUNCED, because the fold reads the whole journal and rewrites the whole artifact, so doing it
+ * per verdict would make a fast drive quadratic in its own length. The value is "current within
+ * seconds", not "within microseconds".
  *
  * Teardown still flushes, and must: the debounce may have a write pending when the tab closes, and
  * the last verdicts of a session are the ones somebody is waiting on.

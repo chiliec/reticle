@@ -1,10 +1,8 @@
 /**
  * Workspace redirect: when `init` is run at a monorepo ROOT, wire the app rather than the root.
  *
- * Split out of `run.ts`, which sits one line under the 1000-line backstop — every init change that
- * touches the orchestration now trips the cap before it can be reviewed. This is the part of that
- * file that answers a single, separable question ("is the app somewhere else, and where?"), so it
- * is the seam that costs nothing to move.
+ * Its own module because it answers a single, separable question: is the app somewhere else, and
+ * where?
  *
  * `runInit` arrives as a parameter rather than an import: re-entering init is the whole point of a
  * redirect, and taking it as an argument keeps this module a leaf instead of forming a cycle with

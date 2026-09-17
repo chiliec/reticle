@@ -56,15 +56,15 @@ export function accountProxyLogWrite(
 /**
  * Reclaim a proxy log that a previous process already let run away. Returns the bytes reclaimed.
  *
- * Reported from the field: one machine's `proxy-4400.log` reached a third of a 460GB disk and broke
- * builds, Docker and ordinary shell commands with ENOSPC. Nothing in Reticle degraded first, so the
- * failure surfaced as the operating system refusing to write files. Files like that exist on real
- * machines now, and the cap alone does not help them: the user should not have to find one with `du`.
+ * An uncapped proxy log has filled a disk and broken unrelated builds, Docker and ordinary shell
+ * commands with ENOSPC. Nothing in Reticle degrades first, so the failure surfaces as the operating
+ * system refusing to write files. Such files already exist on machines that ran an older build, and
+ * the cap alone does not help them: nobody should have to find one with `du`.
  *
  * TRUNCATED IN PLACE, never renamed or unlinked. A rename moves the bytes without reclaiming a byte,
  * and a file that a running process still holds open keeps its blocks allocated after an unlink
- * until that handle closes — which is why the reporter recovered with `: > ~/.reticle/proxy-4400.log`
- * and why that is the operation to copy here.
+ * until that handle closes — which is why `: > ~/.reticle/proxy-4400.log` is the operation to copy
+ * here.
  *
  * Best-effort, in the same spirit as `rotateDaemonLog`: refusing to start the MCP server over
  * housekeeping is strictly worse than a large file.

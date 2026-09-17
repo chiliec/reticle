@@ -47,10 +47,10 @@ export function sameOriginFrameBodies(root: ParentNode): HTMLElement[] {
 /**
  * Call `attach` for every same-origin frame body now and after each frame load.
  *
- * A frame that navigates gets a BRAND NEW document, so the old observation is dead and re-attaching on
- * `load` is not optional — without it, observation silently stops the first time an embedded panel
- * routes. Attaching twice to the same node is harmless (MutationObserver de-duplicates), so no
- * bookkeeping is kept.
+ * A frame that navigates gets a BRAND NEW document, so the previous observation is dead and
+ * re-attaching on `load` is not optional — without it, observation silently stops the first time an
+ * embedded panel routes. Attaching twice to the same node is harmless (MutationObserver
+ * de-duplicates), so no bookkeeping is kept.
  */
 export function observeSameOriginFrames(attach: (body: HTMLElement) => void): Teardown {
   const attachAll = (): void => {

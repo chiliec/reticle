@@ -7,11 +7,11 @@
  *
  * `element` and `text` read the LIVE DOM, `route` can fall back to the current route, and `state` reads
  * live store memory via STATE_READ — where no event floor applies. A condition that held before the
- * click holds after it and passes instantly, whatever the action did. Measured in the field: a click
- * asserted with `{ kind: 'text', contains: 'Parallel Routes' }` returned `verified: "yes"` in 478ms
- * against `routeChanges: 0`, because the predicate matched the nav link that was already on screen —
- * the real navigation landed 1.8 seconds later. Similarly, a pre-existing store value (e.g. cart.count == 3)
- * satisfies an inert action if not checked before dispatch.
+ * click holds after it and passes instantly, whatever the action did. A click asserted with
+ * `{ kind: 'text', contains: 'Parallel Routes' }` returns `verified: "yes"` against
+ * `routeChanges: 0` when the predicate matches a nav link that was already on screen, while the real
+ * navigation lands seconds later. Likewise a pre-existing store value (e.g. `cart.count == 3`)
+ * satisfies an inert action if it is not checked before dispatch.
  *
  * So these are the kinds worth evaluating BEFORE the act, to find out whether the green means
  * anything.

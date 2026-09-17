@@ -15,8 +15,8 @@ import { REPO_ROOT } from '@/machine/repo-root.js';
  *
  * Both facts were free while the two were one package: the version came from one manifest and the
  * name was read off it. Splitting them turns each into an assumption, and an assumption about a
- * version is the class of thing that shipped a Rust crate stuck at `0.1.0` for four months while
- * every release reported success. So they are checked here, in the fast gate, against the manifests
+ * version is the class of thing that leaves a Rust crate stuck at its initial version for months
+ * while every release reports success. So they are checked here, in the fast gate, against the manifests
  * themselves rather than against each other's constants — a guard that reads the same source twice
  * proves nothing.
  */

@@ -68,7 +68,7 @@ export function installScroll(emit: Emit): Teardown {
     const observer = io;
     // Observe reveal targets present at install. Reveal-on-scroll sections are in the initial DOM by
     // design (they exist hidden and animate in on scroll), so this covers the real case. Watching the
-    // whole body subtree for LATE-mounted reveal targets was tried and reverted: a second body-wide
+    // whole body subtree for LATE-mounted reveal targets is deliberately NOT done: a second body-wide
     // MutationObserver on EVERY app — running querySelectorAll(section,...) per mutation batch — is
     // disproportionate overhead for a niche signal. Dynamically-mounted reveal targets are simply not
     // tracked (an honest blind spot, consistent with the rest of the SDK).

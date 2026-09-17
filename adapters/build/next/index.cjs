@@ -28,10 +28,9 @@ const RETICLE_WS_PATH = '/reticle';
 /**
  * Read the pairing token, or create it — whichever process gets there first.
  *
- * The token used to be read ONCE, when next.config was evaluated. Start `next dev` before the
- * daemon and that value was empty, every page was refused, and a reload could not help: there was
- * no token page-side to pick up. The comment that claimed "the client then connects without a token
- * and the page reloads once it has" was false for Next.
+ * Read once at `next.config` evaluation is NOT enough: start `next dev` before the daemon and the
+ * value is empty, every page is refused, and a reload cannot help because there is no token
+ * page-side to pick up.
  *
  * Same mint as the daemon (24 random bytes, 0600 file, never overwrite). An existing token is
  * reused so a plugin-injected page keeps working after the daemon bounces.

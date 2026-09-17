@@ -843,10 +843,10 @@ export const SURFACE_MERGE_PLANS: MergePlan[] = [
 /**
  * Every merge the `merged` surface applies, as ONE list.
  *
- * Extracted from `applyMerges`' argument because a second reader needed it: `mergedNameRedirect`
- * builds its tombstones from the plans, and the `list`/`feedback` members below were injected
- * inline here — so `reticle_sessions`, the first call most agents make, was the one merged name
- * with no redirect and answered "not found" on the surface where it had just stopped existing.
+ * Named rather than inlined into `applyMerges`' argument because a second reader needs it:
+ * `mergedNameRedirect` builds its tombstones from these plans. A member injected inline instead gets
+ * no tombstone, and the merged name answers "not found" on the surface where it stopped existing —
+ * which is what happened to `reticle_sessions`, the first call most agents make.
  */
 export const MERGED_SURFACE_PLANS: MergePlan[] = [
   ...MERGE_PLANS.map((plan) =>

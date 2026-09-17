@@ -1,8 +1,6 @@
 /**
  * On-disk artifact constants: the project history, flow files, replay/drift status, the recorder
- * lifecycle, heal outcomes, and the structured-annotation vocabulary. Split out of constants.ts so
- * each file stays one cohesive unit under the size cap; re-exported from constants.ts (and so from
- * the package index) — every existing `@reticlehq/core` import is unchanged.
+ * lifecycle, heal outcomes, and the structured-annotation vocabulary.
  */
 
 /**

@@ -24,9 +24,8 @@ import {
 } from './onboarding.js';
 
 /**
- * The setup funnel's vocabulary, re-exported so every existing `@reticlehq/core/telemetry` import
- * keeps working. It lives in `onboarding.ts` because it is its own subject and this file had grown
- * past the size cap — the split is where the line already was.
+ * The setup funnel's vocabulary. It is defined in `onboarding.ts`, which is its own subject, and
+ * re-exported here so every `@reticlehq/core/telemetry` import reaches it.
  */
 export {
   OnboardingPhase,
@@ -65,8 +64,8 @@ export const TelemetryEventKind = {
   /** First-ever run on this machine — powers install count + the new-user curve. */
   RETICLE_INSTALLED: 'reticle_installed',
   /**
-   * A human ran a `reticle` subcommand. Carries WHICH command, which is the closest honest read we
-   * have on human intent (`verify` and `gate` mean something very different from `status`).
+   * A human ran a `reticle` subcommand. Carries WHICH command, which is the closest honest read on
+   * human intent (`verify` and `gate` mean something very different from `status`).
    *
    * Explicitly NOT emitted for the internal `_daemon` spawn: `reticle mcp` re-runs its own binary to
    * start the daemon, so counting that child inflated the old `invoke` metric ~2x — and worst on
@@ -108,14 +107,14 @@ export const TelemetryEventKind = {
   /** An uncaught exception or unhandled rejection reached the top of the daemon. Crash analytics. */
   RUNTIME_CRASHED: 'runtime_crashed',
   /**
-   * Someone told us something went wrong (or right). UNLIKE every other kind, this one carries
+   * Somebody reported that something went wrong (or right). UNLIKE every other kind, this one carries
    * author-written free text — which is exactly why it is never emitted passively: it exists only
    * because an agent called `reticle_feedback` or a human ran `reticle feedback`. See
    * `FeedbackSchema` for the consent/redaction contract.
    */
   FEEDBACK_SUBMITTED: 'feedback_submitted',
   /**
-   * Someone chose to tell us who they are. Like `feedback_submitted`, this exists ONLY because a
+   * Somebody chose to say who they are. Like `feedback_submitted`, this exists ONLY because a
    * human ran a command — Reticle never infers an identity from a git remote, an email in git
    * config, or anything else. See `identify.ts` for why that refusal is deliberate.
    */
@@ -150,11 +149,10 @@ export const TelemetryEventKind = {
    */
   APP_INSTRUMENTED: 'app_instrumented',
   /**
-   * The agent LOST its Reticle tools — the worst thing this product does to anyone, and until now
-   * completely invisible in the field.
+   * The agent LOST its Reticle tools, and nothing else reports it.
    *
    * `mcp_client_connected` shows reconnect churn only from the daemon's side, and the proxy's own
-   * account of an outage went to a local file nobody sends us. So "how often does a real user's MCP
+   * account of an outage goes to a local file nobody uploads. So "how often does a real user's MCP
    * server go down, and does it come back" — the single question the transport has to answer — could
    * not be asked of any dashboard.
    *
@@ -230,12 +228,12 @@ export function isSessionScoped(kind: string): boolean {
 }
 
 /**
- * Who caused this. The only honest split available to us: a `reticle` command was TYPED by a person,
+ * Who caused this. The only honest split available: a `reticle` command was TYPED by a person,
  * while an MCP tool call came from the agent's own loop.
  *
- * What we deliberately do NOT claim to know is whether the human told the agent to verify or the
- * agent decided on its own — that lives in a prompt Reticle never sees. Inferring it from timing
- * would be a guess dressed as a measurement, and a dashboard cannot tell the difference later.
+ * It deliberately does NOT claim to know whether the human told the agent to verify or the agent
+ * decided on its own — that lives in a prompt Reticle never sees. Inferring it from timing would be
+ * a guess dressed as a measurement, and a dashboard cannot tell the difference later.
  */
 export const TelemetryActor = {
   HUMAN: 'human',
@@ -335,12 +333,12 @@ export const VerificationSchema = z.object({
    * WHAT was lost, when `reason` is `unclean_capture` — see `CaptureLoss`.
    *
    * The three causes belong to three different owners and need three different fixes, and without
-   * this they are one bar. The one time we had to answer it the data could not, and the answer
-   * turned out to be that our own eviction counter was miscounting.
+   * this they are one bar — and the cause has turned out to be Reticle's own eviction counter
+   * miscounting, which no aggregate could have shown.
    *
    * ONE value, not a list: `losses` can hold several and a multi-value property is not something a
    * dashboard can group by, so the FIRST is sent and the order in the producers is the order of
-   * ownership — ours before the page's. Absent on every verdict whose capture was clean.
+   * ownership — Reticle's before the page's. Absent on every verdict whose capture was clean.
    */
   uncleanLoss: z.nativeEnum(CaptureLoss).optional(),
 });
@@ -367,16 +365,14 @@ export type VersionChange = z.infer<typeof VersionChangeSchema>;
 /**
  * A crash, with enough detail to actually diagnose it.
  *
- * The first version of this carried only a fingerprint — a hash — which made crashes RANKABLE and
- * completely UNDIAGNOSABLE: you could see that forty machines hit `a3f2c1d8e9b0` and had no way on
- * earth to learn what `a3f2c1d8e9b0` was. A group key with no dictionary. Everything below exists to
- * give the hash a meaning, while keeping the line that matters: our code and our failure, never the
- * user's code and never their data.
+ * A fingerprint alone makes crashes RANKABLE and completely UNDIAGNOSABLE — a group key with no
+ * dictionary. Everything below exists to give the hash a meaning, while keeping the line that
+ * matters: Reticle's own code and its own failure, never the user's code and never their data.
  */
 /**
  * Whether a failed connection was aimed at a port Reticle itself uses.
  *
- * An enum rather than the number, because the number is the reporter's and the answer is ours: all
+ * An enum rather than the number, because the number is the reporter's and the answer is Reticle's: all
  * anyone needs to know is whose problem it is. Refused on a Reticle port is a lifecycle problem —
  * a daemon that is not up; refused anywhere else is somebody else's service.
  */
@@ -391,11 +387,11 @@ export const CrashSchema = z.object({
   kind: z.string().min(1).max(32),
   /** The error's constructor name (`TypeError`) — coarse, safe, and enough to triage. */
   errorType: z.string().min(1).max(64).optional(),
-  /** Hash of the type + our own frames. Groups the same crash across every machine. */
+  /** Hash of the type + Reticle's own frames. Groups the same crash across every machine. */
   fingerprint: z.string().min(1).max(64).optional(),
   /**
    * The message with every VARIABLE part removed — quoted strings, URLs, paths, ids, numbers all
-   * replaced by `*`. `no baseline named *` tells us exactly what broke; the flow name that made it
+   * replaced by `*`. `no baseline named *` says exactly what broke; the flow name that made it
    * specific to one user never leaves. This is what turns the fingerprint from an opaque key into a
    * readable defect.
    */
@@ -403,7 +399,7 @@ export const CrashSchema = z.object({
   /**
    * The RETICLE-OWNED stack frames, innermost first, as `function@file:line`.
    *
-   * This is our own published code — `runTool@invoke-tool.js:88` is a line anyone can read in the
+   * This is Reticle's own published code — `runTool@invoke-tool.js:88` is a line anyone can read in the
    * npm tarball — so there is no privacy question in sending it, and it is the single most useful
    * thing for a root-cause analysis: the file, the line, and the function. Frames belonging to the
    * user's application or to node internals are dropped entirely before this is built.
@@ -416,16 +412,16 @@ export const CrashSchema = z.object({
    *
    * Answers "what was it trying to do", which a single frame cannot: `snapshot → act → act →
    * assert` is a verification loop, `lease_acquire → navigate → crash` is a startup problem. Tool
-   * NAMES only, from our own fixed vocabulary; no arguments, so nothing the agent typed is in here.
+   * NAMES only, from a fixed vocabulary; no arguments, so nothing the agent typed is in here.
    */
   breadcrumb: z.array(z.string().max(64)).max(12).optional(),
-  /** Node major/minor — crashes cluster hard by runtime version and we were not recording it. */
+  /** Node major/minor — crashes cluster hard by runtime version. */
   nodeVersion: z.string().max(24).optional(),
   /** `arm64` / `x64`. A surprising number of native-module failures are architecture-specific. */
   arch: z.string().max(16).optional(),
   /**
-   * The machine at the moment of the crash. "Out of memory" and "our bug" look identical in a stack
-   * trace and are completely different problems; this is what tells them apart.
+   * The machine at the moment of the crash. "Out of memory" and a Reticle defect look identical in a
+   * stack trace and are completely different problems; this is what tells them apart.
    */
   machine: MachineSnapshotSchema.optional(),
   /**
@@ -480,15 +476,8 @@ export type BugSource = (typeof BugSource)[keyof typeof BugSource];
 /**
  * WHOSE fault the defect was.
  *
- * `bugsFound` is the number this product would most like to publish, and it is not publishable
- * without this. It shipped twice and was wrong both times: across two full real drives EVERY
- * `attribution: 'app'` was a misattribution, so a single session would have published defects
- * against a customer's product that did not exist. A metric confidently wrong about whose fault
- * something is, is worse than no metric — it is the number a founder steers on, and it points at the
- * customer. It was removed, and an ABSENT field then made "nobody classified this" and "we looked
- * and could not tell" the same fact, which is the other half of the same problem.
- *
- * So it is back with two rules, and both are what the earlier versions lacked:
+ * `bugsFound` is not publishable without this, and a count confidently wrong about whose fault
+ * something is, is worse than no count: it points at the customer. Two rules keep it honest:
  *
  * 1. **Always present.** `UNCLASSIFIED` is a value, not a gap. Absence would mean an old sender or a
  *    path that forgot; a value means the classifier ran and declined.
@@ -496,8 +485,7 @@ export type BugSource = (typeof BugSource)[keyof typeof BugSource];
  *    failed, a signal the app fired carrying data that disagrees with its own screen, a written
  *    field echoed back changed. Never "nothing else explained it". Core already draws exactly this
  *    line for the verdict, in `ABSENCE_DERIVED_CONTRADICTIONS`, and that is the line reused rather
- *    than a second judgement invented next to it — every one of the historical misattributions was
- *    an absence-derived kind, so this rule produces zero of them on the same data.
+ *    than a second judgement invented beside it.
  */
 export const BugAttribution = {
   /** A defect in the app under test — the only bucket that belongs in a published defect count. */
@@ -511,8 +499,8 @@ export const BugAttribution = {
    *
    * The honest majority, and it must stay a value rather than becoming a gap: a failed
    * `element.present` covers "the button is missing", "the API is down" and "the agent mistyped a
-   * testid" identically, and an owner invented for it would put a guess into the one number we
-   * intend to publish. Exclude it from a defect count; never fold it into `app`.
+   * testid" identically, and an owner invented for it would put a guess into a published number.
+   * Exclude it from a defect count; never fold it into `app`.
    */
   UNCLASSIFIED: 'unclassified',
 } as const;
@@ -523,7 +511,7 @@ export type BugAttribution = (typeof BugAttribution)[keyof typeof BugAttribution
  *
  * `kind` is the taxonomy value from `findings.ts` — `signal-contradicted`, `console-error`,
  * `duplicate-request` and so on. Never a selector, a URL, an element, or any description of the
- * user's app: we report THAT a class of defect was found, never WHAT it was in.
+ * user's app — THAT a class of defect was found, never WHAT it was in.
  */
 export const BugFoundSchema = z.object({
   source: z.nativeEnum(BugSource),
@@ -563,7 +551,7 @@ export const BugFoundSchema = z.object({
   /**
    * Whose fault it was, ALWAYS present — `unclassified` when the evidence cannot say, never absent.
    *
-   * Absence and "we looked and could not tell" are different facts, and only one of them is a
+   * Absence and "the evidence could not say" are different facts, and only one of them is a
    * measurement. Count `attribution: 'app'` for defects found in anybody's product; see
    * `BugAttribution` for why `app` needs positive evidence.
    */
@@ -599,9 +587,9 @@ export const McpConnectionSchema = z.object({
   /**
    * Was an app carrying the SDK already attached to this daemon when the agent arrived.
    *
-   * The mirror of `AppInstrumentation.agentAttached`, and the closest thing we have to WHAT THE
-   * AGENT SAW. Most clients that attach never call a single tool, and that cohort was reachable only
-   * by subtraction — `tool_refused` cannot describe it, because an agent that reads the server
+   * The mirror of `AppInstrumentation.agentAttached`, and the closest available read on WHAT THE
+   * AGENT SAW. A client that attaches and never calls a tool is otherwise reachable only by
+   * subtraction: `tool_refused` cannot describe it, because an agent that reads the server
    * instructions, learns nothing is wired and stops has refused nothing. It made no call at all.
    *
    * `false` means the handshake happened against a daemon with no app to look at, which is the state
@@ -645,13 +633,11 @@ export const OutageStage = {
   /**
    * The link came back on its own, and `attempts` says what it cost.
    *
-   * Without it `first` is unfalsifiable. It is emitted at the moment of the drop, when the attempt
-   * counter is 1 by construction and the cap keeps any later drop from ever replacing it — so every
-   * event in the field carried the same stage and the same attempt count, and neither could carry
-   * another. That reads as "reconnection never advances past the first attempt" and it is really
-   * "this event is emitted before there is anything to say". `recovered` is the counterpart that
-   * makes the pair mean something: `first` with no `recovered` and no `budget_spent` is a session
-   * whose tools never came back.
+   * Without it `first` is unfalsifiable. `first` is emitted at the moment of the drop, when the
+   * attempt counter is 1 by construction, and the cap keeps any later drop from replacing it — so
+   * on its own it can only ever report one stage and one attempt, which reads as "reconnection
+   * never advances" when it really means "emitted before there is anything to say". `first` with no
+   * `recovered` and no `budget_spent` is a session whose tools never came back.
    */
   RECOVERED: 'recovered',
 } as const;
@@ -720,8 +706,7 @@ export type McpOutage = z.infer<typeof McpOutageSchema>;
  * WHICH published route brought this install in.
  *
  * Four routes ship at once — the SKILL.md paste URL, an `npx skills add` package, a Claude Code
- * plugin, and docs.reticle.sh — and not one install can be attributed to any of them today. Every
- * decision about where to spend effort on distribution is therefore made blind.
+ * plugin, and docs.reticle.sh — and nothing else distinguishes them.
  *
  * The value is NEVER inferred. It is read from a single explicit marker (`RETICLE_INSTALL_SOURCE`)
  * that a channel sets on itself, narrowed against this list, and anything else reports `UNKNOWN`.
@@ -730,7 +715,7 @@ export type McpOutage = z.infer<typeof McpOutageSchema>;
  * a measurement. Read a small `unknown` as a marker that spread, never as success.
  *
  * What the marker CANNOT be derived from, and why nothing here tries:
- *  - `npm_config_user_agent` says npm/pnpm ran us. Every one of these routes runs through npx, so it
+ *  - `npm_config_user_agent` says npm/pnpm ran the command. Every one of these routes runs through npx, so it
  *    separates none of them.
  *  - The presence of `.claude-plugin/` or an installed skill directory says a plugin or a skill is
  *    present in the repo, not that it is the thing that ran `init` — and both are present at once on
@@ -796,9 +781,9 @@ export const InitConfirmation = {
   /**
    * A dev server with Reticle loaded IS running, and no page dialled.
    *
-   * The half of NO_SESSION that used to be invisible, and the one with a completely different fix:
-   * the config is right and the process was restarted, so telling this person to restart their dev
-   * server is an instruction they have already followed. They need to open the app.
+   * The half of NO_SESSION with a completely different fix: the config is right and the process was
+   * restarted, so telling this person to restart their dev server is an instruction they have
+   * already followed. They need to open the app.
    */
   NO_PAGE: 'no_page',
 } as const;
@@ -860,7 +845,7 @@ export const TelemetryEventSchema = z.object({
    * ADVISORY hint that this run looks automated, when something beyond `CI` suggests it.
    *
    * `ci` reads one environment variable, which is right for a GitHub Actions runner and blind to a
-   * cloud agent sandbox — our own gate has landed in the user data with `ci: false`. This is the
+   * cloud agent sandbox, which lands in the data with `ci: false`. This is the
    * second angle, and it is NEVER a filter: people work in containers, in Codespaces, and over ssh
    * with no terminal. Never exclude a row because this is set; absent means nothing looked
    * automated, not that a human was present. See automation-hint.ts for the rejected signals.
@@ -933,7 +918,7 @@ export const TelemetryEventSchema = z.object({
    * present on the events that show whether a licensed customer got anywhere.
    *
    * `licenseId` is the signed license id — an opaque uuid that resolves to a company only against the
-   * issuance ledger we hold locally, so the analytics backend never learns a customer list. The
+   * issuance ledger held locally, so the analytics backend never learns a customer list. The
    * organisation NAME is deliberately absent: it is free text somebody typed at signing time, and
    * rule 3 is names-never-values.
    *

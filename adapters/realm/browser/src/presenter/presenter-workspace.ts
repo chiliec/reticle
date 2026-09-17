@@ -88,9 +88,9 @@ export function workspaceRowHtml(): string {
 
 export function paintWorkspace(root: HTMLElement): void {
   const summary = workspaceSummary();
-  // Nothing to say - no injected repo root, no leased project id - so the chip says nothing. It
-  // used to render its fallback, "This page", which names no workspace and is exactly as true of
-  // every page. The chip earns its slot only when it can tell you WHICH checkout is being driven.
+  // Nothing to say - no injected repo root, no leased project id - so the chip says nothing. A
+  // fallback like "This page" names no workspace and is exactly as true of every page: the chip earns
+  // its slot only when it can tell you WHICH checkout is being driven.
   const wrap = root.querySelector('.reticle-workspace-wrap');
   if (wrap instanceof HTMLElement) {
     const known = summary.root !== undefined || summary.projectId !== undefined;

@@ -346,7 +346,7 @@ describe('desktop injection is loud in dev too, not only in build', () => {
     expect(text, 'the user must be told the app will not connect').toMatch(
       /never connect|no session/i,
     );
-    // Name the likely cause in plain words, so the fix is obvious without reading our source.
+    // Name the likely cause in plain words, so the fix is obvious without reading Reticle's source.
     expect(text).toMatch(/renders its own HTML|owns its HTML/i);
   });
 
@@ -636,7 +636,7 @@ describe('the daemon journal does not drive the dev server', () => {
 
   /**
    * `ignored` is not an array. Vite types it `AnymatchMatcher` — a string, a RegExp, a predicate
-   * function, or an array of those — and our own stand-in typed it as an array only, which hid
+   * function, or an array of those — and Reticle's own stand-in typed it as an array only, which hid
    * every non-array case from the compiler AND from these tests.
    *
    * A bare string was the quiet one: spreading it produced one pattern per CHARACTER, so the app's

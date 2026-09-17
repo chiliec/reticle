@@ -137,8 +137,8 @@ describe('a plan belongs to the platform it was asked for, not the host', () => 
 // The other half of the same bug joinFor fixed: the planners learned to WRITE the right separator
 // and the writers never learned to READ it. `parentOf` was `slice(0, lastIndexOf('/'))`, so on a
 // win32 path — which has no '/' at all — lastIndexOf returned -1, the slice returned '' and the
-// writer called mkdir(''). A Windows install of 3.1.0 lost twelve of thirteen agent registrations
-// to `ENOENT: mkdir ''` in one run, Claude Code among them, while reporting the rest as fine.
+// writer called mkdir(''). A Windows install then loses nearly every agent registration to
+// `ENOENT: mkdir ''` in one run, Claude Code among them, while reporting the rest as fine.
 describe('the parent of a path is read with the separator the path actually uses', () => {
   it('finds the directory of a win32 path, which has no forward slash in it', () => {
     expect(parentOf('C:\\Users\\u\\AppData\\Roaming\\Code\\User\\mcp.json')).toBe(

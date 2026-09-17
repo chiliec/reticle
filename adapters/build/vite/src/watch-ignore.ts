@@ -1,12 +1,12 @@
 /**
  * Normalising Vite's watcher `ignored` list, which is not a list.
  *
- * Split out of index.ts at the file cap. Small but cohesive: one third-party type shape, one
- * runtime hazard it hides, and the guard that makes the plugin's return assignable without a cast.
+ * Small but cohesive: one third-party type shape, one runtime hazard it hides, and the guard that
+ * makes the plugin's return assignable without a cast.
  */
 
 /**
- * Append our journal pattern to whatever the app already ignored, without assuming it is an array.
+ * Append Reticle's journal pattern to whatever the app already ignored, without assuming it is an array.
  *
  * Vite's `ignored` is `AnymatchMatcher`, so `watch: { ignored: '**\/fixtures/**' }` is a legal
  * config. Spreading that string would explode it into one pattern PER CHARACTER — every one of

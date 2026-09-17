@@ -30,9 +30,9 @@ import { resolveInstallSource } from './install-source.js';
  */
 /**
  * The agent's MCP transport, not a person. `reticle mcp` is what an MCP client runs to open a stdio
- * connection — nobody types it. Measured over one real day it was 475 of 561 `cli_command_run`
- * events (85%), on an event whose whole purpose is human intent, and the agent attaching is already
- * reported by `mcp_client_connected` with strictly more detail (reconnect, daemon age, client).
+ * connection — nobody types it. Counted, it dominates an event whose whole purpose is human intent,
+ * and the agent attaching is already reported by `mcp_client_connected` with strictly more detail
+ * (reconnect, daemon age, client).
  *
  * `serve` is NOT excluded: nothing spawns it on a person's behalf, so typing it is a real act.
  */
@@ -63,8 +63,7 @@ export function reportCliRun(argv: readonly string[]): void {
   const telemetry = getTelemetry();
   // FIRST — before the human-command filter. The install happened whichever command ran, and on most
   // machines the very first contact is the agent spawning `reticle mcp`, which that filter excludes.
-  // Measured over one sweep: 15 `init_completed` and ZERO `reticle_installed`, in a run that
-  // installed the SDK into nine apps — the top of every funnel, missing.
+  // Behind the filter this event never fires at all on an install that only ever runs `reticle mcp`.
   // `detach` so a quick command (`version`/`gate`) exits immediately instead of waiting out the POST.
   if (telemetry.firstRun)
     void telemetry.emit(TelemetryEventKind.RETICLE_INSTALLED, {
@@ -76,10 +75,10 @@ export function reportCliRun(argv: readonly string[]): void {
   if (!isHumanCliCommand(command)) return;
   void telemetry.emit(TelemetryEventKind.CLI_COMMAND_RUN, {
     detach: true,
-    // No `actor`: with the agent's transport excluded, this event is human BY DEFINITION. It was
-    // constant `human` on all 561 events in a real day — zero information, and wrong for the 475
-    // that were the agent. `actor` stays where it earns its place: verification_completed and
-    // bug_found, where it splits the agent's own loop from a human/CI-triggered run.
+    // No `actor`: with the agent's transport excluded, this event is human BY DEFINITION, so the
+    // field would be constant here — zero information. `actor` stays where it earns its place:
+    // verification_completed and bug_found, where it splits the agent's own loop from a human or
+    // CI-triggered run.
     // A fixed, low-cardinality vocabulary WE define, so it is safe to send whole and it is the closest
     // honest read we have on intent: `verify` and `gate` mean something very different from `status`.
     // An unrecognized first arg reports as `unknown` rather than being echoed — an echo would put

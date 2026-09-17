@@ -89,8 +89,8 @@ describe('the skill copies agree about the rules', () => {
 
   /**
    * The plugin's frontmatter version is what a host displays and what a user reports a bug against.
-   * Stale, it names a release whose behaviour the file no longer describes — it said 2.10.0 while
-   * 2.13.0 was shipping, three minor versions of install changes later.
+   * Stale, it names a release whose behaviour the file no longer describes — it once sat three minor
+   * versions of install changes behind what was shipping.
    */
   it('declares the version actually being shipped, in every copy that declares one', () => {
     const shipped = (JSON.parse(read('server/package.json')) as { version: string }).version;

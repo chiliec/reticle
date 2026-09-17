@@ -102,9 +102,9 @@ describe('verificationOf', () => {
   });
 
   /**
-   * A pause REFUSES the call: nothing is driven and nothing is asserted. The refusal now carries
+   * A pause REFUSES the call: nothing is driven and nothing is asserted. The refusal carries
    * `verified: 'unknown'` so the agent's read of that field is never undefined — which must not turn
-   * a refusal into a row in the metric investors are shown.
+   * a refusal into a row in the verification metric.
    */
   it('a paused refusal is not a verification, verdict field or no', () => {
     expect(

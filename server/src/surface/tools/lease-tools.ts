@@ -335,9 +335,9 @@ interface ProbeableSession {
 /**
  * Does this tab still answer?
  *
- * `ready: true` used to mean "a row is in the sessions map", which is how a lease came back ready
- * and was then rejected by `snapshot`, `state` and `console`. Presence is not liveness: the map
- * still holds a tab that is attached, streaming events, and answering nothing (#692).
+ * PRESENCE IS NOT LIVENESS. The sessions map still holds a tab that is attached, streaming events,
+ * and answering nothing, so `ready` read off a row in that map hands back a lease that `snapshot`,
+ * `state` and `console` then reject (#692). It has to mean the tab replied.
  *
  * ANY reply counts, including one that reports the command failed. The question is whether the SDK
  * answers at all, not what it says — so an SDK too old to know the command replies

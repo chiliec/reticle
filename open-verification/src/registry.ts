@@ -5,8 +5,7 @@ import { ChannelId, type ChannelDescriptor } from './vocabulary/channel.js';
  * Who implements this, and what they are entitled to claim.
  *
  * A single pass mark quietly sorts implementations by architecture, and only the one the spec was
- * written against scores full marks. That is the WS-* failure: a specification you cannot
- * implement without the author's product is a product with a spec-shaped cover.
+ * written against scores full marks.
  *
  * So conformance comes in profiles, and an implementation earns the highest it can answer for. An
  * out-of-process verifier driving a debugging protocol reaches `effect` honestly and can never

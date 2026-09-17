@@ -16,7 +16,7 @@ import type {
 import { SpecKind, SpecMessage, SpecOutcome } from './outcome/constants.js';
 import { assertSuccess } from './outcome/success-assert.js';
 
-/** FLOW2SPEC — the result of running one RUNNABLE flow spec, evidence-bearing on a FAIL. */
+/** The result of running one RUNNABLE flow spec, evidence-bearing on a FAIL. */
 export interface SpecRunResult {
   outcome: SpecOutcome;
   /** Verbatim from replayFlow — carries each step's drift/nearest evidence. */
@@ -28,7 +28,7 @@ export interface SpecRunResult {
 }
 
 /**
- * FLOW2SPEC — one flow rendered as a runnable spec. Every spec carries `run`. A RUNNABLE spec
+ * One flow rendered as a runnable spec. Every spec carries `run`. A RUNNABLE spec
  * replays + asserts success; an ERROR spec (file missing/malformed/badly-named) carries `loadError`
  * and a `run` whose returned SpecRunResult is FAIL, so a corrupted flow fails loudly in the suite
  * rather than vanishing. The vitest binding (register.ts) turns the load error into a thrown Error.
@@ -118,7 +118,7 @@ export interface FlowsAsSpecsOptions extends FlowSpecOptions {
 }
 
 /**
- * FLOW2SPEC — enumerate a flows dir (or a live FlowStore) into FlowSpec[]. The map (.reticle/flows)
+ * Enumerate a flows dir (or a live FlowStore) into FlowSpec[]. The map (.reticle/flows)
  * IS the suite. An empty/absent dir yields [] (no throw). A malformed/badly-named file becomes an
  * ERROR spec; enumeration of its siblings is never aborted.
  */

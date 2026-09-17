@@ -9,7 +9,7 @@ import type { Teardown } from './types.js';
  * Wrappers form a chain and the outermost runs first. Reticle records `init.body` when ITS wrapper
  * runs, so anything installed BELOW it — i.e. earlier — mutates the request AFTER we have recorded
  * and before it leaves. An axios/auth/analytics interceptor initialised before connect(), or a
- * polyfill, does exactly that. Our own 85-bug benchmark contains a bug of this shape that we miss and
+ * polyfill, does exactly that. Reticle's own 85-bug benchmark contains a bug of this shape that we miss and
  * a CDP-level tool catches.
  *
  * We cannot fix that from inside the page — there is no "patch last" primitive, and racing for

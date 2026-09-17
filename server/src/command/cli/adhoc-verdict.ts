@@ -7,10 +7,9 @@ import { ReticleTool } from '@reticlehq/core';
 /**
  * A verdict from the CLI, against the daemon that is already running.
  *
- * THE DEAD END THIS REMOVES. The largest single cluster in the field feedback is not a defect in any
- * tool — it is that the tools were not loaded in the client, and there was no supported way to reach
- * a verdict from that state. The shape was always the same: the app is instrumented, the daemon is
- * healthy, `doctor` shows a live connected page, and the client (Codex, Cursor Cloud, Antigravity,
+ * THE DEAD END THIS REMOVES. The tools are not loaded in the client, and there is no other supported
+ * way to reach a verdict from that state. The shape is always the same: the app is instrumented, the
+ * daemon is healthy, `doctor` shows a live connected page, and the client (Codex, Cursor Cloud, Antigravity,
  * Gemini CLI, or a Claude Code session whose MCP link dropped) exposes no `reticle_*` tools, because
  * they load only at client startup. The documented CLI fallback then refused, because the daemon
  * already owned the port — precisely the state a successful install leaves you in. The other CLI
@@ -18,12 +17,10 @@ import { ReticleTool } from '@reticlehq/core';
  * never to stop the daemon, because that kills the agent's MCP link.
  *
  * So an agent held a live, correctly-wired app and no path to a verdict short of a human restarting
- * their editor. Several reporters fell back to Playwright or to their own client and said honestly
- * that Reticle could not produce a verdict.
+ * their editor.
  *
- * HOW, AND WHY IT ADDS NO NEW SURFACE. One reporter found the answer themselves: they drove the full
- * tool surface over the daemon's HTTP/SSE transport with a hand-written client, and it worked. That
- * transport is not opt-in — `start()` calls `attachMcp` unconditionally, so every daemon has it. So
+ * HOW, AND WHY IT ADDS NO NEW SURFACE. The full tool surface is already drivable over the daemon's
+ * HTTP/SSE transport with a hand-written client. That transport is not opt-in — `start()` calls `attachMcp` unconditionally, so every daemon has it. So
  * this asks the running daemon the same questions an agent would, over the same transport, using the
  * MCP client the SDK already ships. Nothing new is exposed and nothing is bound: the daemon keeps
  * the port, the agent keeps its link, and there is nothing to stop.

@@ -1,43 +1,23 @@
 /**
  * The sharded intent store: one small file per subject, plus an index cheap enough to always load.
  *
- * ## Why this exists
- *
- * `.reticle/intent.json` was a single object, and it grew without bound. Parsing that is nothing;
- * READING it is the cost, and reading is what this store is for. An agent wanting the two rules
- * about checkout pulled every other rule in the project through its context to find them, and an
- * agent changing one rewrote the whole file — which is both slow to review and a lost write
- * whenever two sessions touch different subjects at once.
- *
- * ## The shape
- *
  *   .reticle/intent/index.json     every id, its subject and one line of prose
  *   .reticle/intent/<subject>.json the full records for that subject
  *
- * The index is the whole point: it answers "what do we know, and where does it live?" without
- * opening anything, and detail is then fetched for the one subject in play. An all-or-nothing read
- * of everything becomes an index plus one shard.
+ * `.reticle/intent.json` was a single unbounded object, so an agent wanting the two rules about
+ * checkout pulled every other rule in the project through its context, and an agent changing one
+ * rewrote the whole file — a lost write whenever two sessions touch different subjects at once. The
+ * index answers "what do we know, and where does it live?" without opening anything; detail is then
+ * fetched for the one subject in play, so a READ and a WRITE are both bounded to one subject.
  *
- * The index is NOT tiny, and measuring beat guessing twice over. Summarising the statements barely
- * helped, because the bulk is not the prose but the ids —
+ * KNOWN LIMIT: the index is not tiny — the ids dominate it, and
  * `inline:signing-in-with-the-email-password-created-earli-6ca804e9` is 63 characters before the
- * statement starts. The real win is not the saving on either number: it is that a READ and a WRITE
- * are both bounded to one subject rather than to the whole corpus.
+ * statement starts. An order of magnitude more records needs a second tier (subjects and counts,
+ * ids fetched per subject) rather than a longer single read.
  *
- * The index is therefore the part that does not scale forever. An order of magnitude larger and it
- * needs a second tier — subjects and counts, with ids fetched per subject — rather than a longer
- * single read. Recorded here because the next person will hit it, and the shape of the fix is
- * already visible.
- *
- * ## What the records carry that the old ones did not
- *
- * The legacy file was written BY verification, AT verification time, in verification's vocabulary: a
- * statement, a predicate, and whether a verdict discharged it. Almost nothing in it named a
- * surface. There was nowhere to put the reason a thing must be true, who decided it, or when — so
- * the business case somebody states once and then forgets had no home and was never captured.
- *
- * `why`, `source` and `subject` are that home. They are optional because a migrated record cannot
- * invent them, and a store that rejected incomplete records would simply not be written to.
+ * `why`, `source` and `subject` are what the legacy records had nowhere to put: the reason a thing
+ * must be true, who decided it, and when. Optional, because a migrated record cannot invent them and
+ * a store that rejected incomplete records would simply not be written to.
  */
 import { z } from 'zod';
 import { IntentSchema, type Intent } from '@reticlehq/core/artifacts';
@@ -100,9 +80,8 @@ export type IntentShard = z.infer<typeof IntentShardSchema>;
  * The index exists to answer WHICH SHARD, and a clause is enough to decide that; the sentence is one
  * file away. Ellipsis included so a truncated line is never mistaken for the whole intent.
  *
- * Worth 7% on the real corpus rather than the large saving expected — the ids dominate — but it also
- * bounds the damage a future 500-character statement can do to a file meant to be read every
- * session, which is the reason to keep it.
+ * A small saving on its own — the ids dominate — but it bounds the damage a 500-character statement
+ * can do to a file meant to be read every session, which is the reason to keep it.
  */
 const SUMMARY_MAX = 72;
 

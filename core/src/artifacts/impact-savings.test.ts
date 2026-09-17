@@ -1,15 +1,12 @@
 /**
  * What the savings model claims, and why each claim survives being challenged.
  *
- * Reported by users: "we spend more time using Reticle than the time saved says we got back." The
- * model made that inevitable rather than measuring it. Minutes counted DEFECTS only — a verdict that
- * passed earned zero — so a user who drove for forty minutes and found two defects was shown eight
- * minutes saved, on a card grid that also shows real driving time. Two durations side by side with
- * no stated relationship is an invitation to subtract them, and the subtraction said Reticle costs
- * more than it returns.
+ * Counting minutes against DEFECTS only — a passing verdict earning zero — makes the card grid
+ * report less saved time than the driving time shown beside it, and two durations side by side with
+ * no stated relationship invite a subtraction that says Reticle costs more than it returns.
  *
- * The old reasoning was written down and is the thing that is wrong: "a pass saves nothing by itself
- * - the run was going to pass either way". The counterfactual is not "it passes anyway". It is
+ * "A pass saves nothing by itself - the run was going to pass either way" is the wrong
+ * counterfactual. It is
  * "somebody checks it by hand, or nobody checks it and a false green ships". A PROVEN pass replaces
  * that manual check, and replacing it is the product.
  */

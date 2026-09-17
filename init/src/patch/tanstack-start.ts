@@ -1,9 +1,8 @@
 /**
  * The TanStack Start connect recipe.
  *
- * Its own module rather than another entry in `snippets.ts`, which was at the 1000-line backstop:
- * Start is the one framework whose document module `init` deliberately refuses to write, so the
- * recipe and the reasoning behind that refusal are a unit.
+ * Its own module because Start is the one framework whose document module `init` deliberately
+ * refuses to write, so the recipe and the reasoning behind that refusal are a unit.
  */
 
 import { UiLibrary } from '@/detect/detect.js';

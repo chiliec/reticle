@@ -9,22 +9,16 @@ import { realmOf, AppRuntime, isOpaqueOrigin } from '@reticlehq/core';
  * presented never loads its page. The session stays connected, so nothing looks wrong, and the
  * developer goes hunting through their own code for a fault that is not there.
  *
- * This advice previously blamed occlusion — "macOS suspends an occluded or off-Space WKWebView" —
- * which is false for those states, and was the kind of wrong steer this function exists to prevent.
- * A LOADED Tauri webview keeps answering while minimized, occluded, and on another Space. `hide()`
- * after load is the remaining headless path: a hidden macOS WKWebView has been observed to go quiet
- * after a pause, but that is not something every machine demonstrates, so this message names it as
- * a candidate rather than a fact.
+ * Occlusion is NOT the cause: a loaded Tauri webview keeps answering while minimized, occluded and
+ * on another Space. `hide()` after load is the only remaining quiet path, and it is not
+ * reproducible on every machine — so it is named as a candidate, never as a fact.
  *
- * It then over-corrected: it asserted the hidden-before-load ordering as FACT. But the only evidence
- * here is `hidden === true` — the ordering is never observed. Measured on a Tauri shell pointed at an
- * external http origin, whose window nothing ever hid: the message confidently prescribed a fix for a
- * mistake that had not been made, and two rounds of debugging went into the wrong place. A diagnostic
- * that names the wrong cause is worse than a bare timeout, because the bare timeout at least sends
- * the reader looking. So this now reports what is KNOWN and ranks the causes rather than picking one.
+ * The only thing observed here is `hidden === true`; the hidden-before-load ORDERING is never
+ * observed. So this ranks the causes and asserts none of them: a diagnostic that names the wrong
+ * cause is worse than a bare timeout, because the bare timeout at least sends the reader looking.
  *
  * The advice is ADDED, never substituted — the original fact still leads — and only for a runtime
- * that can actually suffer it, since misdirecting an Electron user costs them the same hour.
+ * that can actually suffer it.
  */
 
 /**

@@ -38,33 +38,14 @@ const CORE = join(
  * A count, not a list: the list is derivable and printed on failure, and a hand-written copy
  * would be one more thing to keep in step.
  *
- * All four hinge on exactly ONE file and none of those files is a leaf: `verdict -> flow-types`,
- * `artifacts -> constants`, `identity -> constants`, `verdict -> channel`. The same computation
- * over every package gives the same answer everywhere, so the leaf-extraction rule -- move only
- * what imports no sibling -- can no longer reach any pair in this repository. The next reduction
- * anywhere is a SPLIT, which is a different and much more expensive kind of change.
+ * The remaining pair hinges on exactly ONE file, and the leaf-extraction rule -- move only what
+ * imports no sibling -- can no longer reach it. The next reduction is a SPLIT, which is a different
+ * and much more expensive kind of change.
  *
- * Four. `wire <-> artifacts` survived an attempt to remove it, and the attempt is worth knowing
- * about: the whole of `wire -> artifacts` looked like one `export * from
- * '../artifacts/flow-constants.js'` in `wire/constants/constants.ts`, a convenience barrel using nothing it
- * re-exported. Deleting it did not break the cycle, because `wire/types.ts` genuinely references
- * annotation and run constants -- the barrel was hiding WHERE they came from, not creating the
- * dependency. Removing it was still worth doing (`artifacts/flow-types.ts` had been reaching
- * through `wire` to fetch a constant from its own directory), but the number did not move, and a
- * guard is the place to say so before somebody tries it again.
- */
-/**
- * Four until `wire/constants.ts` and `wire/session-constants.ts` moved into `wire/constants/`.
- * Both are pure tables of named values that import nothing, and both were reached by `identity`
- * and by `artifacts`; those were the ONLY things either directory wanted from `wire`, so
- * `identity <-> wire` and `artifacts <-> wire` both stopped being mutual. Lowered here in the
- * same commit that earned it, which is what the equality below is for.
- */
-/**
- * Two until the last import cycle in this package was removed. `verdict/consequence.ts` named
- * `FlowExpect` only to answer two questions ABOUT a `FlowExpect`, so both moved beside the type in
- * `artifacts/flow-types.ts` and `artifacts <-> verdict` stopped being mutual. Lowered in the same
- * commit that earned it.
+ * Deleting a convenience barrel does NOT lower the number: a `export *` that re-exports another
+ * directory's constants hides WHERE they came from rather than creating the dependency, and the
+ * files that name those constants still name them. Lower this only in the same commit that earns
+ * it, which is what the equality below is for.
  */
 const MUTUAL_PAIRS_TODAY = 1;
 

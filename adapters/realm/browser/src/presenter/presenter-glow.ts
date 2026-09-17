@@ -23,8 +23,7 @@ interface GlowDeps {
 
 /**
  * The glow / activity state machine - drives the border shimmer + synthetic-cursor visibility from
- * agent-activity timing. Extracted from presenter.ts so the controller file stays under the size cap;
- * behavior is byte-for-byte the same. It holds references to the same `#glow`/`#cursor` nodes the
+ * agent-activity timing. It holds references to the same `#glow`/`#cursor` nodes the
  * Presenter does (both call setAttribute on those elements - the Presenter owns the SESSION border via
  * data-on; this owns the BUSY shimmer via data-busy). A burst flips the glow IN once, holds it (the
  * slow reticle-pulse keeps breathing - no per-action restart/strobe), then fades it OUT once after a quiet

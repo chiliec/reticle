@@ -2,9 +2,8 @@
  * The weaker install attempts, in the order they are tried.
  *
  * Ordered by how much each one gives up, cheapest concession first, because the first that succeeds
- * is the one that stands. Split out of plan.ts: the ladder is its own subject — two unrelated
- * install failures, each with a different cost and a different sentence to say afterwards — and
- * plan.ts is at its file cap.
+ * is the one that stands. The ladder is its own subject: two unrelated install failures, each with
+ * a different cost and a different sentence to say afterwards.
  */
 
 import { PackageManager, installCommandParts } from '@/detect/detect.js';
@@ -34,10 +33,9 @@ const LEGACY_PEER_NOTE =
 /**
  * Said out loud when the exact-version install failed and the unpinned one worked.
  *
- * It used to assert a cause it cannot know. Every one of nine fixture apps got the same sentence —
- * "the registry refused 2.5.0 (pnpm's minimumReleaseAge holds new releases back)" — when the actual
- * cause on that run was that the version did not exist yet, and the remedy offered was a `pnpm
- * config` command handed to a yarn 1 project that will never read it.
+ * It used to assert a cause it cannot know: every fixture app got the same sentence, blaming pnpm's
+ * `minimumReleaseAge`, when the actual cause was that the version did not exist yet — and the remedy
+ * offered was a `pnpm config` command handed to a yarn 1 project that will never read it.
  *
  * This note is built at PLAN time, before anything runs, and `io.exec` returns a bare boolean, so
  * the apply layer has no failure text to hand back either. The honest move is therefore to report

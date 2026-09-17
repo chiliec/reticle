@@ -2,7 +2,7 @@
  * @reticlehq/core — the wire contract at the bottom of the Reticle graph (zod its only dependency).
  *
  * API-stability note: the exports below the divider are INTERNAL cross-package plumbing — they are
- * re-exported so the other @reticlehq/* packages can share one implementation, NOT as a stable surface
+ * cross-package plumbing so the other @reticlehq/* packages share one implementation, NOT a stable surface
  * for outside consumers. They can change in a minor release. Depend on the STABLE section for anything
  * outside this monorepo.
  *
@@ -68,7 +68,6 @@ export * from './wire/state-select.js'; // selectPath / capDepth — shared by b
 export * from './wire/toon.js'; // TOON encoding used by the server's result encoder
 export * from './words/upgrade.js'; // self-update policy shared by the CLI
 export * from './telemetry.js';
-// Split out of telemetry.js at the 1000-line cap; the barrel keeps the import path callers use.
 export * from './words/no-session-reason.js';
 export * from './telemetry-refusal.js';
 export * from './wire/narrow.js';

@@ -3,10 +3,9 @@ import type { RedactionConfig } from '@reticlehq/core';
 /**
  * What `reticle.connect()` accepts.
  *
- * Split out of reticle.ts when that file crossed the 600-line cap - the same move `session-info.ts`
- * made for the server's Session. A pure description of the SDK's public entry contract has no reason
- * to live inside the class that happens to consume it, and separating them keeps the surface every
- * integrating app actually reads reviewable on its own.
+ * A pure description of the SDK's public entry contract has no reason to live inside the class that
+ * consumes it, and keeping them apart leaves the surface every integrating app reads reviewable on
+ * its own.
  */
 export interface ReticleConnectOptions {
   /** WS endpoint of the local bridge. Defaults to ws://localhost:<port><path>. */

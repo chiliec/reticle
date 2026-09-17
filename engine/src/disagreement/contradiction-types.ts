@@ -17,7 +17,7 @@ import type { DeclaredNetFailure } from '@/question/declared.js';
  * Widening `Contradiction.kind` to `string` for the consumer seam would otherwise have made every
  * emit site below accept a typo'd literal. This keeps them checked without closing the edge.
  */
-// Re-exported so every existing consumer keeps its import path; the shape itself lives in core.
+// Re-exported here; the shape itself lives in core.
 export type { Contradiction };
 
 export type OwnContradiction = Contradiction & { kind: ContradictionKind };

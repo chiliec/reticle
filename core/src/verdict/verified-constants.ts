@@ -117,11 +117,10 @@ export const VerifiedReason = {
    * The assertion held, but a channel's outcome had not been observed when the window closed — an
    * ABSENCE-derived finding (see ABSENCE_DERIVED_CONTRADICTIONS), not evidence against the action.
    *
-   * Split out of UNSETTLED because that word is a claim about idle, and this clause fires
-   * independently of whether the page went idle. One field report was, verbatim, "internally
-   * contradictory": `verifiedReason: "unsettled"` beside `settled: true`, a passing nested verdict,
-   * the requested POST at 200 and a clean console. Both halves came from this rule, and a verdict
-   * whose own evidence block denies its stated reason is a verdict nobody can act on.
+   * DISTINCT FROM `UNSETTLED`, because that word is a claim about idle and this clause fires
+   * independently of whether the page went idle. Reporting it as `unsettled` produces a verdict
+   * whose own evidence block denies its stated reason — `verifiedReason: "unsettled"` beside
+   * `settled: true` — which nobody can act on.
    */
   EVIDENCE_INCOMPLETE: 'evidence_incomplete',
   /** Held at a real grade over a clean capture with no channel disagreeing. */
@@ -135,9 +134,9 @@ export type VerifiedReason = (typeof VerifiedReason)[keyof typeof VerifiedReason
  * WHAT made a capture unclean — the closed vocabulary behind `UNCLEAN_CAPTURE`.
  *
  * `unclean_capture` names three losses that belong to three different owners and need three
- * different fixes: our server buffer, our browser transport, and a boundary in the page that nobody
- * can see through. Until this existed they arrived as one value on a dashboard and as one sentence
- * of free prose in `integrity.issues`, which is not something a query can group by.
+ * different fixes: the server buffer, the browser transport, and a boundary in the page that nobody
+ * can see through. Without it they arrive as one value and one sentence of free prose in
+ * `integrity.issues`, which is not something a query can group by.
  *
  * That cost real time. `unclean_capture` became a large share of all `unknown` verdicts in the
  * field, and answering "which of the three?" took reading the eviction policy, because the data
@@ -209,11 +208,12 @@ export const BlindSpotKind = {
   UNINSTRUMENTED_FRAME: 'uninstrumented-frame',
   VIRTUALIZED_UNMOUNTED: 'virtualized-unmounted',
   /**
-   * Something wrapped `fetch` before we did, so the request we record is not necessarily the request
-   * that leaves. Wrappers chain outermost-first: anything installed EARLIER sits below us and mutates
-   * after we have read `init.body`. An interceptor initialised before connect(), or a polyfill, does
-   * exactly that. Unfixable from inside the page — there is no "patch last" primitive — so it is
-   * declared instead, and a verdict over it reports partial coverage rather than implying we saw the wire.
+   * Something wrapped `fetch` first, so the recorded request is not necessarily the request that
+   * leaves. Wrappers chain outermost-first: anything installed EARLIER sits underneath and mutates
+   * the body after it has been read. An interceptor initialised before connect(), or a polyfill,
+   * does exactly that. Unfixable from inside the page — there is no "patch last" primitive — so it
+   * is declared instead, and a verdict over it reports partial coverage rather than implying the
+   * wire was seen.
    */
   WRAPPED_NETWORK: 'wrapped-network',
   /**

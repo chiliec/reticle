@@ -1,9 +1,8 @@
 /**
  * What to say when the dependency install fails.
  *
- * Split out of plan.ts, which was at the 1000-line backstop. A cohesive unit rather than an
- * arbitrary cut: it is prose about one step's failure modes, and the only thing it needs is which
- * package manager was used.
+ * A cohesive unit on its own: prose about one step's failure modes, and the only thing it needs is
+ * which package manager was used.
  */
 import { PackageManager } from '@/detect/detect.js';
 

@@ -4,7 +4,7 @@
  * `~/.reticle` holds the pid files, the daemon logs, the telemetry id and outbox, and every saved
  * flow. A daemon that cannot write it does not start — and until now said nothing useful about why.
  *
- * Measured on 2.6.0 with `chmod 555 ~/.reticle`:
+ * Reproduced with `chmod 555 ~/.reticle`:
  *
  *   the daemon did not come up on :4415 — nothing is listening on :4415 — no daemon is running
  *   see /…/.reticle/daemon-4415.log

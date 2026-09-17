@@ -137,9 +137,7 @@ export const MCP_CLIENTS: readonly ClientSpec[] = [
      *
      * It was project-scoped as `opencode.json`, and registration is gated on the marker already
      * existing, so a project that had never written one was skipped in SILENCE: the user has OpenCode
-     * installed, `init` says nothing about it, and the tools never appear. In the field every OpenCode
-     * user connected a client and produced zero tool calls and zero app connections, which is what
-     * "you were never wired" looks like from outside.
+     * installed, `init` says nothing about it, and the tools never appear.
      *
      * Path verified against a real install (OpenCode 1.3.17), not recalled. The extension is `.jsonc`,
      * which the old project marker could not have matched even where a project config existed. JSONC
@@ -158,11 +156,9 @@ export const MCP_CLIENTS: readonly ClientSpec[] = [
     id: McpClient.ANTIGRAVITY,
     label: 'Antigravity',
     /**
-     * Nine users connected an MCP client through Antigravity and drove nothing at all.
-     *
-     * `init` did not know this client, so they hand-wired a registration - the connections are in the
-     * field data, so they got that far - and then never ran `init`, never instrumented an app, and
-     * never called a tool. Nothing in that state tells anyone there is a second half.
+     * This client was unknown to `init`, so it was never wired: a hand-written registration reaches
+     * the tools without ever instrumenting an app, and nothing in that state says there is a second
+     * half.
      *
      * Path and shape from Google's documentation rather than recall: `mcpServers`, at
      * `~/.gemini/config/mcp_config.json`, and one file serves the 2.0 IDE, the CLI and the SDK. Same

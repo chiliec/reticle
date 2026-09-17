@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
  * This plugin has to load in a CommonJS config, and for one blunt reason: without
  * `"type": "module"` in the app's package.json, Vite bundles `vite.config.ts` as CJS and `require`s
  * it. An ESM-only plugin cannot be required, so the import `init` writes could not be loaded and the
- * dev server refused to start at all — the app served nothing until the user deleted our line.
+ * dev server refused to start at all — the app served nothing until the user deleted Reticle's line.
  *
  * Every Vite surface this repo owns sets `"type": "module"`, and the install gate scaffolds with
  * `npm create vite`, which emits it. So the failure needs an app OLDER than the scaffolds we

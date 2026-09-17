@@ -3,20 +3,16 @@ import { z } from 'zod';
 /**
  * The dev-server discovery registry — the return leg of `daemon-registry.ts`.
  *
- * A live daemon already drops `daemon-<port>.json` here so a build plugin can FIND it by projectId
- * rather than being told a port in two places. Nothing went the other way: the daemon, and `init`,
- * had no way to know a dev server existed at all.
+ * A live daemon drops `daemon-<port>.json` here so a build plugin can FIND it by projectId rather
+ * than being told a port in two places. This is the other leg: without it the daemon and `init`
+ * cannot know a dev server exists at all, and the commonest setup miss — a plugin added to a config
+ * the running dev server already read — is invisible from outside that process.
  *
- * That gap is why setup fails silently. Ten things must be true before a tool call can see anything,
- * and the commonest miss — a plugin added to a config the running dev server already read — is
- * invisible from outside the dev server's own process. So `init` wrote files, printed instructions,
- * and left; the person with an uninstrumented page was never told.
- *
- * The alternative was for `init` to run the dev command itself. It cannot: the command, the script
- * name, the package manager, the port and the framework are all things the user or their agent may
- * change, and a setup step that hardcodes any of them is a setup step that breaks on the project it
- * was most needed for. So nothing here starts anything or names a command. The plugin ALREADY runs
- * Node-side when the dev server boots; it announces there, and the reader waits.
+ * Nothing here starts anything or names a command. `init` cannot run the dev command itself: the
+ * command, the script name, the package manager, the port and the framework are all things the user
+ * or their agent may change, and hardcoding any of them breaks on the project it was most needed
+ * for. The plugin ALREADY runs Node-side when the dev server boots; it announces there, and the
+ * reader waits.
  *
  * With both legs present the diagnosis is three-way and every branch is an observed fact:
  *
@@ -87,11 +83,10 @@ export type DevServerEntry = z.infer<typeof DevServerEntrySchema>;
 /**
  * The live entries that belong to THIS project.
  *
- * Scoping is not a refinement here, it is the difference between a diagnosis and a wrong answer. A
- * dev server registry is machine-wide — one directory holds every app on the box — so "a dev server
- * is running" is satisfied by somebody else's app, by another package in the same monorepo, by
- * yesterday's terminal. Reported unscoped, `init` for app A told the user their dev server was wired
- * and handed them app B's URL: confident, specific, and about a project they were not setting up.
+ * Scoping is the difference between a diagnosis and a wrong answer. The registry is machine-wide —
+ * one directory holds every app on the box — so unscoped, "a dev server is running" is satisfied by
+ * somebody else's app, another package in the same monorepo, or yesterday's terminal, and `init`
+ * for app A hands the user app B's URL: confident, specific, and about the wrong project.
  *
  * Two ways to belong, because both are true and neither covers the other:
  *

@@ -81,7 +81,7 @@ import { InitFailure } from './diagnose/init-failure.js';
 import type { InitOutcome } from '@reticlehq/core/telemetry';
 
 import { resolveLockfiles } from './detect/lockfiles.js';
-// Re-exported so the existing import site (and its test block) keeps working after the split.
+// Re-exported: it moved to its own module, and every existing importer says `run.js`.
 export { resolveLockfiles };
 
 const NODE_MODULES_DIR = 'node_modules';
@@ -121,8 +121,8 @@ const MAX_SCAN_DEPTH = 5;
  * the app's and correctly reported finding nothing in them, so `init` said "no data-testid values
  * yet" about an app with several — which makes an agent go and write the ones already there. That
  * list had already grown once for a `frontend/` app, and a third report of the same shape is what
- * says the answer is not another name in a list. So: walk the app root, bounded by depth and by the
- * same file cap as before.
+ * says the answer is not another name in a list. So: walk the app root, bounded by depth and by a
+ * file count.
  */
 function readSourceFiles(io: InitIo): { path: string; source: string }[] {
   const out: { path: string; source: string }[] = [];

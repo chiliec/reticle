@@ -1,11 +1,10 @@
 /**
  * An empty tree over a crashed app looked exactly like an empty tree over a slow one.
  *
- * Filed from the field alongside the react-three-fiber crash: the `data-reticle-source` stamp threw
- * inside R3F's commit phase, React unmounted the whole tree, and the page went white.
- * `reticle_snapshot` answered `{ tree: "", nodes: 0 }` — the same answer it gives a page that has
- * not rendered yet — and the reporter spent a diagnosis pass establishing which one it was. Their
- * words: detecting a dead root "would have pointed me at the real cause immediately".
+ * When the `data-reticle-source` stamp threw inside react-three-fiber's commit phase, React
+ * unmounted the whole tree and the page went white. `reticle_snapshot` answers `{ tree: "",
+ * nodes: 0 }` — the same answer it gives a page that has not rendered yet — so establishing which
+ * one it is costs a diagnosis pass. Detecting a dead root names the real cause instead.
  *
  * This file already answers the same question for the causes it can see: `leanSkipped` and
  * `hiddenSkipped` exist so that an empty tree is a pointer at the READ rather than a claim about the

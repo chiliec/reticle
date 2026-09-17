@@ -103,11 +103,9 @@ export function buildDynamicTools(
       : {
           profile: {
             ...profile,
-            // This used to say `full` carries no meta-tools because it advertised everything
-            // directly. That stopped being true when the advertised surface was capped: no surface
-            // advertises the whole registry any more, so BOTH meta-tools are on every surface and
-            // reticle_run is always the way to the tail. The old wording would now send an agent
-            // away from the only tool that can reach half the registry.
+            // No surface advertises the whole registry, so wherever an unadvertised tail exists,
+            // `reticle_run` is the route to it. Wording that implies otherwise sends an agent away
+            // from the only tool that can reach half the registry.
             note:
               callable === undefined
                 ? `The surface is read once at daemon startup: set ${ADVERTISE_ALL_ENV}=1 and restart the daemon, or it has no effect. No surface advertises every tool: the advertised count is capped because editors budget tools across all connected MCP servers. Every tool listed here is callable through reticle_run { tool, args } whether or not it is advertised.`

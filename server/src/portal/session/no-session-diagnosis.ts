@@ -1,14 +1,7 @@
 /**
  * Turning "no browser session connected" from a dead end into a next action.
  *
- * This is the most consequential sentence in the product. Most sessions never call a Reticle tool at
- * all, and of the ones that do, a large share make exactly ONE call — usually `reticle_sessions` —
- * and stop. Almost none of those ever touched a browser, and this is the session error they hit. The
- * agent asks whether anything is connected, is told no, and leaves.
- *
- * The old message asked the agent to check two things it cannot see from where it stands ("is your
- * app running with the SDK enabled?", "does it point at this port?"). The daemon can actually tell
- * the three cases apart, and each has a different, concrete fix:
+ * The daemon can tell these cases apart, and each has a different, concrete fix:
  *
  *   - a session was here and went away    -> the tab closed or reloaded; reopen it
  *   - something is listening, never dialled, project not wired -> run `reticle init` in THAT app
@@ -170,20 +163,6 @@ export const SELF_RECOVERING_MARKER =
 const RETRY = SELF_RECOVERING_MARKER;
 
 /**
- * The way out that needs no human at all.
- *
- * `reticle_lease` opens a browser Reticle drives itself, instead of waiting for somebody's tab to
- * dial in. In the field it is the single strongest predictor of a session that works: sessions that
- * use it drive an order of magnitude more tool calls than those that do not, they account for a
- * disproportionate share of every bug found, and no single-call bounce has ever used one. It is also
- * advertised on no profile except `full`, so an agent only ever finds it if it already knew it
- * existed. Naming it HERE puts it in front of the agent at the one moment it is the answer, and
- * costs nothing on the turns when it is not.
- *
- * Only offered when the app is known to carry the SDK: leasing an uninstrumented app just burns a
- * browser and comes back `ready:false`.
- */
-/**
  * The no-shell path, for the branches where a BLIND lease would be wrong.
  *
  * A lease opens a URL, so offering one while nothing is listening is offering to open nothing —
@@ -212,6 +191,12 @@ function leaseAdvice(base: string, facts: NoSessionFacts): string {
   return caveat === undefined ? base : `${base} ${caveat}`;
 }
 
+/**
+ * The way out that needs no human at all.
+ *
+ * Only offered when the app is known to carry the SDK: leasing an uninstrumented app just burns a
+ * browser and comes back `ready:false`.
+ */
 const SELF_SERVE =
   'You do not have to wait for the human: reticle_lease {action:"acquire", url} opens a browser ' +
   'Reticle drives itself, and returns a sessionId you can use immediately (reach it with ' +
@@ -258,13 +243,11 @@ const NON_LOCALHOST_GATE =
   "message and pass both in the app's reticle.connect().";
 
 /**
- * The causes that actually occurred in the field, for an app that is wired and still silent.
+ * The causes for an app that is wired and still silent.
  *
  * Every one of these is indistinguishable from "no SDK installed" from every surface an agent can
- * reach, and the old message modelled none of them — it modelled a missing SDK and a wrong port, and
- * across a batch of reports on four apps the port was right every time. An agent that is told the
- * wrong differential does not merely waste calls: several of these reports end with the agent
- * telling its human that Reticle was not set up, on an app that was correctly wired.
+ * reach, so a message that names only a missing SDK and a wrong port hands the agent the wrong
+ * differential — which ends with it reporting Reticle as unwired on an app that is correctly wired.
  */
 const REAL_CAUSES =
   'Causes that produce exactly this and are NOT a port problem, in the order they actually occur: ' +
@@ -287,9 +270,8 @@ const NUXT_STALE_BUNDLE =
 /**
  * The lead when durable state proves this project has connected on this port before.
  *
- * The daemon used to contradict itself inside one response: `reticle_sessions` said a session HAD
- * connected earlier "so the wiring is correct", and a lease seconds later said the usual cause was a
- * port mismatch. It already held the evidence against its own hint.
+ * Durable state outranks this process: a daemon that has served nothing since boot must not name a
+ * port mismatch as the likely cause when it holds a record of this project connecting on this port.
  */
 const RESTARTED_LEAD =
   'no browser session connected. This daemon has served none since it started, but it is a NEW ' +
@@ -310,15 +292,10 @@ const SCANNED_PORTS = [...DEV_SERVER_PORTS].join(', ');
 /**
  * How to say "open the app" to an agent that may have no `reticle` binary.
  *
- * These strings are read by an AGENT that is already blocked, and they used to name a bare
- * `reticle open <url>`. Reticle registers its MCP server as `npx @reticlehq/server mcp`, so the
- * ordinary install puts NOTHING on PATH — the binary those messages assume is missing on most
- * machines that ever read them.
- *
- * Reported from Windows, where a half-failed plugin install left the MCP server registered and all
- * the tools advertised while no CLI existed on disk. The agent followed the remediation, found no
- * `reticle`, tried `npx @reticlehq/reticle` (a package that does not exist and 404s), and had no
- * path forward at all. The remedy has to be a command that works from a bare npm environment.
+ * Reticle registers its MCP server as `npx @reticlehq/server mcp`, so the ordinary install puts
+ * NOTHING on PATH: a remedy naming a bare `reticle` binary is unrunnable on most machines that read
+ * it — and a half-failed install can advertise every tool while no CLI exists on disk. So every
+ * remedy here has to be a command that works from a bare npm environment.
  *
  * Init-time messages keep the short form on purpose: there, the reader is already running the CLI.
  */
@@ -346,12 +323,10 @@ function slowListenerClause(facts: NoSessionFacts): string {
 }
 
 /**
- * The commonest first-run state there is, and until #320 the message named it nowhere.
+ * The commonest first-run state there is (#320).
  *
- * Reticle sees a page only once a browser has LOADED it. A wired app that nobody has opened produces
- * exactly the same empty list as a broken install, and the reporter who hit it spent an afternoon
- * re-verifying their init output, diffing their Vite config and curling their own page before
- * discovering that one `reticle open` fixed it instantly.
+ * Reticle sees a page only once a browser has LOADED it, so a wired app that nobody has opened
+ * produces exactly the same empty list as a broken install.
  */
 const OPEN_THE_APP =
   'Reticle only ever sees a page that is LOADED, so the commonest cause by a distance is that no ' +
@@ -361,11 +336,10 @@ const OPEN_THE_APP =
 /**
  * What a machine-wide port scan can and cannot say.
  *
- * It finds listeners anywhere on localhost and knows nothing about who owns them. The old wording
- * spent that as evidence — "something IS listening on port 5173, 8000, 8080, SO a server is up and
- * has never dialled this daemon" — about three ports that belonged to three other repositories on
- * the reporter's machine, while their own app sat on a port the scan does not cover. On any machine
- * running more than one instrumented repo, which is the normal case here, that inference is unsound.
+ * It finds listeners anywhere on localhost and knows nothing about who owns them. On a machine
+ * running more than one repo — the normal case — "something is listening, so this project's server
+ * is up and never dialled" is unsound: those ports can belong to anything, and the app's own port
+ * may not be in the scanned set at all.
  */
 function unattributedListeners(listening: readonly number[]): string {
   if (0 === listening.length) {
@@ -504,10 +478,9 @@ function alreadyListeningClause(listening: readonly number[]): string {
 /**
  * The diagnosis, and the CODE for the branch that produced it.
  *
- * The prose has always been well-ranked and it was the only output, so the population that installs
- * Reticle and never gets an app connected arrived as one undifferentiated silence. "Restarted the
- * dev server and it still did not connect" and "never started the app" need opposite fixes and were
- * the same absence (#615).
+ * The prose alone is not enough to tell the branches apart afterwards: "restarted the dev server
+ * and it still did not connect" and "never started the app" need opposite fixes and read as the
+ * same absence (#615).
  *
  * One function returning both, rather than a classifier beside the writer. A reason computed
  * separately would drift from the sentence the user is actually shown, and then the metric would
@@ -543,16 +516,12 @@ export function explainNoSession(facts: NoSessionFacts): {
   }
 
   if (everConnected) {
-    // A reaped lease first, because it is the one cause we have POSITIVE evidence for. Reported
-    // from the field (#157): an aged-out lease produced "the tab was closed … ask the human to
-    // reopen the app", which is wrong on every clause — there is no human tab, and the recovery it
-    // names is unavailable to the caller while the one that works goes unmentioned. The reporter
-    // went looking for a port mismatch.
+    // A reaped lease first, because it is the one cause with POSITIVE evidence behind it. Calling
+    // it "the tab was closed, ask the human to reopen the app" is wrong on every clause (#157):
+    // there is no human tab, and the recovery that works goes unmentioned.
     //
-    // The hedge that used to close this branch ("if you were driving a human tab instead…") is
-    // gone with the reason for it. `leaseExpired` was a lifetime count of reaps, so it could not
-    // tell which session went and had to cover both; it now names the session that actually
-    // departed (#611), so this branch is only reached when the thing that vanished WAS the lease.
+    // No hedge, because none is needed: `leaseExpired` names the session that actually departed
+    // (#611), so this branch is only reached when the thing that vanished WAS the lease.
     if (true === facts.leaseExpired) {
       return reason(
         NoSessionReason.LEASE_EXPIRED,
@@ -641,12 +610,10 @@ export function explainNoSession(facts: NoSessionFacts): {
         'running: start it yourself in the background with the command in `next_action` — it is read ' +
         "from this project's own scripts, and says so rather than guessing when there is none — tell " +
         'the human in one line that it is running, then open the app in a browser. ' +
-        // The caveat is here rather than omitted because the scan is NARROW, and the old sentence
-        // spent its confidence as though an empty result were proof of absence. Reported twice: a
-        // scripted drive of 2.5.0 asserted the app was not running while it served 200 on :7699, and
-        // an agent was told nothing was listening while a dev server answered on :5000 under a custom
-        // hostname. The common defaults have since been added to the scanned set, which narrows the
-        // gap and cannot close it — anything passed to `--port` is still invisible.
+        // The caveat is here rather than omitted because the scan is NARROW: an empty result is not
+        // proof of absence. Reported twice, once against a server answering 200 on :7699 and once
+        // against one on :5000 under a custom hostname. The common defaults are in the scanned set,
+        // which narrows the gap and cannot close it — anything passed to `--port` is invisible.
         'That scan is narrow, so it is not proof: a server on any other port is invisible to it. If ' +
         // Deliberately NOT offering reticle_lease here, and a test pins that: a lease opens a URL, and
         // if nothing is listening there is nothing at any URL to open. Asking for the real one is the

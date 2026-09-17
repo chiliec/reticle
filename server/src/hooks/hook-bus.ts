@@ -3,9 +3,7 @@
  *
  * Two surfaces sit on this and neither is the mechanism: `onReticleEvent` hands the payload to code
  * running in this process, and the command runner spawns whatever `.reticle/hooks.json` names. They
- * are adapters. Building only one of them would have meant building this anyway, which is why both
- * shipped together rather than one now and one "later" — later is where the second design goes to
- * be different from the first.
+ * are adapters.
  *
  * ── THE ONE RULE ────────────────────────────────────────────────────────────────────────────────
  * A HOOK MUST NEVER BREAK OR SLOW A VERIFICATION. The verdict is the product; a user's notification
@@ -15,8 +13,7 @@
  * hangs is left hanging, and the caller has already moved on either way.
  *
  * This is the same discipline the sync daemon states for itself — "nothing here is awaited by a tool
- * call" — and for the same reason. It is stated twice because they are two mechanisms that each had
- * to choose, not one rule inherited from a shared base.
+ * call" — and for the same reason.
  *
  * ── WHY A MODULE-LEVEL BUS ──────────────────────────────────────────────────────────────────────
  * Deliberately process-global, unlike the snapshot cache which was just moved off module scope for

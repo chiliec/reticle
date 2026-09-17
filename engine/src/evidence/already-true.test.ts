@@ -1,7 +1,7 @@
 /**
  * `verified: "yes"` for a navigation that never happened.
  *
- * Measured in the field, on a Next app-router fixture:
+ * On a Next app-router page:
  *
  *   act_and_wait { ref: <"Parallel Routes" link>, until: { kind: 'text', contains: 'Parallel Routes' } }
  *   -> verdict at 478ms, verified: "yes", routeChanges: 0

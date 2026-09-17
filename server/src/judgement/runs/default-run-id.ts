@@ -4,8 +4,8 @@ import { asRunId, type RunId } from '@reticlehq/core';
 /**
  * The default run-id generator — a branded uuid.
  *
- * A leaf on purpose. It used to live in `runner-port.ts`, which imports the whole flow-replay stack;
- * `verification-sync.ts` wanted this one function and got a cycle with it.
+ * A leaf on purpose: `verification-sync.ts` wants this one function, and reaching it through the
+ * flow-replay stack would be a cycle.
  */
 export function defaultRunId(): RunId {
   return asRunId(randomUUID());

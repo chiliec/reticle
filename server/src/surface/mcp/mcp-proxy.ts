@@ -670,12 +670,11 @@ export function startMcpProxy(
        * ONE reconnect per connect attempt, whoever notices the failure first.
        *
        * A dead socket emits on BOTH halves — `req`'s `error` and the response's `aborted`/`close`
-       * for the same TCP death — and this latch used to live inside the response callback, so
-       * `req.on('error')` scheduled a SECOND reconnect that the drop path could not see. Two chains
-       * came back, both died the same way, and both split again. The retry budget cannot stop that
-       * either: any one chain reaching an `endpoint` frame resets `attempts` to zero for all of
-       * them. It is the runaway behind a proxy log large enough to fill a disk, and the doubling is
-       * visible in the field logs as roughly two `reconnecting` lines per `reconnected` one.
+       * for the same TCP death — so a latch inside the response callback lets `req.on('error')`
+       * schedule a SECOND reconnect that the drop path cannot see. Two chains come back, both die the
+       * same way, and both split again. The retry budget cannot stop that either: any one chain
+       * reaching an `endpoint` frame resets `attempts` to zero for all of them. That runaway is what
+       * grows a proxy log large enough to fill a disk.
        */
       let settled = false;
       /**

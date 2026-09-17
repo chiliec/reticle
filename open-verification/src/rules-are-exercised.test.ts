@@ -65,10 +65,9 @@ const subject = (over: Partial<SubjectRef> = {}): SubjectRef => ({
 /**
  * Built without a cast, deliberately.
  *
- * The first version of this fixture invented the shape -- `id`, `observations`, a bare
- * `provenance.class` -- and an `as Evidence` cast made every test pass. `tsc` rejected it, which
- * is the only reason the fixture is right: a cast in a test fixture is a false green waiting to
- * be believed, and this one was mine.
+ * An `as Evidence` cast makes every test pass over an invented shape. `tsc` is the only thing
+ * that keeps the fixture honest, so a cast in a test fixture is a false green waiting to be
+ * believed.
  */
 const evidence = (cls: ProvenanceClass = ProvenanceClass.OBSERVED, source = 'probe'): Evidence => ({
   observation: { id: `o-${source}`, window: 'w1', channel: ChannelId.NET, at: 1, summary: 'net' },

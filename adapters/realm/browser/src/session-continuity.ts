@@ -1,10 +1,10 @@
 /**
  * Keep a tab's session id across a reload.
  *
- * The id was minted fresh on every `connect()`. A reload is a new document, so the page came back as
- * a NEW session while the agent still held the old id — and every call after
- * `reticle_navigate { reload: true }` was refused with "no browser session connected". Reported on 6
- * of 6 apps; a reload is the most ordinary thing an agent does.
+ * Minting the id fresh on every `connect()` is not enough: a reload is a new document, so the page
+ * comes back as a NEW session while the agent still holds the previous id, and every call after
+ * `reticle_navigate { reload: true }` is refused with "no browser session connected". A reload is the
+ * most ordinary thing an agent does.
  *
  * `sessionStorage` is exactly the right scope: it survives reloads and same-tab navigations, and is
  * NOT shared with another tab of the same app — so two tabs stay two sessions, which is what the

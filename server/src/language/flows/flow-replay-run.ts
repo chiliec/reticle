@@ -259,34 +259,16 @@ function arrivedSuccessor(
 }
 
 /**
- * Replay's half of the FlowFile contract: navigate to the flow's `startPath` before step 1.
- *
- * A full-page load tears down the session socket, so the navigation must happen here — before any
- * step runs — and the replay continues on the session the SDK reconnects as (found via the same
- * tombstone rebind that lets `resolve(oldId)` answer after any navigation). Best-effort by design:
- * when the flow carries no startPath, the tab is already there, the current route is unobservable,
- * the navigation is refused, or the SDK never reconnects in the window, it returns undefined and
- * replay proceeds on the connected session as before — with startPathMismatchHint turning any
- * resulting drift into an actionable next move rather than a mystifying one.
- */
-/**
  * Can step 1 start from where the tab already is?
  *
- * `startPathMismatchHint` states the premise the navigation below exists to serve: on the wrong
- * route "the anchor simply isn't on this page yet". That is the condition worth a page load — and
- * it was never the condition checked. `arriveAtStartPath` fired on a route mismatch ALONE, so a
- * flow whose first anchor lives somewhere persistent (a sidebar, a header, a nav rail — present on
- * every route) was navigated for a problem it did not have.
+ * A route mismatch is NOT on its own a reason to navigate. The condition worth a page load is that
+ * the first anchor is not reachable from here — and a flow whose first anchor lives somewhere
+ * persistent (a sidebar, a header, a nav rail) is reachable from every route.
  *
- * A navigation is a full page load, which tears the session down and brings the app back in its
- * cold state. For the ordinary case of a flow recorded after signing in, that cold state is the
- * LOGIN SCREEN: step 1 then reports its anchor missing and names the component that holds it, which
- * is a correct sentence about a file that is completely fine. Found by the benchmark, on two flows
- * with identical steps where the first replayed clean and the second — run after it, with the tab
- * drifted off `/` — did not.
- *
- * So the question is asked directly. A best-effort step that can leave the caller WORSE off than
- * skipping it is not best-effort; checking first is what makes the description true.
+ * Navigating anyway is expensive in the one direction that matters: a full page load tears the
+ * session down and brings the app back COLD, which for a flow recorded after signing in is the
+ * login screen. Step 1 then reports its anchor missing and blames a file that is completely fine.
+ * A best-effort step that can leave the caller WORSE off than skipping it is not best-effort.
  *
  * Unresolvable either way (no anchor we can query, a failed query) reads as "cannot tell", and the
  * navigation goes ahead — the pre-existing behaviour, and the safe direction for a check whose whole
@@ -307,6 +289,17 @@ async function firstStepResolvesHere(
   }
 }
 
+/**
+ * Replay's half of the FlowFile contract: navigate to the flow's `startPath` before step 1.
+ *
+ * A full-page load tears down the session socket, so the navigation must happen here — before any
+ * step runs — and the replay continues on the session the SDK reconnects as (found via the same
+ * tombstone rebind that lets `resolve(oldId)` answer after any navigation). Best-effort by design:
+ * when the flow carries no startPath, the tab is already there, the current route is unobservable,
+ * the navigation is refused, or the SDK never reconnects in the window, it returns undefined and
+ * replay proceeds on the connected session as before — with startPathMismatchHint turning any
+ * resulting drift into an actionable next move rather than a mystifying one.
+ */
 export async function arriveAtStartPath(
   sessions: SessionManager,
   session: StartPathSession & {

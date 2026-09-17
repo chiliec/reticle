@@ -1,11 +1,8 @@
 /**
  * The two rules every panel that builds HTML from outside text has to obey.
  *
- * Extracted from `presenter-report.ts` when a second panel needed them. Not for tidiness: both are
- * SECURITY rules with an incident behind them, and a security rule copied into a second file is a
- * rule that will be fixed in one of them. The report panel was the only caller for as long as it was
- * the only panel rendering app-derived text; it stopped being that, and the right response to a
- * second caller is one implementation rather than two.
+ * Shared rather than copied per panel: both are SECURITY rules, and a security rule that exists in
+ * two files is a rule that gets fixed in one of them.
  */
 
 /**

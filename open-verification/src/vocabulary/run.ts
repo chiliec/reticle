@@ -16,8 +16,7 @@ export const OVP_VERSION = '1.0' as const;
  * This is what crosses the wire, lands in CI, and gets attached to a deploy. Everything above is
  * the vocabulary; this is the sentence.
  *
- * The four properties that distinguish it from every test report that exists, and the reason a
- * consumer would prefer it:
+ * The four properties that distinguish it from an ordinary test report:
  *
  *   - every claim records whether it was declared BEFORE the action, so a check can be told from
  *     a rationalisation;
@@ -26,8 +25,6 @@ export const OVP_VERSION = '1.0' as const;
  *     verifier could not see rather than assuming it saw everything;
  *   - every subject carries an EPOCH, so evidence about code that has since been rewritten cannot
  *     answer for code that replaced it.
- *
- * A reader who checks nothing else should check those four.
  */
 /**
  * A constraint that did not hold.

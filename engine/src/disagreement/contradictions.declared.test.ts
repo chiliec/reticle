@@ -1,7 +1,7 @@
 /**
  * A verdict must be decided by the channel the caller asked about.
  *
- * Both cases here were measured in the field on correct apps:
+ * Both cases below are correct apps reported wrongly:
  *
  *  - an error path verified by declaring the failing request in the oracle — `{ net, POST,
  *    /api/v1/auth/login, status: 500 }` plus the right message present and the wrong one absent —

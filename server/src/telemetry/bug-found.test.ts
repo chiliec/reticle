@@ -3,9 +3,8 @@ import { bugsInResult, routeOf } from './bug-found.js';
 import { BugAttribution, BugSource, ContradictionKind, fingerprintFinding } from '@reticlehq/core';
 
 /**
- * The outcome metric — the only number that can honestly be published or shown to an investor,
- * because it counts what Reticle did FOR users rather than what users did with it. Which makes it the
- * one number that has to be exact: an inflated "bugs found" is worse than none.
+ * The outcome metric: it counts what Reticle did FOR users rather than what users did with it, which
+ * makes it the one number that has to be exact. An inflated "bugs found" is worse than none.
  */
 describe('bugsInResult', () => {
   it('counts a contradiction as a false green when the assertion PASSED', () => {

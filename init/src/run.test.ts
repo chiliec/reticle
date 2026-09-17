@@ -53,7 +53,7 @@ function memoryIo(
    * must use that platform's separator, and this repo has already shipped a Windows path bug for
    * exactly the opposite reason. But `join()` yields backslashes there, while these fixtures are
    * written with forward slashes, so on Windows a lookup missed and the Cursor step silently never
-   * ran. The test was the thing that was not portable, on a platform a large share of users are on.
+   * ran. The test was the thing that was not portable, on a platform Reticle supports.
    */
   const norm = (p: string): string => p.replace(/\\/g, '/');
   /**
@@ -62,9 +62,8 @@ function memoryIo(
    * `p.startsWith('/')` is a POSIX-only question, and production reaches this through `join()`,
    * which yields `\app\CLAUDE.md` on Windows. That is absolute and did not look it, so the harness
    * prefixed it with the scoped app root and produced `src/admin//app/CLAUDE.md`: two tests failed on
-   * Windows only, about paths production gets right. Same shape as the `norm` fix above, on the
-   * platform that is most of our users, and the second time this harness has been the thing that was
-   * not portable.
+   * Windows only, about paths production gets right. Same shape as the `norm` fix above, and the
+   * second time this harness has been the thing that was not portable.
    */
   const isAbsolute = (p: string): boolean => /^([A-Za-z]:)?\//.test(norm(p));
   const key = (p: string): string =>
@@ -133,7 +132,7 @@ describe('resolveLockfiles — package-manager detection in a monorepo', () => {
   it('walks up to the workspace-root lockfile when the sub-package has none', () => {
     // Normalised, for the reason the memory io above is: resolveLockfiles walks with `join`, which
     // yields backslashes on Windows, and a literal POSIX comparison never matches there — so the
-    // walk "failed" on a platform a large share of users are on, while passing everywhere else.
+    // walk "failed" on Windows while passing everywhere else.
     const io = { exists: (p: string) => '/repo/pnpm-lock.yaml' === p.replace(/\\/g, '/') };
     const set = resolveLockfiles(
       new Set(['package.json', 'vite.config.ts']),
@@ -315,8 +314,7 @@ describe('runInit', () => {
     runInit(OPTS, io);
     // Normalised for the reason this file's own harness is: the redirect builds the path with
     // `join()`, which yields backslashes on Windows, so a literal POSIX comparison passes
-    // everywhere and fails on the platform that is two thirds of our users. CI caught exactly that
-    // on the first version of this test.
+    // everywhere and fails on Windows. CI caught exactly that on the first version of this test.
     const printed = io.lines.join('\n').replace(/\\/g, '/');
     expect(printed).toContain('frontend');
     expect(
@@ -448,8 +446,8 @@ describe('runInit', () => {
     const call = io.execCalls[0];
     expect(call?.command).toBe('pnpm');
     expect(call?.args.slice(0, 2)).toEqual(['add', '-D']);
-    // Pinned: a stale registry cache once handed pnpm 2.2.1 while npm took 2.3.0 in the next
-    // project, and a version-skewed SDK against a newer daemon is the -32000 path.
+    // Pinned: a stale registry cache once handed pnpm an older release while npm took the current
+    // one in the next project, and a version-skewed SDK against a newer daemon is the -32000 path.
     expect(call?.args[2]).toMatch(/^@reticlehq\/react@\d+\.\d+\.\d+/);
     expect(call?.args[3]).toMatch(/^@reticlehq\/vite-plugin@\d+\.\d+\.\d+/);
   });
@@ -989,7 +987,7 @@ describe('runInit — the /reticle command', () => {
 /**
  * For ~48 hours after every release, a pnpm project with `minimumReleaseAge` could not install
  * Reticle AT ALL: `init` pins the SDK to the CLI's version and pnpm refuses anything younger than
- * its window. Measured against the live 2.4.0, three minutes after publish.
+ * its window. Reproduced against a live release, three minutes after publish.
  *
  * The pin exists to stop SILENT version skew, so it cannot simply be dropped — but a blocked install
  * is worse than a reported one. Fall back to unpinned, and say so.
@@ -1048,8 +1046,8 @@ describe('runInit — a refused pin falls back instead of blocking the install',
  * printing the project directory in the header. This is the first: nothing ever checked.
  *
  * It is the same shape as #139 (`✓ Capabilities + store` for a module nothing imported) and the same
- * shape as the Next.js install that reported clean and connected 0% of the time. A checkmark that
- * cannot fail is not a report, it is decoration — and this one is the first thing a new user reads.
+ * shape as the Next.js install that reported clean and never connected. A checkmark that cannot fail
+ * is not a report, it is decoration — and this one is the first thing a new user reads.
  *
  * The write path itself is not suspected. The point is that no arrangement of the filesystem — a
  * read-only mount, a full disk, an antivirus quarantining a new dotfile, a path the process cannot
@@ -1137,8 +1135,8 @@ describe('the closing hint names the MCP reload before it tells you to ask the a
 
   it('names a command that CONFIRMS the install, not one that merely asks', () => {
     // `init` writes files and stops. The install is not finished until an app carrying the SDK has
-    // dialled the daemon, and this is the last instruction most people read — so it has to point at
-    // the thing that can answer, which since 2.7.0 also says WHY when the answer is no.
+    // dialled the daemon, and this is the last instruction a user reads — so it has to point at the
+    // thing that can answer, and that also says WHY when the answer is no.
     const io = memoryIo(VITE_FILES);
     runInit(OPTS, io);
     const out = io.lines.join('\n');

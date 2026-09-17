@@ -117,10 +117,9 @@ if(typeof prev==='function')return prev.apply(this,arguments);};}
  * before the plugin says so.
  *
  * The source is a function of the port, the projectId, the pairing token and whether the app has a
- * `reticle-dev` module. In a healthy session that settles almost immediately: the daemon starting
- * after Vite is one change, a dev module being created is another. Anything past a handful means
- * an input is oscillating, and an oscillating connect module is what makes Vite re-resolve it on
- * every page load — the reload loop this counter exists to make audible instead of mysterious.
+ * `reticle-dev` module — in a healthy session, the daemon starting after Vite is one change and a
+ * dev module appearing is another. Past a handful, an input is oscillating, which makes Vite
+ * re-resolve the module on every page load: the reload loop this counter makes audible.
  */
 const CONNECT_CHURN_LIMIT = 5;
 
@@ -183,27 +182,21 @@ export interface ReticleVitePluginOptions {
    * Off by default because a body is the one part of a request that routinely carries a card
    * number, a token or a customer's address, and the daemon journals what it is told.
    *
-   * Reachable here because the plugin is the only `connect()` most apps ever have, and calling
-   * `connect()` a second time is a no-op — so without this option a body is unreachable for every app
-   * wired the recommended way. A wrong amount in a request body is invisible to every other channel.
+   * Exposed HERE because the plugin is the only `connect()` most apps have and a second `connect()`
+   * is a no-op, so an SDK option the plugin cannot pass is an option that does not exist.
    *
-   * Also settable as `VITE_RETICLE_CAPTURE_BODIES=1`, so it can be turned on for one debugging
-   * session without editing vite.config.
+   * Also settable as `VITE_RETICLE_CAPTURE_BODIES=1`.
    */
   captureNetworkBodies?: boolean;
   /**
    * Retain a FAILED request's response body even with `captureNetworkBodies` off. Default true.
    *
-   * Reachable here for the reason `captureNetworkBodies` is: the plugin is the only `connect()`
-   * most apps ever have. Also settable as `VITE_RETICLE_NO_ERROR_BODIES=1`, which turns it OFF --
-   * the inverse of the other env vars, because this is the one that defaults on (#800).
+   * Also settable as `VITE_RETICLE_NO_ERROR_BODIES=1`, which turns it OFF -- the inverse of the
+   * other env vars, because this is the one that defaults on (#800).
    */
   captureErrorBodies?: boolean;
   /**
    * Make Reticle's OWN presenter visible to snapshots and queries. CONTRIBUTORS ONLY.
-   *
-   * Reachable here for the same reason `captureNetworkBodies` is: the plugin is the only `connect()`
-   * most apps ever have, so an SDK option the plugin cannot pass is an option that does not exist.
    *
    * The presenter is hidden from every tool by design — an agent that can drive Reticle's own
    * interface can fabricate its own impact report. The cost is that a HUD change is the only kind of
@@ -219,9 +212,7 @@ export interface ReticleVitePluginOptions {
    * Off by default: the SDK refuses outside localhost so a page on the open internet cannot be
    * instrumented by a bridge it happened to reach. Turn it on for a dev server that CANNOT be served
    * on localhost — a host-based multi-tenant frontend, a white-label app resolving the tenant from
-   * the `Host` header, anything with cookie-scoped auth on a custom dev hostname. Without it those
-   * apps cannot use Reticle at all, because the plugin is the only `connect()` they have and a
-   * second, hand-written one is a no-op.
+   * the `Host` header, anything with cookie-scoped auth on a custom dev hostname.
    *
    * NOT SUFFICIENT ON ITS OWN — a pairing token is also required. `connectionPolicy` in
    * `@reticlehq/browser` refuses a non-localhost connect with "a pairing token is required outside
@@ -230,8 +221,7 @@ export interface ReticleVitePluginOptions {
    * started daemon is normally all it takes; pass `token` yourself only when the daemon's file is
    * unreachable. A non-loopback BRIDGE additionally has to be `wss://`.
    *
-   * Also settable as `VITE_RETICLE_ALLOW_NON_LOCALHOST=1`, so it can be turned on for one session
-   * without editing vite.config.
+   * Also settable as `VITE_RETICLE_ALLOW_NON_LOCALHOST=1`.
    */
   allowNonLocalhost?: boolean;
   /**
@@ -521,10 +511,9 @@ function connectArgs(options: ReticleVitePluginOptions): string {
 /**
  * The conventional app-side dev module: `registerStore` / `registerCapabilities` live here.
  *
- * It is imported by CONVENTION rather than by patching the app's entry file. The connect is injected
- * into a virtual module, so there is nowhere for a user to add these calls without `init` editing
- * `src/main.tsx` — an edit to the file people actually own, for something that is opt-in enrichment.
- * Convention costs one `existsSync` and leaves their entry untouched.
+ * Imported by CONVENTION rather than by patching the app's entry file: the connect is injected into
+ * a virtual module, so the alternative is `init` editing `src/main.tsx` — a file the user owns — for
+ * something that is opt-in enrichment. Convention costs one `existsSync`.
  */
 export const RETICLE_DEV_MODULE_CANDIDATES = [
   'src/reticle-dev.ts',
@@ -544,14 +533,11 @@ export function findDevModule(root: string, exists: (p: string) => boolean): str
 /**
  * Which SDK package this app actually has, and whether `install()` applies.
  *
- * The injected connect used to name `@reticlehq/react` unconditionally. That is right for a React
+ * The injected connect must NOT name `@reticlehq/react` unconditionally. That is right for a React
  * app and fatal for any other: `reticle init` gives a Vue or Svelte codebase the framework-neutral
  * `@reticlehq/browser` — deliberately, because a package named `@reticlehq/react` with `react` in
- * its peers has no business in a Vue app — and the injected import then names a package that is not
- * installed, so nothing connects and the page reports no session with no obvious cause.
- *
- * Measured end to end on a pristine `npm create vite --template vue` app: init wrote every file
- * correctly and the tab never dialled the daemon, because of this one specifier.
+ * its peers has no business in a Vue app — and the injected import would then name a package that is
+ * not installed, so nothing connects and the page reports no session with no obvious cause.
  *
  * The React kit WINS when both resolve: it is a superset (it re-exports the sensor and adds the
  * adapter), so an app that has it wants component identity. `install()` is the adapter's alone and
@@ -721,42 +707,31 @@ export function reticle(options: ReticleVitePluginOptions = {}): ReticleVitePlug
     /**
      * Declare the SDK itself and the optimizer cache fingerprint.
      *
-     * The browser SDK used to need extra CJS query-engine deps here. It no longer imports that
-     * second accessibility engine, so keeping those names would make Vite pre-bundle packages the
-     * app may not have and blame Reticle for a false `Failed to resolve dependency` warning.
+     * The SDK itself only. It does not import a second accessibility engine, and naming CJS deps it
+     * does not use would make Vite pre-bundle packages the app may not have, then blame Reticle for a
+     * false `Failed to resolve dependency` warning.
      */
     config(config: ViteUserConfigLike) {
       // Everything below asks what the APP has installed, so every lookup is rooted here and never
-      // at the plugin's own location. Vite defaults an omitted root to the cwd; so do we.
+      // at the plugin's own location. Vite defaults an omitted root to the cwd, and so does this.
       const appRoot = config.root ?? process.cwd();
       const optimizerKey = optimizerOptionsKey(viteMajor(appRoot));
       return {
         // Keep the daemon's journal out of the dev server's watcher.
         //
         // The daemon writes `.reticle/` into the PROJECT root — session journals, and `ambient.json`
-        // rewritten atomically as `ambient.json.tmp` + rename on a live session. Vite watches the
-        // project root and does not ignore that directory, so every journal write read as a project
-        // file changing and Vite answered with a full page reload.
+        // rewritten atomically as `ambient.json.tmp` + rename on a live session. Unignored, every
+        // journal write reads as a project file changing and Vite answers with a full page reload,
+        // which is a loop with no exit: page loads -> SDK connects and streams events -> daemon
+        // journals them -> Vite reloads the page -> SDK reconnects.
         //
-        // That is a loop with no exit: page loads -> SDK connects and streams events -> daemon
-        // journals them -> Vite reloads the page -> SDK reconnects -> more events. It ran several
-        // times a second for as long as the dev server was up, and the damage was total but
-        // misattributed: every ref went stale, every act_and_wait died mid-flight, and the log
-        // filled with connect/disconnect pairs that looked like a flapping SDK rather than a
-        // watcher chasing its own tail.
-        //
-        // A RegExp, not a glob, and that is the whole difference between this working and not.
-        // chokidar dropped glob support in v4 — Vite 7+ ships v4/v5, where a pattern like
-        // `**/.reticle/**` is silently accepted and matches nothing. MEASURED against the chokidar
-        // this repo resolves: with the glob, a write to `.reticle/ambient.json` still fires; with
-        // this RegExp it does not, while a normal file still does. Vite's own defaults are globs and
-        // have the same problem, which is why it is not safe to copy their shape here.
+        // A RegExp, NOT a glob: chokidar dropped glob support in v4, and Vite 7+ ships v4/v5, where
+        // `**/.reticle/**` is silently accepted and matches nothing. Vite's own defaults are globs
+        // and have the same problem, so their shape is not safe to copy here.
         //
         // Anchored on `^` or a separator so it matches the directory and not a file that merely ends
         // in those characters, and both separators are accepted because chokidar reports the path in
-        // the platform's own form.
-        //
-        // Appends to the app's list rather than replacing it, so nothing it already excluded is lost.
+        // the platform's own form. Appends to the app's list rather than replacing it.
         server: {
           watch: {
             ignored: mergeIgnored(config.server?.watch?.ignored, JOURNAL_IGNORE),
@@ -764,8 +739,8 @@ export function reticle(options: ReticleVitePluginOptions = {}): ReticleVitePlug
         },
         // Expose the daemon's pairing token to hand-written connects in the same Vite app. The
         // plugin's own injected connect gets the token directly, but a connect the USER writes —
-        // SvelteKit's client hook, a custom entry — had no way to reach a file only Node can read,
-        // so it called connect() with no credential and the bridge answered "authentication
+        // SvelteKit's client hook, a custom entry — cannot reach a file only Node can read, so it
+        // would call connect() with no credential and the bridge would answer "authentication
         // failed". Empty until the daemon has provisioned one; the page reloads once it has.
         define: {
           ...(config.define ?? {}),
@@ -864,35 +839,31 @@ export function reticle(options: ReticleVitePluginOptions = {}): ReticleVitePlug
      * Serve the connect module fresh, every time.
      *
      * `load` reads the daemon's pairing token at serve time precisely because the daemon may start
-     * after the dev server — but Vite caches the module it produced, and answers every later request
-     * from that cache, INCLUDING after a full page reload. So a dev server started first served a
-     * tokenless connect module once and then kept serving it: the SDK got a 1008 `authentication
-     * failed`, stopped retrying (correctly — a wrong token does not fix itself), and `reticle status`
-     * showed no session while the page demonstrably contained `/@reticle-connect`. Only restarting
-     * the dev server cleared it, which is not a step anybody guesses.
+     * after the dev server — but Vite caches the module it produced and answers every later request
+     * from that cache, INCLUDING after a full page reload. A dev server started first therefore keeps
+     * serving a tokenless connect module: the SDK gets a 1008 `authentication failed` and stops
+     * retrying (correctly — a wrong token does not fix itself), so `reticle status` shows no session
+     * while the page demonstrably contains `/@reticle-connect`, and only a dev-server restart clears
+     * it.
      *
      * Dropping the cached module before it is served makes `load` re-read the token, so starting the
      * daemon and reloading the page is enough.
      *
-     * Only when the source would ACTUALLY differ, though. This used to invalidate on every request
-     * for the module, forever — and a module that is force-invalidated on every request is
-     * re-resolved against Vite's dep optimizer on every page load, which is the shape of a
-     * self-sustaining reload loop: reload → request → invalidate → re-resolve → reload. Reported
-     * from the field on a Vite + React Router app pinned to a non-default port: every route
-     * reloaded the whole page about once a second, `/@reticle-connect` was fetched in every cycle,
-     * and removing the plugin stopped it instantly. Comparing the source first costs one string
-     * compare, keeps the late-daemon fix intact (the token appearing IS a change), and makes the
-     * module inert once it has settled.
+     * Only when the source would ACTUALLY differ, though. A module force-invalidated on every
+     * request is re-resolved against Vite's dep optimizer on every page load, which is a
+     * self-sustaining reload loop: reload → request → invalidate → re-resolve → reload. Comparing
+     * the source first costs one string compare, keeps the late-daemon fix intact (the token
+     * appearing IS a change), and makes the module inert once it has settled.
      */
     configureServer(server) {
       if (!inject) return;
       // The web post-condition is armed by the first DOCUMENT REQUEST, in the middleware below.
       //
       // Not from `transformIndexHtml`, because a framework that renders its own HTML never calls it
-      // and the check would be unreachable in the one case it exists for. But not from here either:
-      // armed at boot it fired ten seconds after the server started whether or not anybody had
-      // opened the app, and told a healthy project it would never connect. The request is the
-      // earliest moment the plugin knows enough to have an opinion.
+      // and the check would be unreachable in the one case it exists for. But not from boot either:
+      // that fires whether or not anybody has opened the app, and tells a healthy project it will
+      // never connect. The request is the earliest moment the plugin knows enough to have an
+      // opinion.
       // Tell `~/.reticle` this dev server exists, the moment it is actually listening.
       //
       // This is the one fact nobody outside this process could observe: the plugin is loaded in the

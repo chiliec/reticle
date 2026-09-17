@@ -51,10 +51,9 @@ describe('reticle babel plugin', () => {
 /**
  * A lowercase JSX tag is not the same thing as a DOM element.
  *
- * Filed from the field, against a CAD app: `sourceMapping` is on by default, and it stamped
- * `data-reticle-source` onto `<mesh>`, `<group>` and every other react-three-fiber intrinsic.
- * R3F is a separate reconciler whose "host elements" are three.js objects, and `applyProps` reads
- * ANY prop containing a dash as a pierced property path — so `data-reticle-source` is walked as
+ * `sourceMapping` is on by default, so it stamps `data-reticle-source` onto `<mesh>`, `<group>` and
+ * every other react-three-fiber intrinsic. R3F is a separate reconciler whose "host elements" are
+ * three.js objects, and `applyProps` reads ANY prop containing a dash as a pierced property path — so `data-reticle-source` is walked as
  * `data` -> `reticle` -> `source`, finds no `data` object on the instance, and throws:
  *
  *   Uncaught Error: R3F: Cannot set "data-reticle-source". Ensure it is an object before setting

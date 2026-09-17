@@ -184,7 +184,7 @@ export function installStorage(emit: Emit): Teardown {
   proto.clear = patchedClear;
 
   return () => {
-    // Restore only if the slot still holds our wrapper — never uninstall a wrapper the app layered
+    // Restore only if the slot still holds Reticle's wrapper — never uninstall a wrapper the app layered
     // on top of ours after connect().
     if (proto.setItem === patchedSetItem) proto.setItem = origSet;
     if (proto.removeItem === patchedRemoveItem) proto.removeItem = origRemove;

@@ -392,10 +392,9 @@ describe('crawl does not present a capped sweep as a complete one', () => {
 
 describe('a control that is SUPPOSED to do nothing is not an anomaly', () => {
   /**
-   * Measured on a shipments console: all three of the crawler's anomalies were controls behaving
-   * correctly — a `[disabled]` button, an already `[checked]` radio, and a text input. An anomaly
-   * list that is 100% false on a real app is worse than none: the agent spends its budget disproving
-   * it and learns to skip the field.
+   * A control clicked with no reaction may be legitimately inert — a `[disabled]` button, an already
+   * `[checked]` radio, a text input. An anomaly list that is all false positives is worse than none:
+   * the agent spends its budget disproving it and learns to skip the field.
    */
   it.each([
     '- button "Hold selected" [disabled]',

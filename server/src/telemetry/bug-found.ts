@@ -52,18 +52,16 @@ function kindsOf(value: unknown): string[] {
  * The defects in one tool result.
  *
  * Ordering matters for the false-green flag: a contradiction found alongside a PASSING assertion is
- * the case the product exists for — the screen looked right, the write failed, and every other tool
- * on the market would have called it green. That pairing is what `falseGreen` marks.
+ * the case the product exists for — the screen looked right and the write failed. That pairing is
+ * what `falseGreen` marks.
  */
 /**
  * The verdict this result carries, whatever envelope it arrived in.
  *
- * `reticle_assert` reports a top-level boolean `pass`. `reticle_act_and_wait` — the tool agents
- * actually reach for, and the one whose description calls it the act->observe->assert loop — reports
- * `verdict.pass` with the summary at `verified`. Reading only `result.pass` meant a FAILED
- * act_and_wait produced no bug at all, and a contradiction found next to a PASSING one was recorded
- * with `falseGreen: false` — deflating the single number this product exists to publish, by the
- * shape of its own envelope.
+ * `reticle_assert` reports a top-level boolean `pass`. `reticle_act_and_wait` reports `verdict.pass`
+ * with the summary at `verified`. Both shapes have to be read: taking only `result.pass` means a
+ * FAILED act_and_wait produces no bug at all, and a contradiction found next to a PASSING one is
+ * recorded with `falseGreen: false`.
  */
 function verdictOf(result: Record<string, unknown>): boolean | undefined {
   if ('boolean' === typeof result['pass']) return result['pass'];
@@ -114,21 +112,16 @@ function couldNotRun(failure: unknown): boolean {
 /**
  * WHOSE fault a contradiction was.
  *
- * `attribution` shipped twice and was wrong both times. It stamped `app` on every contradiction,
- * including `request-never-settled` — which Reticle raises from the ABSENCE of a settle event, so a
- * dev-overlay poll manufactured it with the app doing nothing wrong. Across two full real drives
- * EVERY `attribution: 'app'` was a misattribution, while the one defect that genuinely was a bad
- * agent predicate carried none. A metric confidently wrong about whose fault a defect is, is worse
- * than no metric: it is the number a founder steers on, and it points at the customer.
+ * A metric that is confidently wrong about fault is worse than no metric. Stamping `app` on every
+ * contradiction is wrong: `request-never-settled` is raised from the ABSENCE of a settle event, so a
+ * dev-overlay poll manufactures one with the app doing nothing wrong.
  *
- * The evidence that was missing then exists now, and it is already drawn in core for the verdict:
- * `ABSENCE_DERIVED_CONTRADICTIONS` separates the kinds inferred from something NOT having happened
- * inside a window Reticle chose the end of, from the kinds positively OBSERVED — a request that came
- * back failed, a signal the app fired that disagrees with its own screen, a written field echoed
- * back changed. Only the second class is evidence against the app, and it is the same line that
- * decides whether a verdict may say `no`. Reusing it rather than inventing a second judgement beside
- * it is the whole point: every historical misattribution was an absence-derived kind, so this rule
- * produces zero of them on the data that broke the last two versions.
+ * The line that decides is already drawn in core for the verdict. `ABSENCE_DERIVED_CONTRADICTIONS`
+ * separates the kinds inferred from something NOT having happened inside a window Reticle chose the
+ * end of, from the kinds positively OBSERVED — a request that came back failed, a signal the app
+ * fired that disagrees with its own screen, a written field echoed back changed. Only the second
+ * class is evidence against the app, and it is the same line that decides whether a verdict may say
+ * `no`. Reusing it rather than inventing a second judgement beside it is the point.
  *
  * Everything else — a failed assertion, a replay regression, a crawl anomaly that is not a
  * contradiction — is `unclassified`, which is a VALUE and not a gap. A failed `element.present`

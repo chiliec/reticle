@@ -22,11 +22,10 @@
 /**
  * What a slide points at when the tour is drawn over a real page.
  *
- * The HUD is addressable because Reticle put it there, and so is every control inside it — naming
- * our own toolbar button is not a guess. The APP is addressable only as a WHOLE — "here is the
- * thing being snapshotted" — which needs a region, not a control. That is the line, and it is about
- * authorship rather than size: a tour may ring any control it rendered itself, and may never ring a
- * button in the app, because that one would be a guess about markup we have never seen.
+ * The HUD is addressable because Reticle put it there, and so is every control inside it. The APP is
+ * addressable only as a WHOLE — "here is the thing being snapshotted" — which needs a region, not a
+ * control. The line is about authorship rather than size: a tour may ring any control it rendered
+ * itself, and may never ring a button in the app, because that would be a guess about unseen markup.
  *
  * It matters that the tour points at the app at least once. The pitch is verifying YOUR RUNNING
  * APP from the inside, and a tour drawn entirely over a dimmed page reads as a modal that happens
@@ -70,10 +69,10 @@ export interface TourCard {
    * The invitation to actually use the thing being pointed at, when the tour can let the click
    * through to it.
    *
-   * Only ever set on an anchor that is Reticle's own chrome. A tour may invite a click on a control
-   * we rendered; it may not invite one on the app's own markup, which we have never seen. Reading a
-   * slide about a button teaches strictly less than pressing it, and this is the difference between
-   * a carousel somebody clicks Next through and a tour they have already used the product during.
+   * Only ever set on an anchor that is Reticle's own chrome: a tour may invite a click on a control
+   * it rendered and never one on the app's own markup. Reading a slide about a button teaches
+   * strictly less than pressing it, which is the difference between a carousel somebody clicks Next
+   * through and a tour they have already used the product during.
    */
   tryIt?: string;
 }
@@ -112,7 +111,7 @@ export interface TourPrompt {
  *
  * Every one of them names something the product does: driving one flow to a verdict, the `/reticle`
  * command `init` writes into the project, and the autonomous crawl. The flows they name — login,
- * checkout — are examples of the SHAPE, since this tour runs over an app we have never seen; the
+ * checkout — are examples of the SHAPE, since this tour runs over an unknown app; the
  * capability behind each is real, which is the part a tour must not get wrong.
  */
 export const TOUR_HANDOFF_PROMPTS: readonly TourPrompt[] = [
@@ -134,10 +133,9 @@ export const TOUR_STEPS: readonly TourStep[] = [
   {
     id: 'connect',
     title: 'Yayyy! It is connected',
-    // The ring points at the HUD, so the prose has to make the HUD the evidence. It used to say the
-    // proof was a session "listed here", which is the output of the call below — a reader followed
-    // the ring to the panel and the panel was not what proved the claim. The panel IS proof: it is
-    // mounted only on a connected session and never appears without one.
+    // The ring points at the HUD, so the prose has to make the HUD the evidence: it is mounted only
+    // on a connected session and never appears without one. Naming the call's output as the proof
+    // instead sends a reader to the panel for a claim the panel does not make.
     say: 'That panel is Reticle. Seeing it is your proof the SDK is connected to your app.',
     why: 'It only mounts on a connected session, so it cannot show up without one. Having the tools is not the same as being set up.',
     // The merged surface has no `reticle_sessions`. It answers -32602 and names the replacement, so

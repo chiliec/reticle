@@ -3,23 +3,18 @@ import { ReticleTool } from '@reticlehq/core';
 /**
  * How to CALL each job, on whichever surface is live.
  *
- * The instructions are the first thing an agent reads, and they used to name tools in prose:
- * `reticle_snapshot`, `reticle_query`, `reticle_wait_for`, `reticle_run`. On the default surface
- * every one of those is real, so nothing ever went wrong — and nothing in the build could tell that
- * the sentence and the surface were two independent facts.
+ * The instructions are the first thing an agent reads, so naming tools in prose makes the sentence
+ * and the live surface two independent facts. On a trimmed surface the briefing named tools that did
+ * not exist there, and `reticle_tools` catalogued dozens more that could not be called: an agent
+ * handed that tries a tool it was shown, fails, tries again, and stops using the product — which
+ * reads as a token saving, because a product nobody uses is cheap.
  *
- * MEASURED, on the nine-tool surface: the briefing named NINE tools that did not exist on it, and
- * `reticle_tools` catalogued 57 more that could not be called. Handed that, an agent tried a tool it
- * had been shown, failed, tried again, and then stopped using the product — 96 drive calls on the
- * default surface against 2, and 20 verdicts against 1. It fixed the bugs by reading source instead.
- * The run READ as a 28% token saving, because a product nobody uses is cheap.
- *
- * `surface-coherence.test.ts` exists to catch exactly this and did not: it checks the documents
- * against `CORE_TOOL_NAMES`, so it is blind to every surface but the default and passed green.
+ * `surface-coherence.test.ts` checks the documents against `CORE_TOOL_NAMES`, so it is blind to every
+ * surface but the default and cannot catch this by itself.
  *
  * So the names are DERIVED here from the advertised set, and the prose asks for a job rather than a
- * tool. A briefing that names a tool the agent was not given is now unrepresentable rather than
- * merely tested for.
+ * tool. A briefing that names a tool the agent was not given is unrepresentable rather than merely
+ * tested for.
  */
 export interface SurfaceVocabulary {
   navigate: string;

@@ -197,12 +197,11 @@ export function nextActionFor(facts: NextActionFacts): NoSessionNextAction {
   // away is proof that the project it turned away is wired.
   // A refusal against a project that IS initialised here. The daemon has the config, so this is not
   // a scope problem — the page reached the right daemon and presented a credential it would not
-  // accept. Measured in the field on a Vite server inside Docker with the daemon on the host: the
-  // plugin reads-or-mints the pairing token from `$HOME/.reticle`, which inside the container is the
-  // image's throwaway root, so it minted its own and every page was refused. `authentication failed`
-  // named nothing, `status` said `sessionCount: 0` and nothing else, and the cause was found by
-  // grepping the plugin's `dist/` inside the container for an environment variable that appears in
-  // no documentation. Six minutes, for a fact the daemon held the whole time.
+  // accept. The usual cause is a dev server that shares no filesystem with the daemon (Docker, a
+  // devcontainer, WSL): the build plugin reads-or-mints the pairing token from `$HOME/.reticle`,
+  // which over there is a different file, so it mints its own and every page is refused. The daemon
+  // holds every fact needed to say so, which is why the reason below says it rather than repeating
+  // `authentication failed`.
   if (true === facts.initialized && true === facts.authRefused) {
     return {
       action: NoSessionAction.OPEN_APP,

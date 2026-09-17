@@ -301,7 +301,7 @@ describe('buildPlan — MCP (global, per detected agent)', () => {
  *
  * It hid because a daemon on `127.0.0.1:3000` and Vite on `[::1]:3000` split the port by address
  * family, so nothing reported a conflict: the same address-family behaviour behind the loopback
- * defect fixed in 2.7.0, arriving from the other direction.
+ * loopback defect, arriving from the other direction.
  */
 describe('an existing config is read, not assumed correct', () => {
   it('reports a dev-server port as a NOTICE, not as already done', () => {
@@ -794,9 +794,10 @@ describe('buildPlan — Astro', () => {
 });
 
 /**
- * `pnpm add -D @reticlehq/react` installed 2.2.1 in one project while npm and yarn took 2.3.0 in the
- * next — a stale registry metadata cache, invisible to everyone. A version-skewed SDK against a newer
- * daemon is the -32000 path: the app connects, the protocol disagrees, and nothing names a version.
+ * `pnpm add -D @reticlehq/react` once installed an older release in one project while npm and yarn
+ * took the current one in the next — a stale registry metadata cache, invisible to everyone. A
+ * version-skewed SDK against a newer daemon is the -32000 path: the app connects, the protocol
+ * disagrees, and nothing names a version.
  */
 describe('buildPlan — the SDK is pinned to the CLI version', () => {
   const installStepOf = (sdkVersion?: string) =>
@@ -829,15 +830,10 @@ describe('buildPlan — the SDK is pinned to the CLI version', () => {
 });
 
 /**
- * Reported from nine fixture apps: every one of them got the SAME retry note, whatever their package
- * manager and whatever actually went wrong —
- *
- *   the registry refused 2.5.0 (pnpm's minimumReleaseAge holds new releases back) …
- *   pnpm config set minimumReleaseAgeExclude "@reticlehq/*"
- *
- * Two separate lies in one sentence. The real cause on that run was that **the version did not exist
- * yet** — no release-age window was involved. And the remedy is a `pnpm config` command handed to a
- * **yarn 1** project, which will never read it.
+ * Every fixture app got the SAME retry note, whatever its package manager and whatever actually went
+ * wrong: it blamed pnpm's `minimumReleaseAge` and offered `pnpm config set minimumReleaseAgeExclude`.
+ * Two lies in one sentence — the real cause was that the version did not exist yet, and the remedy
+ * was a `pnpm config` command handed to a yarn 1 project that will never read it.
  *
  * The note cannot learn the true cause here: it is built at plan time, before anything runs, and
  * `io.exec` returns a bare boolean so the apply layer has no failure text to pass back either. What

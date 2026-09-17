@@ -99,10 +99,8 @@ export interface SnapshotResult {
    *
    * The same argument as `leanSkipped`, for the cause `leanSkipped` cannot speak to. That one is
    * lean-only by construction, so a `full` snapshot that comes back empty carries no explanation at
-   * all: `{ tree: "", nodes: 0 }` on a page holding 44 buttons, which reads as "the app broke" when
-   * what happened is that everything on it computed hidden. Reported from the field (#672) at a cost
-   * of about six tool calls and a large console dump to establish the page was fine and the snapshot
-   * was wrong.
+   * all: `{ tree: "", nodes: 0 }` on a page holding dozens of buttons, which reads as "the app
+   * broke" when what happened is that everything on it computed hidden (#672).
    *
    * It is deliberately a count of what was SKIPPED rather than a diagnosis of why the page is
    * hidden. The walk knows the first fact for certain and cannot know the second, and a number that
@@ -113,10 +111,9 @@ export interface SnapshotResult {
    * How many elements exist under the scope at all, present ONLY when the walk produced no nodes.
    *
    * The third cause of an empty tree, and the one no count of the WALK can reach: a walk that
-   * visited nothing has nothing to report. Filed from the field after the source-mapping stamp
-   * crashed a react-three-fiber app — React unmounted everything, the page went white, and
-   * `{ tree: "", nodes: 0 }` was indistinguishable from a page that had not rendered yet. A
-   * diagnosis pass went on establishing which.
+   * visited nothing has nothing to report. When the source-mapping stamp crashes a
+   * react-three-fiber app, React unmounts everything, the page goes white, and `{ tree: "",
+   * nodes: 0 }` is indistinguishable from a page that has not rendered yet.
    *
    * Counted off the DOM instead, which settles it outright: a handful of elements is a mount
    * container with nothing in it, and dozens is a page whose elements were all skipped (see
@@ -213,7 +210,7 @@ function formatLine(
   // holds that line and carries the numbers.
   //
   // So a display element with a testid and no name is not addressable FROM THE TREE, on purpose.
-  // `reticle_look { action: "find", testid }` reaches it directly for ~31 tokens, which is the right
+  // `reticle_look { action: "find", by: "testid", value }` reaches it directly for ~31 tokens, which is the right
   // tool for something you want to assert on rather than drive.
   const label = name;
   const namePart = label.length > 0 ? ` "${label}"` : '';
@@ -307,8 +304,8 @@ function pierceChildren(parent: Element): Element[] {
  * re-read can start AT a branch root — the node the truncated walk stopped just before emitting. */
 function visit(child: Element, depth: number, ctx: WalkCtx, inLive: boolean): void {
   if (skipEarly(child)) {
-    // Only the hidden ones are counted. The others — <script>, <style>, our own HUD — are noise the
-    // tree is SUPPOSED to omit, and counting them would put a number on every ordinary page and so
+    // Only the hidden ones are counted. The others — <script>, <style>, Reticle's own HUD — are
+    // noise the tree is SUPPOSED to omit, and counting them would put a number on every ordinary page and so
     // make the number mean nothing on the one page that needs it.
     if (hiddenByMarkup(child)) ctx.hiddenSkipped += 1;
     return;
@@ -352,31 +349,24 @@ function visit(child: Element, depth: number, ctx: WalkCtx, inLive: boolean): vo
   // indistinguishable from an empty page, and the tool description recommends this mode as the
   // default — so the cheaper view told an agent there was nothing to drive.
   //
-  // `data-testid` was tried here as a second signal, on the premise that it is a handle its author
-  // put there to be driven. Measured against our own instrumented bench app, the premise is false:
-  // the lean tree on its dashboard came to 16 nodes and 175 tokens, and EIGHT were display elements
-  // — kpi-deploys, kpi-success, kpi-p95, kpi-services, area-chart, activity-feed, brand. Half the
-  // "actionable" view was things nothing can act on, and the mode roughly doubled to carry them; the
-  // benchmark read it as a 4% verification-efficiency regression. A testid marks what a TEST cares
-  // about, which is a superset of what a driver can use.
+  // NOT `data-testid` as a second signal. A testid marks what a TEST cares about, which is a superset
+  // of what a driver can use: on the bench app's dashboard it takes the lean tree to 16 nodes / 175
+  // tokens of which EIGHT are display elements (kpi-deploys, area-chart, activity-feed, brand), which
+  // the benchmark reads as a 4% verification-efficiency regression. It also does not help the
+  // roleless case — MarkText's controls carry no testid either. `leanSkipped` is what covers that:
+  // an empty tree that says how many it passed over is no longer an empty page.
   //
-  // It did not even help the case it shipped for: MarkText's controls carry no testid. `leanSkipped`
-  // is what fixed that — an empty tree that says how many it passed over is no longer an empty page.
-  //
-  // `cursor: pointer` was tried too and was worse: interactive went from 0 nodes and 72 tokens to
-  // 180 and 870 against a FULL snapshot of 47/424, because the pointer cursor is inherited and every
-  // wrapper div inside a clickable row matched. A signal that cannot tell a control from its
+  // NOT `cursor: pointer` either, which is worse: interactive goes from 0 nodes / 72 tokens to
+  // 180 / 870 against a FULL snapshot of 47/424, because the pointer cursor is inherited and every
+  // wrapper div inside a clickable row matches. A signal that cannot tell a control from its
   // ancestors cannot decide what a control is.
   const actionable = interactive;
   // A testid is not in this expression, and that is the decision rather than an omission.
   //
-  // This comment used to say "a testid still makes an element MEANINGFUL, so `full` keeps it and can
-  // name and address it", which was true of a version that no longer exists. Adding it back was tried
-  // again on the strength of that sentence and measured the same way it was the first time: +15% on
-  // `full`, which is the DEFAULT mode and therefore the most-called read in the product. An element
-  // marked only by a testid, with no role, name or text, is reached with
-  // `reticle_look { action: "find", testid }` instead. See `browser.test.ts`, which guards this and
-  // carries the A/B.
+  // A testid alone does not make an element meaningful: including it cost +15% on `full`, which is
+  // the DEFAULT mode and therefore the most-called read in the product. An element marked only by a
+  // testid, with no role, name or text, is reached with `reticle_look { action: "find", by: "testid", value }`
+  // instead. A/B in `browser.test.ts`.
   const meaningful =
     actionable || role !== 'generic' || name.length > 0 || text.length > 0 || layout.length > 0;
   const include = lean ? actionable : meaningful;
@@ -421,7 +411,7 @@ function walk(parent: Element, depth: number, ctx: WalkCtx, inLive = false): voi
 /**
  * The APP's open dialogs. Reticle's own panels use `role="region"` (not `dialog`) so they are not
  * mistaken for the application's modal layer by snapshot hints, query orientation, or a library's
- * outside-click walk — see #783. Anything that still carries `role="dialog"` inside our overlay is
+ * outside-click walk — see #783. Anything that still carries `role="dialog"` inside Reticle's overlay is
  * excluded here via `isReticleOverlay`.
  */
 function collectDialogs(root: ParentNode): string[] {

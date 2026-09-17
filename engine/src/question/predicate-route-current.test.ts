@@ -3,8 +3,8 @@
  *
  * `evalRoute` filtered the window to route-change events and, finding none, returned
  * `pass:false, "no route change observed"` — the current route was never consulted, though the
- * session tracks it and `reticle_snapshot({ mode: 'status' })` hands it back one call later. That is
- * how both reporters proved the verdict wrong:
+ * session tracks it and `reticle_snapshot({ mode: 'status' })` hands it back one call later. Two
+ * cases prove the verdict wrong:
  *
  *   "'Did the session survive a reload?' is a core verification and a reload by definition produces
  *    no route change."

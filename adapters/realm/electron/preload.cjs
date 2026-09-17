@@ -22,7 +22,7 @@
  */
 const { contextBridge, ipcRenderer } = require('electron');
 // The ONE definition of these strings, generated from @reticlehq/core's TypeScript source so a CJS
-// preload and the ESM renderer cannot drift apart. Previously hand-copied into six files.
+// preload and the ESM renderer cannot drift apart.
 const {
   RETICLE_IPC_GLOBAL,
   RETICLE_CAPTURE_CHANNEL,
@@ -32,12 +32,10 @@ const {
 /**
  * Renderer-side subscribers, keyed by a token.
  *
- * A Map rather than one slot, and a token rather than the callback itself, for two reasons. A single
- * slot meant a second `connect()` in the same renderer silently STOLE the first one's subscription —
- * and "unsubscribing" was really "overwrite with a no-op", so an SDK teardown left the app in a
- * different state than it found it. Tokens rather than function identity because a callback crosses
- * `contextBridge` as a proxy, so the reference the preload holds is not the one the renderer passes
- * back and `delete(callback)` would never match.
+ * A Map rather than one slot: a single slot lets a second `connect()` in the same renderer STEAL the
+ * first one's subscription, and "unsubscribe" becomes "overwrite with a no-op". Tokens rather than
+ * function identity because a callback crosses `contextBridge` as a proxy, so the reference the
+ * preload holds is not the one the renderer passes back and `delete(callback)` never matches.
  *
  * Empty until a renderer subscribes. What happens to records made before that is `backlog`, below.
  */
@@ -48,13 +46,12 @@ let seq = 0;
 /**
  * IPC that happened before the SDK was watching, held for the first subscriber.
  *
- * This used to be dropped, on the reasoning that the SDK only wants activity from the moment it is
- * watching. That reasoning is a web reflex and it is wrong here. A desktop app loads its data over
- * IPC on mount, and `connect()` is injected and does asynchronous work, so the app's FIRST calls —
- * the ones that populate the entire screen — routinely land before any sink exists. Dropping them
- * does not produce a gap a reader can see: it produces a network view that is empty and looks clean,
- * which is the failure this project treats as the worst kind. An agent reads it as "the app made no
- * backend calls" and reports so.
+ * Held rather than dropped. "The SDK only wants activity from the moment it is watching" is a web
+ * reflex and wrong here: a desktop app loads its data over IPC on mount, and `connect()` is injected
+ * and does asynchronous work, so the app's FIRST calls — the ones that populate the entire screen —
+ * routinely land before any sink exists. Dropping them produces no gap a reader can see, just a
+ * network view that is empty and looks clean, which an agent reads as "the app made no backend
+ * calls".
  *
  * Bounded, because an app running for hours with no SDK attached must not grow a queue, and replayed
  * to the FIRST subscriber only: a second `connect()` in the same renderer is not entitled to history
@@ -81,11 +78,10 @@ function report(record) {
 /**
  * Longest payload reported per IPC call, matching the HTTP body cap.
  *
- * A desktop app's ENTIRE API surface is IPC. The web side has recorded request/response bodies for a
- * long time — which is what lets Reticle catch a batch whose 200 hides per-item failures, or a refund
- * posting a major-unit number into a minor-unit field. On Electron none of that could ever fire,
- * because this shim reported only channel, ok and duration and dropped the payloads it was already
- * holding. Every payload-based check was silently web-only on the platform this release is about.
+ * A desktop app's ENTIRE API surface is IPC, so the payloads are what let Reticle catch a batch whose
+ * 200 hides per-item failures, or a write that posts the wrong units. Reporting only channel, ok and
+ * duration would drop payloads this shim is already holding, and make every payload-based check
+ * silently web-only.
  */
 const IPC_BODY_MAX = 8192;
 
@@ -201,10 +197,10 @@ function observeOneWay(original, name) {
 // Patch the three entry points an app's IPC actually leaves through, before its own
 // `exposeInMainWorld` captures the references.
 //
-// `invoke` alone is NOT the whole surface — that claim used to be in this comment and it was wrong.
-// A `send` + `on('reply')` pair is a mainstream Electron pattern, and an app built that way had
-// EVERY backend call invisible while `coverage` still read full. `sendSync` genuinely returns its
-// result, so it is observed like an invoke; `send` cannot be, so it is recorded as one-way.
+// `invoke` alone is NOT the whole surface. A `send` + `on('reply')` pair is a mainstream Electron
+// pattern, and an app built that way has EVERY backend call invisible while `coverage` reads full.
+// `sendSync` genuinely returns its result, so it is observed like an invoke; `send` cannot be, so it
+// is recorded as one-way.
 //
 // `postMessage` (MessagePort transfer) is deliberately not wrapped: the ports outlive the call, so a
 // single record could not describe it honestly. An app using it should say so in its own signals.

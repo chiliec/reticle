@@ -69,12 +69,12 @@ export const PROBE_TESTID = 'reticle-root';
 export const SpecKind = { RUNNABLE: 'runnable', ERROR: 'error' } as const;
 export type SpecKind = (typeof SpecKind)[keyof typeof SpecKind];
 
-/** FLOW2SPEC: the binary outcome of running one RUNNABLE flow spec. */
+/** The binary outcome of running one RUNNABLE flow spec. */
 export const SpecOutcome = { PASS: 'pass', FAIL: 'fail' } as const;
 export type SpecOutcome = (typeof SpecOutcome)[keyof typeof SpecOutcome];
 
 /**
- * FLOW2SPEC: the named failure/diagnostic messages a flow spec can carry — never a free string.
+ * The named failure/diagnostic messages a flow spec can carry — never a free string.
  * SUCCESS_NOT_MET: replay was clean but flow.success did not hold. STEP_DRIFT: a step anchor
  * drifted or its expect did not hold (replay stopped). EMPTY_DIR: documentation-only note that an
  * empty .reticle/flows yields zero specs.
@@ -86,5 +86,5 @@ export const SpecMessage = {
 } as const;
 export type SpecMessage = (typeof SpecMessage)[keyof typeof SpecMessage];
 
-/** FLOW2SPEC: prefix of the Error a malformed/missing flow file raises when its spec runs. */
+/** Prefix of the Error a malformed/missing flow file raises when its spec runs. */
 export const FLOW_LOAD_ERROR_PREFIX = 'flow could not be loaded';

@@ -102,7 +102,6 @@ export class IntentStore {
     });
   }
 
-  /** Attach the predicate that would prove an intent. False when the id names nothing. */
   /**
    * File a record under where it turned out to be about.
    *
@@ -124,6 +123,7 @@ export class IntentStore {
     });
   }
 
+  /** Attach the predicate that would prove an intent. False when the id names nothing. */
   async bind(id: string, binding: unknown): Promise<boolean> {
     return withFileLock(this.#path(), async () => {
       const file = await this.#load();

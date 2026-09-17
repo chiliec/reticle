@@ -126,9 +126,8 @@ describe('the intent a sync sends', () => {
  *
  * The ladder that can read a flow, a route or a binding predicate lives in the engine. The server
  * had no access to it and had reimplemented a far weaker version — flow-or-nothing — so records the
- * engine files correctly arrived at the dashboard as `unsorted`. Measured on the real corpus: 105
- * of 163 placeable records were landing in the bucket of last resort, which is what made a coverage
- * map read as one pile with six labels.
+ * engine files correctly arrived at the dashboard as `unsorted`. Most placeable records landed in
+ * the bucket of last resort, which is what makes a coverage map read as one pile with six labels.
  */
 describe('the subject a sync sends', () => {
   const sent = (root: string): Record<string, { subject?: string }> =>

@@ -30,10 +30,10 @@ import { resolveProjectCloud } from '@/memory/cloud/cloud-config.js';
 import { log } from '@/log.js';
 import type { ToolDeps } from '@/surface/tools/tool-kit.js';
 
-/** A replay plus the wall-clock time it took — the shape the verify handler already collects. */
 /** The author of record when no MCP peer introduced itself — a CLI run, or a client that skipped the handshake. */
 const RETICLE_MCP_AGENT_ID = 'reticle-mcp';
 
+/** A replay plus the wall-clock time it took — the shape the verify handler already collects. */
 export interface TimedReplay {
   replay: FlowReplayResult;
   durationMs: number;

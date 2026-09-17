@@ -3,34 +3,20 @@
  *
  * NOT the protocol's `Realm`. That is an abstract class in `open-verification` describing what
  * a realm can DO -- eight questions an implementation answers. This describes what a realm IS LIKE:
- * four fixed traits the rest of the codebase branches on. Both were called `Realm` for a while,
- * in one repository, which is how a barrel export starts refusing to compile and how a reader
- * starts believing this file is the specification. It is not; it is a lookup table.
+ * four fixed traits the rest of the codebase branches on. It is a lookup table, not a specification.
  *
- * A realm is the kind of place an app runs: a browser tab, an Electron window, a Tauri window. Most
- * of Reticle does not care which — a click is a click and a failed request is a failed request — but
- * a handful of decisions genuinely differ, and until now each was a separate `if` in whichever file
- * needed it.
+ * A realm is the kind of place an app runs: a browser tab, an Electron window, a Tauri window. The
+ * four traits are whether it is a desktop shell, whether it draws with WebKit, whether its coverage
+ * warnings are its own, and whether its visual baselines get their own directory.
  *
- * Four of them, found by reading every branch on the runtime rather than by guessing:
+ * Adding a realm is one row. `Record<AppRuntime, RealmTraits>` means leaving it out is a COMPILE
+ * error rather than a silent default — a scattered `if` gives a new realm the *web* answer, which
+ * is the answer most likely to look plausible and be wrong. That is the whole reason this is a
+ * table and not a lookup function with a fallback.
  *
- *   - whether it is a desktop shell, asked in two places;
- *   - whether it draws with WebKit, which changes what a hidden window does;
- *   - whether its coverage warnings are its own and must not be shown for other realms;
- *   - whether its visual baselines get their own directory.
- *
- * Scattered, each is easy to write and easy to forget. Adding a fourth realm meant finding all four
- * with a grep and hoping the grep was complete — and a missed one does not break loudly, it quietly
- * gives a new realm the *web* answer, which is the answer most likely to look plausible and be wrong.
- *
- * Gathered here, adding a realm is one row. `Record<AppRuntime, RealmTraits>` means leaving it out is a
- * COMPILE error rather than a silent default, which is the whole reason this is a table and not a
- * lookup function with a fallback.
- *
- * What is deliberately NOT here: anything a realm does rather than is. Which screenshot backend to
- * call, how to patch a build config, what a connect snippet looks like — those are code, they live
- * with the code that runs them, and pulling them in would turn one honest table into a plugin system
- * nobody asked for. This table holds facts you could write on an index card.
+ * Deliberately NOT here: anything a realm DOES rather than is. Which screenshot backend to call,
+ * how to patch a build config, what a connect snippet looks like — those are code and live with the
+ * code that runs them. This table holds facts you could write on an index card.
  */
 
 import {
@@ -156,7 +142,7 @@ export const REALMS: Record<AppRuntime, RealmTraits> = {
  *
  * Written as a type guard so the caller gets the narrowing the hand-written chain of comparisons gave
  * it for free. Without that, replacing the chain would have widened a field back to a plain string,
- * and the compiler would have stopped catching a runtime that is not one of ours.
+ * and the compiler would stop catching a runtime this package does not know.
  */
 export function isKnownRealm(runtime: string | undefined): runtime is AppRuntime {
   return runtime !== undefined && Object.hasOwn(REALMS, runtime);
@@ -177,7 +163,7 @@ export function isKnownRealm(runtime: string | undefined): runtime is AppRuntime
  * Realms a host registered at startup, for domains this package does not ship.
  *
  * `REALMS` above is a compile-checked `Record<AppRuntime, …>` and stays that way: leaving out a
- * shell we ship must remain a compile error. But that same shape is a wall for everybody else —
+ * shell this package ships must remain a compile error. But that same shape is a wall for everybody else —
  * an Android realm, a game realm, a CLI realm cannot be NAMED without a pull request against
  * `@reticlehq/core`, and a protocol meant for industries that have never heard of this repository
  * cannot require one.
@@ -195,24 +181,17 @@ const EXTENSION_PREFIX = 'x-';
  *
  * The `x-` prefix is required for two reasons that are both about the future: a third-party name
  * can never collide with one this package later ships, and a reader can tell at a glance which
- * realms are ours and which are somebody's. It is the same convention `ChannelIdSchema` already
+ * realms this package ships and which a host added. It is the same convention `ChannelIdSchema` already
  * enforces for channels.
  *
  * Throws rather than returning a result. A realm that failed to register would answer `web` to
  * everything — the most plausible-looking wrong answer available — and the caller is a host at
  * startup, where a throw is read immediately and a silent miss is not read at all.
  *
- * WHAT THIS DOES NOT YET HAVE, stated here because the gap is invisible from the signature: there
- * is no host seam in the daemon. `reticle serve` imports no user module, so nothing outside this
- * repository has a moment in which to call this, and every realm Reticle itself ships is a row in
- * `REALMS` rather than a registration. So this is a working, typed, tested extension point with
- * zero external callers — a hypothesis about how a third party would add a realm, not a path anyone
- * has walked. Adding a mobile or service realm today means a change to `@reticlehq/core`.
- *
- * It is left as-is deliberately. Building a plugin-loading flag for a user who has not asked for
- * one would be inventing the requirement along with the feature, and the shape that eventually
- * lands should be decided by whoever first needs it. What is not acceptable is letting the gap go
- * unsaid, because an exported, documented function reads as a supported path.
+ * CEILING, invisible from the signature: there is no host seam in the daemon. `reticle serve`
+ * imports no user module, so nothing outside this repository has a moment in which to call this,
+ * and every realm Reticle ships is a row in `REALMS` rather than a registration. Adding a realm
+ * today means a change to `@reticlehq/core`.
  */
 export function registerRealm(runtime: string, traits: RealmTraits): void {
   if (!runtime.startsWith(EXTENSION_PREFIX)) {
@@ -325,7 +304,7 @@ export function realmOfProject(
 }
 
 /**
- * Which kind of surface each shell we know about presents.
+ * Which kind of surface each known shell presents.
  *
  * The bridge between the two vocabularies, kept here rather than beside `PlatformProfile` so that
  * the profile list itself depends on nothing. A connection that says which shell it is, and not

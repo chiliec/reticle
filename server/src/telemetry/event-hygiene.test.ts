@@ -1,21 +1,19 @@
 /**
- * Profiling the event vocabulary against one real day of production data
- * (`plan/export-2026-08-07-205221.csv`, 1,468 events) turned up three things that are not opinions.
+ * Three defects in the event vocabulary, each a property of the vocabulary rather than an opinion.
  *
- * 1. `cli_command_run` IS MOSTLY NOT A HUMAN COMMAND. 475 of 561 (85%) are `command: 'mcp'` — the
- *    agent's MCP client spawning its transport, which no person typed. The event's stated purpose is
- *    "human intent: `verify`/`gate` vs `status`", and 85% of it is neither. Its own docstring already
- *    excludes the spawned `_daemon` child for exactly this reason; `mcp` is the same act one level up.
- *    `mcp_client_connected` already reports an agent attaching, with strictly more detail.
+ * 1. `cli_command_run` IS MOSTLY NOT A HUMAN COMMAND. Most of it is `command: 'mcp'` — the agent's
+ *    MCP client spawning its transport, which no person typed — on an event whose stated purpose is
+ *    "human intent: `verify`/`gate` vs `status`". Its own docstring already excludes the spawned
+ *    `_daemon` child for exactly this reason; `mcp` is the same act one level up, and
+ *    `mcp_client_connected` already reports an agent attaching with strictly more detail.
  *
  * 2. IT IS ALSO WHY THE SESSION COUNT IS WRONG. `sessionId` is minted per PROCESS, so every one-shot
- *    CLI command invents one. Measured: uniq(sessionId) = 704 across the day, of which 561 came from
- *    `cli_command_run` and **not one of them is shared with any daemon**. The real number of daemon
- *    runs is 121. Every tile that counts sessions is therefore ~6x high, and no join on those ids can
- *    ever succeed — so omitting them loses nothing that works today.
+ *    CLI command invents one, and none of those ids is ever shared with a daemon. Anything counting
+ *    sessions is therefore inflated by the CLI, and no join on those ids can ever succeed — so
+ *    omitting them loses nothing that works today.
  *
- * 3. `actor` ON `cli_command_run` IS CONSTANT. All 561 say `human`, which is both zero information
- *    and wrong for the 475 that were the agent's transport. Once `mcp` is excluded the event is human
+ * 3. `actor` ON `cli_command_run` IS CONSTANT. It always says `human`, which is zero information and
+ *    wrong for every call that was the agent's transport. Once `mcp` is excluded the event is human
  *    by definition and the property is pure payload.
  *
  * `actor` stays where it EARNS its place — on `verification_completed` and `bug_found`, where it

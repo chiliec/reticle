@@ -1,6 +1,5 @@
 /**
- * Network-call vocabulary shared by the browser SDK and the server. Split out of constants.ts to
- * keep that file under the size cap.
+ * Network-call vocabulary shared by the browser SDK and the server.
  */
 
 /**
@@ -18,9 +17,9 @@ export const NetInitiator = {
    *
    * A server-rendered app answers a click with a full document load: the old document is torn down
    * with the SDK inside it, and the SDK comes back up in a page whose defining request happened
-   * before it existed. No patched transport could have seen it, so the net channel had no record of
-   * it at all — a Django MPA click was verified on route and heading while the `net` clause naming
-   * the destination MISSED, and the verdict came back `unknown`.
+   * before it existed. No patched transport could have seen it, so without this initiator the net
+   * channel has no record of it at all: a `net` clause naming the destination MISSES and the verdict
+   * comes back `unknown` even though route and heading verified.
    *
    * DISTINCT FROM the document-INITIATED subresource initiators (`link`, `css`, `img`, `script`,
    * `manifest`, `other`) that the resource-timing observer stamps. Those prove that observer is
@@ -78,20 +77,20 @@ export const IpcStatus = {
  * `202 Accepted` — the server took the request and has NOT finished processing it.
  *
  * The only status in HTTP whose meaning is "no outcome yet". Folding it into the 2xx success band is
- * how an asynchronous workflow gets verified at exactly the moment nothing has been decided:
- * measured on a logistics console, a dispatch answered 202, the UI rendered success, the page
- * settled, and the server reverted the shipment 1.2s later.
+ * how an asynchronous workflow gets verified at exactly the moment nothing has been decided: a
+ * dispatch answers 202, the UI renders success, the page settles, and the server reverts the write
+ * a second later.
  */
 export const HTTP_ACCEPTED = 202;
 
 /**
  * Traffic the DEV TOOLCHAIN makes about itself — never the app under test.
  *
- * A CLOSED list, deliberately. Reported from a real drive: a correct Next.js navigation graded
- * `verified: "no"` because the dev overlay was fetching a source map for an unrelated React key
- * warning (`POST /__nextjs_original-stack-frames`), and that in-flight request counted as "the UI
- * advanced over a request that never settled". Every app that logs one dev warning got a false
- * negative on every action — the worst defect class after a false green.
+ * A CLOSED list, deliberately. Without it a correct navigation grades `verified: "no"` because the
+ * dev overlay is fetching a source map for an unrelated React warning (`POST
+ * /__nextjs_original-stack-frames`) and that in-flight request counts as "the UI advanced over a
+ * request that never settled" — a false negative on every action in any app that logs one dev
+ * warning.
  *
  * The rule for adding an entry: it must be a channel the FRAMEWORK owns, that no application route
  * can occupy, and that fires as a consequence of running in dev rather than of anything the user

@@ -239,9 +239,8 @@ describe('every client can produce a paste-able snippet', () => {
  *
  * It was listed with a project-scoped `opencode.json`, and registration is gated on that file already
  * existing, so a project that had never written one was skipped in silence: the user has OpenCode
- * installed, `init` says nothing about it, and the tools never appear. In the field every OpenCode
- * user connected an MCP client and produced zero tool calls and zero app connections, which is what
- * "you were never wired" looks like from the outside.
+ * installed, `init` says nothing about it, and the tools never appear — which is what "you were
+ * never wired" looks like from the outside.
  *
  * Verified against a real install (OpenCode 1.3.17): the config lives at
  * `~/.config/opencode/opencode.jsonc`. The extension is `.jsonc`, which the project-scoped marker
@@ -281,11 +280,10 @@ describe('opencode is wired where it actually lives', () => {
 });
 
 /**
- * Antigravity, which connected nine users and drove nothing.
+ * Antigravity, which `init` did not know at all.
  *
- * `init` did not know this client at all, so those users hand-wired an MCP registration (they reached
- * the daemon - the connections are in the field data) and then never ran `init`, never instrumented an
- * app, and never called a tool. Nothing told them there was a second half.
+ * A hand-wired MCP registration reaches the daemon without ever running `init`, instrumenting an app
+ * or calling a tool, and nothing in that state says there is a second half.
  *
  * Path and shape taken from Google's own documentation, not recalled: the config is
  * `~/.gemini/config/mcp_config.json` under a top-level `mcpServers` key, and one file serves the 2.0

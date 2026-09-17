@@ -1,9 +1,8 @@
 /**
  * The last thing `init` prints, and the only part of it a user is asked to act on.
  *
- * Split out of `run.ts` because that file sits exactly at the 1000-line cohesion cap, and because
- * this IS a separate concern: everything else in `run.ts` decides what to write, and this decides
- * what to say afterwards. The two failure modes are different too — a wrong write breaks an
+ * Its own file because it is its own concern: everything else in `run.ts` decides what to write,
+ * and this decides what to say afterwards. The failure modes differ too — a wrong write breaks an
  * install, a wrong sentence loses a user quietly.
  */
 
@@ -66,14 +65,13 @@ export function restartHint(
   // NAME THE COMMAND THAT PROVES IT, not one that merely asks.
   //
   // `init` writes files and stops; the install is not finished until an app carrying the SDK has
-  // actually dialled the daemon, and nothing here confirmed that. The field shape is unambiguous:
-  // people complete the agent half, never complete the app half, and keep a daemon running for
-  // weeks with nothing to drive — so this is the last instruction most of them read.
+  // actually dialled the daemon, and nothing here confirmed that — so this is the last instruction
+  // a user reads before the half that can still fail.
   //
   // "Ask your agent: List Reticle sessions" asks a question whose failure is a dead end. `reticle
-  // status` ANSWERS it: as of 2.7.0 it reports the session, or says why there is none — no app
-  // running, an app running that never dialled us, a tab that closed — with the fix for each.
-  // The one thing that works BEFORE the restart, so it goes before it.
+  // status` ANSWERS it: it reports the session, or says why there is none — no app running, an app
+  // running that never dialled us, a tab that closed — with the fix for each. It works BEFORE the
+  // restart, so it goes before it.
   //
   // What comes after the restart, named as a JOB rather than as a capability.
   //
@@ -97,13 +95,10 @@ export function restartHint(
   if (!wasMcpRegistered(mcpStatus)) return `${dev}\n${demo}\n${prove}`;
   // ALREADY: the tools are reachable RIGHT NOW, and this is the branch that used to lie.
   //
-  // `wasMcpRegistered` is true for both APPLY and ALREADY, which is correct for the funnel field it
-  // was written for and wrong here, because the two cases have opposite answers to "must anybody
-  // restart". Every second project on a machine, and every Claude Code plugin install, took the
-  // APPLY text: "restart your agent — the tools only appear after that". An agent reads this AFTER
-  // whatever its skill file said, and it describes the output in front of it, so it wins. The agent
-  // stops with the project wired and nothing driven, which is the exact failure the install path
-  // exists to prevent, caused by the install path itself.
+  // `wasMcpRegistered` is true for both APPLY and ALREADY, which is wrong here: the two cases have
+  // opposite answers to "must anybody restart". ALREADY used to take the APPLY text — "restart your
+  // agent, the tools only appear after that" — and an agent believes the output in front of it over
+  // whatever its skill file said, so it stops with the project wired and nothing driven.
   if (mcpStatus === StepStatus.ALREADY) {
     return (
       `${dev}\n` +

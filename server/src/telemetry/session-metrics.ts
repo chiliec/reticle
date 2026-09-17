@@ -60,8 +60,8 @@ const BREADCRUMB_LENGTH = 12;
 /**
  * Actions driven with no verdict before Reticle asks for one.
  *
- * Three, because the median verdict-less session made FOUR tool calls (2026-08-10/11). A higher
- * threshold never fires for the sessions that need it most.
+ * Three, because a verdict-less session typically makes only a handful of calls. A higher threshold
+ * never fires for the sessions that need it most.
  */
 const UNVERIFIED_ACTION_NUDGE_AT = 3;
 
@@ -77,15 +77,10 @@ export class SessionMetrics {
    * Session-LIFETIME totals for the four numbers the funnel is computed from.
    *
    * `reset()` zeroes every window counter on each periodic flush, but `durationMs` is measured from
-   * `#startedAt` and is never reset. So the FINAL summary — the one whose docstring promises "the
-   * whole session in a single event" — reported a 30-minute session containing zero tool calls,
-   * because it only ever carried the residue since the last flush.
-   *
-   * In the field almost every `daemon_stopped` row had `toolCalls: 0`, at a median
-   * duration of 30.5 minutes, while `session_progress` for the same daemons carried real tool
-   * histograms. Anyone computing "did this session use Reticle" off the event named for the end of
-   * the session got `no` essentially always. That is not a small skew — it is the funnel reading
-   * zero at the exact step this release exists to raise.
+   * `#startedAt` and is never reset. Without these, the FINAL summary — the one whose docstring
+   * promises "the whole session in a single event" — reports a long session containing zero tool
+   * calls, because it carries only the residue since the last flush, and anyone computing "did this
+   * session use Reticle" off the event named for the end of the session reads `no`.
    *
    * Window semantics are unchanged: `session_progress` still reports its own window, so nothing that
    * already sums those events double-counts. Only `final: true` swaps in the lifetime numbers.
@@ -129,9 +124,8 @@ export class SessionMetrics {
    */
   readonly #seenBugKinds = new Set<string>();
   /**
-   * Tool errors meaning "the agent could not reach an app at all" — the single biggest drop-off in
-   * the funnel, and until now reachable only by unpacking `errors[]` in HogQL. Most daemons never
-   * call a tool, and of the sessions that made exactly one call, most bounced on this.
+   * Tool errors meaning "the agent could not reach an app at all" — counted as a field of its own
+   * because the alternative is unpacking `errors[]` in HogQL.
    */
   #noSessionErrors = 0;
   /** Connection-level MCP POST failures the SSE stream cannot see. See SessionSummary. */
@@ -369,14 +363,13 @@ export class SessionMetrics {
   /**
    * Ask the agent for a verdict, once, when it has driven the page without asking for one.
    *
-   * In the field most sessions that made a tool call produced no verdict — and
-   * **almost all of those never called a verdict-producing tool even once.** They drove the app
-   * with `reticle_act` and never asked whether it worked. This counter already existed
-   * (`abandonedActions`); it was reported to US and never to the agent.
+   * A session that drives the app with `reticle_act` and never asks whether it worked proves
+   * nothing. The counter behind this (`abandonedActions`) already existed and was reported only in
+   * telemetry, never to the agent that could act on it.
    *
-   * Three is the threshold because the median verdict-less session made four tool calls: any higher
-   * and it never fires for the sessions that need it. Re-arms after a verdict, so a second
-   * abandoned run is caught — the loop can break more than once in a long session.
+   * Three is the threshold because a verdict-less session typically makes only a handful of calls:
+   * any higher and it never fires for the sessions that need it. Re-arms after a verdict, so a
+   * second abandoned run is caught — the loop can break more than once in a long session.
    */
   takeUnverifiedNudge(): string | undefined {
     if (this.#unsettledActions < UNVERIFIED_ACTION_NUDGE_AT || this.#nudgedUnverified) {

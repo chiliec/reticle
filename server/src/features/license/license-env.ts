@@ -64,16 +64,6 @@ function isRoot(dir: string): boolean {
 }
 
 /**
- * The directories that hold a `.reticle.json`: the apps that were actually instrumented.
- *
- * This is the closest thing the daemon has to "the session's project directory", and it is the same
- * discovery the no-session diagnosis uses to tell an agent where the app really is. Reusing it means
- * the licence search and that diagnosis can never disagree about where the project lives.
- *
- * It replaced a guess at `apps/*` and `packages/*`, which missed exactly the repo shape
- * `findWorkspaceApps` was written for: three apps at `web/`, `admin/` and `space/`.
- */
-/**
  * The conventional layout, kept as a fallback beside the declaration-driven search above.
  *
  * `discoverProjectConfigs` descends only into DECLARED workspaces, which is right and is what a real
@@ -101,6 +91,13 @@ function inConventionalChildren(dir: string): string | undefined {
   return undefined;
 }
 
+/**
+ * The directories that hold a `.reticle.json`: the apps that were actually instrumented.
+ *
+ * The same discovery the no-session diagnosis uses to tell an agent where the app really is, so the
+ * licence search and that diagnosis can never disagree about where the project lives. It replaced a
+ * guess at `apps/*` and `packages/*`, which missed the workspace shapes people actually ship.
+ */
 function inDiscoveredProjects(dir: string): string | undefined {
   let found: readonly { directory: string }[];
   try {

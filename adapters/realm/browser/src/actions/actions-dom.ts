@@ -31,10 +31,9 @@ export async function fireClickSequence(
     el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true })),
   );
   if (el.tabIndex >= 0 && 'function' === typeof el.focus) el.focus();
-  // The gap that makes hold-to-confirm driveable. Everything between down and up used to be
-  // synchronous, so a control whose contract is "the button is down for N ms" could not be
-  // expressed at all — the reported case cancelled its own confirm on the mouseup that arrived 7ms
-  // later. `drag` already splits the pair across a gap; this is that shape with a timer.
+  // The gap that makes hold-to-confirm driveable. With down and up synchronous, a control whose
+  // contract is "the button is down for N ms" cannot be expressed at all — it cancels its own
+  // confirm on a mouseup arriving milliseconds later. `drag` splits the pair the same way.
   //
   // The ACHIEVED hold is measured and returned rather than echoed back: `holdMs: 1200` against a
   // 1200ms animation is a race by construction, and a caller needs to tell "held 1200" from
@@ -49,9 +48,8 @@ export async function fireClickSequence(
   asSyntheticInput(() =>
     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true })),
   );
-  // Marked as ours so the annotator's capture-phase listener lets it through. Only the CHECK branch
-  // used to do this, so the ordinary click action — which is this function — was swallowed whole in
-  // annotate mode while still reporting `dispatched: true`.
+  // Marked as Reticle's own so the annotator's capture-phase listener lets it through. Without it,
+  // the click is swallowed whole in annotate mode while still reporting `dispatched: true`.
   const notPrevented = asSyntheticInput(() =>
     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })),
   );

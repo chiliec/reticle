@@ -4,11 +4,9 @@ import { surfaceForInlineIntent } from './inline-intent.js';
 /**
  * Where an inline intent was captured, so the store can file it.
  *
- * Measured on a real corpus: 167 of 173 things a project knew landed in `unsorted`, because
- * `act_and_wait({ intent })` declared a statement and nothing else. The subject ladder had no flow,
- * no route and no explicit subject to work from, so every record fell to the bucket of last resort
- * — and a coverage map that is one pile with six labels tells a manager the team knows nothing,
- * when the truth is that it knows a great deal and none of it is filed.
+ * Without one, almost everything a project knew landed in `unsorted`, because
+ * `act_and_wait({ intent })` declared a statement and nothing else: the subject ladder had no flow,
+ * no route and no explicit subject to work from, so every record fell to the bucket of last resort.
  *
  * The route is the fix because it is ALWAYS available: an agent is always somewhere. The flow name
  * is better when there is one, and the ladder in `intent-subject.ts` already prefers it.

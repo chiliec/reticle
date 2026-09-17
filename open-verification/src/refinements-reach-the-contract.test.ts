@@ -35,13 +35,9 @@ const REPO = execFileSync('git', ['rev-parse', '--show-toplevel'], {
 }).trim();
 
 /**
- * Source with comments stripped, because the first version of this guard was GREEN on three
- * comment lines and zero real refinements.
- *
- * It matched the prose explaining why these are unions rather than refinements — including
- * prose written in the same commit that removed the last refinement. A guard that reads its own
- * explanation as the thing it forbids reports the opposite of the truth, and this repository has
- * a note about that exact failure from a previous occurrence.
+ * Source with comments stripped: the prose explaining why these are unions rather than
+ * refinements matches the pattern too, so a guard that reads its own explanation as the thing it
+ * forbids goes GREEN on zero real refinements.
  */
 function code(file: string): string {
   return readFileSync(join(REPO, file), 'utf8')

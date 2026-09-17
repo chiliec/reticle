@@ -1,5 +1,5 @@
 /**
- * The `route` oracle. Split out of predicate-eval.ts, which was at the file-size backstop.
+ * The `route` oracle.
  *
  * Route is the one predicate with TWO sources of truth — a navigation inside the window and where the
  * app is right now — and keeping that reconciliation in one place is what makes it readable.

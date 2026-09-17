@@ -5,8 +5,8 @@
  * Pure formatting over the counted blind spots the observers report.
  */
 
-// The kind enum lives in core (it crosses the wire in a BLIND_SPOT event); re-exported here so existing
-// honesty-side imports keep working.
+// The kind enum lives in core (it crosses the wire in a BLIND_SPOT event); re-exported here for the
+// honesty-side callers.
 export { BlindSpotKind } from '@reticlehq/core';
 import {
   BlindSpotKind,

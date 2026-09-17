@@ -4,38 +4,21 @@ import type { ToolDef } from './tool-kit.js';
 /**
  * There is ONE tool surface. This is not a menu.
  *
- * The advertised tool DEFINITIONS are re-sent to the model on every turn, so the surface is a
- * per-turn cost that compounds across a loop, and fewer tools also makes the model wander less.
- * What ships is the verify loop (navigate→look→act→observe→assert, with direct network + console +
- * state) advertised directly, plus two meta-tools — `reticle_tools` to discover and `reticle_run` to
- * invoke — that keep every other tool exactly one call away. Nothing is unreachable; the cold tail
- * just is not re-sent every turn.
+ * Advertised tool DEFINITIONS are re-sent to the model on every turn, so the surface is a per-turn
+ * cost that compounds across a loop, and fewer tools also makes the model wander less. What ships is
+ * the verify loop (navigate→look→act→observe→assert, with direct network + console + state)
+ * advertised directly, plus two meta-tools — `reticle_tools` to discover and `reticle_run` to invoke
+ * — that keep every other tool exactly one call away. Nothing is unreachable; the cold tail just is
+ * not re-sent every turn.
  *
- * Five profiles were tried. Four are gone, each for a measured reason rather than a taste:
+ * ALL is deliberately NOT a profile: it is a verification switch, the only mode that advertises
+ * `outputSchema`, which is what makes the MCP layer validate tool OUTPUT — the check that caught
+ * `reticle_verify_change` returning a payload its own schema rejected. Carrying output schemas on the
+ * default surface more than doubles its bytes, so it cannot be folded in, and deleting it loses that
+ * defect class. So it stays, and no user is asked to pick it.
  *
- * `core` was BYTE-IDENTICAL to the default — 16 tools, 18,183 bytes, the same list. One behaviour
- * behind two names is how "I set it and nothing changed" becomes a support question with no answer.
- *
- * `standard` advertised 17 more tools directly for ~3,500 extra tokens EVERY TURN, buying only the
- * removal of an occasional `reticle_run` hop. Nothing about that was characterisable as a use case.
- *
- * `dynamic` advertised the 2 meta-tools and nothing else. Not one harness, app or bench ever
- * selected it, and this repo's own measurement (bench/agent-loop-and-replay.md) says a pure
- * on-demand surface does NOT hold accuracy with a generic model: "it needs the hot-set schemas.
- * On-demand is for the cold tail, not the hot path." An option that is unused and measured-worse is
- * a trap, not a choice — it looks like a 4,000-token saving and costs correctness.
- *
- * ALL is what remains, and it is deliberately NOT a profile: it is a verification switch. It is the
- * only mode that advertises `outputSchema`, which is what makes the MCP layer validate tool OUTPUT —
- * the check that caught `reticle_verify_change` returning a payload its own schema rejected. It
- * cannot be folded into the default: measured, carrying output schemas on the 16-tool surface costs
- * 18,183 -> 41,117 bytes, 2.26x, +5,733 tokens per turn. And it cannot simply be deleted without
- * losing that defect class. So it stays, named for what it is, and no user is asked to pick it.
- *
- * Sizes are NOT restated here — not as a current figure, not as a historical one. Four generations
- * of this comment got them wrong. They live in surface-sizes.test.ts, which reads them off the real
- * surface. (The numbers above are the two measurements that JUSTIFY a decision, which is a different
- * job from documenting the current size; both were taken with a fresh daemon per reading.)
+ * Surface sizes are NOT quoted in comments here. They live in surface-sizes.test.ts, which reads them
+ * off the real surface.
  */
 export const TOOL_SURFACE = {
   /** What every user gets: the verify loop, plus the 2 meta-tools that reach everything else. */
@@ -43,66 +26,35 @@ export const TOOL_SURFACE = {
   /** Every tool advertised directly, WITH output schemas. A verification switch — see above. */
   ALL: 'all',
   /**
-   * The smallest surface that can still produce a VERDICT. Not a profile — a cost switch.
+   * The smallest surface that can still produce a VERDICT: one `act_and_wait`, plus the meta-tools.
+   * Not a profile — a cost switch. On the path where the caller already knows what to assert, almost
+   * the entire bill is the menu rather than the answer, so the menu is the thing to cut, and the
+   * assertion supplies the evidence the surface would otherwise have to go and find.
    *
-   * Measured on the wire: a verification that names its own target costs one `act_and_wait` call,
-   * and 5,480 of its 5,909 tokens are the advertised surface re-sent for that single turn. The
-   * answers cost 430. So on the path where the caller already knows what to assert, almost the
-   * entire bill is the menu, and the menu is the thing to cut.
-   *
-   * Deliberately NOT the default, and now MEASURED rather than inherited. Run over the same 30-bug
-   * set that the default surface scores 23/27 detection and 2/29 false alarms on:
-   *
-   *   detection      24/28   (held)
-   *   FALSE ALARMS   7/30    (was 2/29 — TRIPLED)
-   *   tokens         113,599 per run (was 179,959 — 37% cheaper)
-   *
-   * The five new false alarms are not scattered. They are `mutation-leak` and
-   * `generate-blast-filter` (state), `kpi-deploys-tamper` (business-logic), `debounce-broken`
-   * (timing) and `route-stuck-deployments` (routing) — precisely the classes whose evidence lives in
-   * `reticle_state`, `reticle_network` and `reticle_observe`, which this surface does not advertise.
-   * Strip the observation tools and the model stops observing: it reaches for the verdict without
-   * the evidence and calls a healthy build broken.
-   *
-   * So the retired `dynamic` finding is confirmed, with a sharper mechanism than "accuracy drops".
-   * 37% of the tokens is not worth trading for the one metric this product actually wins on, and
-   * this must not become the default on the strength of the token number alone.
-   *
-   * It remains correct for a caller who has ALREADY decided what to assert — there the assertion
-   * supplies the evidence the surface would otherwise have to go and find.
+   * NAMED CEILING: it drops the evidence tools, and that TRIPLES false alarms. The new ones are
+   * precisely the defect classes whose evidence lives in `reticle_state`, `reticle_network` and
+   * `reticle_observe` — strip the observation tools and the model stops observing, reaching for the
+   * verdict without the evidence and calling a healthy build broken. Deliberately not the default;
+   * the token saving does not buy that.
    */
   VERIFY: 'verify',
   /**
-   * EXPERIMENTAL, opt-in, UNDER MEASUREMENT — and deliberately on the same terms as LEAN below.
+   * The same capabilities as `default` under ten names instead of seventeen, by merging inside the
+   * core hot-set: look (snapshot/query/inspect/state), observe (observe/network/console), assert
+   * (assert/wait_for), and sessions folded into session. NOTHING is dropped — every tool `default`
+   * advertises stays reachable, which is the difference between this and `verify`. It is the surface
+   * `resolveToolSurface` falls back to.
    *
-   * The same ten capabilities as `default`, advertised as ten names instead of seventeen, by merging
-   * inside the core hot-set: look (snapshot/query/inspect/state), observe (observe/network/console),
-   * assert (assert/wait_for), and sessions folded into session. NOTHING is dropped — every tool
-   * `default` advertises is still reachable, which is the difference between this and `verify`.
-   *
-   * MEASURED on the wire, as actually advertised: 21,873 B -> 17,885 B, ~5,468 -> ~4,471 tokens,
-   * -18.2% per turn.
-   *
-   * NOT MEASURED: accuracy. `verify` is the reason that distinction is load-bearing — it cut 37% and
-   * tripled false alarms, and the tokens were not the part that mattered. This does not become the
-   * default on the strength of its token number, and the accuracy arm is the gate.
-   *
-   * The known risk, stated so the measurement knows what to look for: a merged tool's input schema is
-   * the UNION of its members' fields with every field optional, so the model sees `by`, `value`,
-   * `ref`, `mode` and `path` on one `reticle_look` with nothing saying which action takes which, and
-   * a wrong-field call validates instead of being refused.
+   * NAMED CEILING: a merged tool's input schema is the UNION of its members' fields with every field
+   * optional, so the model sees `by`, `value`, `ref`, `mode` and `path` on one `reticle_look` with
+   * nothing saying which action takes which, and a wrong-field call VALIDATES instead of being
+   * refused. Accuracy is unmeasured; a token number alone never promotes a surface.
    */
   MERGED: 'merged',
   /**
-   * EXPERIMENTAL, opt-in, and UNDER MEASUREMENT. Not a recommendation, and not on a path to becoming
-   * the default until it has a number of its own.
-   *
-   * It exists because of the finding recorded on VERIFY above, read forwards instead of backwards.
-   * That surface cut the bill 37% and TRIPLED false alarms, and the five new false alarms were not
-   * scattered: every one of them was a defect whose evidence lives in `reticle_state`,
-   * `reticle_network` or `reticle_observe`. So the token saving and the accuracy loss came from two
-   * different cuts, and only one of them has to be paid for. `lean` keeps every observation tool and
-   * cuts the rest.
+   * EXPERIMENTAL, opt-in. It keeps every observation tool and cuts the rest, because the token saving
+   * and the accuracy loss recorded on VERIFY above came from two different cuts and only one of them
+   * has to be paid for.
    *
    * What stays, and why each one is not a candidate for removal:
    *   SNAPSHOT / QUERY   look. Without them the agent cannot name an element it did not already know.
@@ -126,10 +78,9 @@ export const TOOL_SURFACE = {
    *   SESSION            the lease block and the pause hint name it in prose, which is what made it
    *                      load-bearing on the default surface. Under a trimmed surface the
    *                      unadvertised-tool help turns that into a working `reticle_run` call.
-   *   FEEDBACK           the one drop with a KNOWN CEILING: an unadvertised feedback channel collects
-   *                      little to nothing, so a long-lived profile must not ship without it. Acceptable
-   *                      only because this profile is opt-in and short-lived by construction; if it
-   *                      ever stops being an experiment, feedback comes back first.
+   *   FEEDBACK           NAMED CEILING: an unadvertised feedback channel collects little to nothing,
+   *                      so a long-lived profile must not ship without it. Acceptable only while this
+   *                      profile is opt-in; if it stops being an experiment, feedback comes back first.
    */
   LEAN: 'lean',
 } as const;
@@ -163,32 +114,21 @@ const RETIRED_PROFILE_VALUES: Readonly<Record<string, ToolSurface>> = {
 };
 
 // The set an agent needs to verify a change end-to-end. Tool DEFINITIONS are re-sent every turn, so
-// this set is a per-turn cost, and every name in it has to earn its place.
+// this set is a per-turn cost, and every name in it has to earn its place. Sizes and counts are
+// asserted in surface-sizes.test.ts, never quoted here.
 //
-// MEASURED per-turn `tools/list` cost, off the real wire (spawn `mcp`, read tools/list, measure the
-// serialized result), with a FRESH DAEMON per reading — the setting is read by the daemon at startup,
-// so a loop that reuses one daemon measures the first surface every time and looks like proof that
-// the setting does nothing. That happened while taking this very reading.
-//
-//   default    18,183 B  ~4,546 tok/turn    16 tools
-//   all       127,903 B ~31,976 tok/turn    48 tools
-//
-// Treat these as the SHAPE of the gap and re-measure before quoting one; counts are asserted in
-// surface-sizes.test.ts, never from this comment.
+// Measure the wire cost with a FRESH DAEMON per reading: the setting is read by the daemon at
+// startup, so a loop that reuses one daemon measures the first surface every time and looks like
+// proof that the setting does nothing.
 //
 // Where the cost sits on the default surface: inputSchema is 76% of the payload (parameter
 // descriptions are half of that), tool descriptions are 12%, outputSchema ~0 because it is dropped.
 // So the next real saving is in parameter prose, not in dropping more tools.
 //
-// There is a floor, though: an 8-tool cut (dropping act/navigate/wait_for/sessions) was MEASURED to
-// regress real-agent accuracy 5/5 -> 3/5, because the model loses scaffolding and wanders on harder
-// flows. Direct network/console stay (far more discoverable than observe-with-filters -> fewer turns,
-// better verdicts).
-//
-// Evidence status: the 5/5 figure came from a single gpt-4o run and is STALE as a justification.
-// Current-model evidence is indirect but real — the cost-delta run (bench/fix-loop/COST-DELTA.md)
-// drove this surface on a current model and fixed 4/4 cells with ~25% FEWER tool calls than the
-// baseline. A formal A/B against a leaner surface on a current model is still UNRUN.
+// There is a floor: an 8-tool cut (dropping act/navigate/wait_for/sessions) MEASURABLY regressed
+// real-agent accuracy, because the model loses scaffolding and wanders on harder flows. Direct
+// network/console stay — far more discoverable than observe-with-filters, so fewer turns and better
+// verdicts. A formal A/B against a leaner surface on a current model is UNRUN.
 // See bench/agent-loop-and-replay.md.
 export const CORE_TOOL_NAMES: ReadonlySet<string> = new Set([
   ReticleTool.SESSIONS,
@@ -199,12 +139,9 @@ export const CORE_TOOL_NAMES: ReadonlySet<string> = new Set([
   ReticleTool.ACT_AND_WAIT,
   // ACT_SEQUENCE is here because its absence leaves the loop it exists to collapse: a login form
   // driven one round trip at a time, a click and a fill per call, which is exactly the antipattern
-  // SKILL.md warns about.
-  //
-  // Those repeats are not retries — the calls succeed and get repeated, because the batching tool
-  // was reachable only through `reticle_run`, so an agent had to already know it existed to use it.
-  // A tool an agent must already know about is a tool that never gets called; the same argument
-  // that put INSPECT and FEEDBACK here.
+  // SKILL.md warns about. Reachable only through `reticle_run`, the batching tool needs an agent that
+  // already knows it exists — and a tool an agent must already know about never gets called. Same
+  // argument as INSPECT and FEEDBACK below.
   ReticleTool.ACT_SEQUENCE,
   ReticleTool.OBSERVE,
   ReticleTool.NETWORK,
@@ -214,64 +151,47 @@ export const CORE_TOOL_NAMES: ReadonlySet<string> = new Set([
   ReticleTool.STATE,
   // INSPECT is what turns a finding into an EDIT: it maps a DOM node to `src/App.tsx:104`. Finding a
   // bug is half the job; knowing which file to open is the half that makes the agent useful, and it
-  // is the one capability here with no substitute in any other verification tool. It sat in
-  // `standard`, so under the default profile an agent had to already know it existed and reach it
-  // through reticle_run — which, observed over a drive of the whole surface, means it never gets called.
-  // The measured floor that justifies a lean core was about CUTTING to 8 (accuracy 5/5 → 3/5), not
-  // about holding at 12; one tool of schema tax to close the find→fix loop is the right trade.
+  // is the one capability here with no substitute in any other verification tool. One tool of schema
+  // tax to close the find→fix loop is the right trade; the measured floor is about cutting to 8, not
+  // about holding at 12.
   ReticleTool.INSPECT,
-  // FEEDBACK is in every profile for the same reason INSPECT is: a tool an agent has to already know
-  // about, and reach through reticle_run, is a tool that never gets called. That is fatal here in a way
-  // it is not elsewhere — an unadvertised feedback channel collects nothing, which is indistinguishable
-  // from not having built one. It is also the cheapest tool on the surface to carry (three params) and
-  // the only one whose whole purpose is telling us which of the other fifteen are failing.
+  // FEEDBACK is on every surface for the same reason INSPECT is, and fatally so: an unadvertised
+  // feedback channel collects nothing, which is indistinguishable from not having built one. It is
+  // also the cheapest tool on the surface to carry (three params), and the only one whose purpose is
+  // reporting which of the others are failing.
   ReticleTool.FEEDBACK,
   // SESSION is here because the product ORDERS the agent to call it. The session lease block is
-  // spliced onto the first result of every session ("call reticle_session {action:'yield'}"), and
-  // the pause hint is spliced onto every refusal while a human has the session paused, where
-  // {action:"resume"} is the only exit. Both were naming a tool the default surface did not
-  // advertise: an agent that obeyed got `unknown tool`, and an agent that did not left the panel
-  // reading "live" after it had stopped driving — which is the state the whole handback protocol
-  // exists to prevent.
-  //
-  // Measured cost: ~1.3 KB of prose (455 B description + ~780 B of parameter descriptions) on a
-  // surface whose prose is ~23.7 KB, so roughly +5%, a few hundred tokens a turn. The alternative —
-  // deleting the instruction from the lease and the pause hint — deletes the handback protocol,
-  // because there is nowhere else those two calls are ever named.
+  // spliced onto the first result of every session ("call reticle_session {action:'yield'}"), and the
+  // pause hint onto every refusal while a human has the session paused, where {action:"resume"} is
+  // the only exit. Unadvertised, an agent that obeys gets `unknown tool` and an agent that does not
+  // leaves the panel reading "live" after it stopped driving — the state the handback protocol exists
+  // to prevent. The alternative, deleting the instruction from the lease and the pause hint, deletes
+  // the protocol: there is nowhere else those two calls are named.
   ReticleTool.SESSION,
   // VERIFY is the only advertised tool that can CONCLUDE, and its absence was measurably the most
-  // expensive thing on this surface.
-  //
-  // Measured on the Layer B agent loop (bench/raw/agent-loop-results.json, Haiku 4.5, 25-turn cap):
-  // on the no-regression control — a CLEAN app, where the right answer is "nothing is wrong" —
-  // Playwright MCP concluded in 7 turns and Reticle burned all 25 and never answered, at 333k tokens
-  // against Playwright's 54k. That one cell was a quarter of Reticle's total cost across five
-  // scenarios. Removing it, Reticle is at parity on the other four and wins two outright.
-  //
-  // The cause is compositional rather than behavioural: every other tool in this set answers "here
-  // is more to look at". None of them can say "there is nothing more". On a healthy app — which is
-  // most runs — that is a loop with no exit, and 25 was just where the cap fell.
+  // expensive thing on this surface. The cause is compositional rather than behavioural: every other
+  // tool here answers "here is more to look at", and none of them can say "there is nothing more". On
+  // a healthy app — which is most runs — that is a loop with no exit, and it runs to the turn cap.
   //
   // `reticle_verify` is the exit. { action: "crawl" } drives every reachable control itself and
   // reports the whole fault set in ONE call, and { action: "flows" } replays the saved flows with no
-  // model in the loop at all — the path Layer C measures at 271 tokens, deterministic, 0% flake.
-  // Both were built and neither was reachable: the same "a tool an agent must already know about is
-  // a tool that never gets called" argument that put INSPECT and FEEDBACK here, applied to the one
-  // tool that ends the loop.
+  // model in the loop at all: deterministic, no flake. Both were built and neither was reachable —
+  // the "a tool an agent must already know about never gets called" argument applied to the one tool
+  // that ends the loop.
   ReticleTool.VERIFY,
 ]);
 
 /**
  * The extended surface: what `all` advertises BEYOND the default set.
  *
- * `all` used to mean "every tool in the registry", and that is no longer allowed to be true. Cursor
- * enforces a limit of 40 tools across every connected MCP server COMBINED, so a server advertising
- * 48 by itself can push a user's other servers out or be dropped wholesale. The budget is a count,
- * so no amount of trimming parameter prose buys anything back — only advertising fewer names does.
+ * `all` is NOT "every tool in the registry". Cursor enforces a limit of 40 tools across every
+ * connected MCP server COMBINED, so a server advertising 48 by itself can push a user's other servers
+ * out or be dropped wholesale. The budget is a COUNT, so no amount of trimming parameter prose buys
+ * anything back — only advertising fewer names does.
  *
- * That is true of the COUNT cap and false of everything else, so prose is NOT free: most of this
- * server's schema weight is parameter descriptions rather than tool descriptions, and the whole block
- * is re-sent every turn, multiplied by turn count before one byte of evidence is counted.
+ * Prose is not free elsewhere, though: most of this server's schema weight is parameter descriptions
+ * rather than tool descriptions, and the whole block is re-sent every turn, multiplied by turn count
+ * before one byte of evidence is counted.
  *
  * Which does NOT license trimming by eye. Those descriptions are what make a tool get called
  * correctly, and one malformed call costs a whole extra turn — more than the bytes saved. The
@@ -291,19 +211,18 @@ export const CORE_TOOL_NAMES: ReadonlySet<string> = new Set([
  * orientation, the record/replay flow loop, visual evidence, and the three fault-injection controls.
  */
 export const EXTENDED_TOOL_NAMES: ReadonlySet<string> = new Set([
-  // Demoted from the default set to make room under the cap. It was added as an explicit bet that
-  // orientation replaces exploratory snapshots, and the measurement that would have settled that
-  // bet was never run — so when the budget became a hard count, the unproven entry is the one that
-  // gives way. Still one `reticle_run` hop from any agent that wants it.
+  // Demoted from the default set to make room under the count cap: it was an unproven bet that
+  // orientation replaces exploratory snapshots, and an unproven entry is the one that gives way.
+  // Still one `reticle_run` hop from any agent that wants it.
   ReticleTool.CAPABILITIES,
   ReticleTool.FLOW_SAVE,
   ReticleTool.FLOW_REPLAY,
-  // New and unproven, so it does not take a default-surface slot under the cap. Same terms the
-  // capabilities demotion set: reachable in one reticle_run hop by any agent that wants it.
+  // Unproven, so it does not take a default-surface slot under the cap. Same terms as the
+  // capabilities demotion: reachable in one reticle_run hop by any agent that wants it.
   ReticleTool.INTENT,
-  // Same terms again, plus one argument specific to it: its caller is BY CONSTRUCTION an agent that
-  // just lost its context and is re-reading the tool list, so the discovery hop it costs is a call
-  // that caller was already going to make. See context-tools.ts for the full argument.
+  // Same terms, plus one argument specific to it: its caller is BY CONSTRUCTION an agent that just
+  // lost its context and is re-reading the tool list, so the discovery hop it costs is a call that
+  // caller was already going to make. See context-tools.ts.
   ReticleTool.CONTEXT,
   ReticleTool.RECORD,
   ReticleTool.SCREENSHOT,
@@ -325,36 +244,20 @@ const VERIFY_TOOL_NAMES: ReadonlySet<string> = new Set([ReticleTool.ACT_AND_WAIT
  * because an experiment whose independent variable drifts mid-flight measures nothing. Every
  * inclusion and every exclusion is argued at TOOL_SURFACE.LEAN.
  *
- * ## MEASURED: it is cheaper and less correct. Do not promote it to the default.
- *
- * Run as its own arm of the fix-and-verify benchmark — same five bugs, same model, same budget, the
- * full surface as its control:
- *
- * | | full surface | lean |
- * |---|---|---|
- * | bugs fixed | **5/5** | **3/5** |
- * | FALSE GREENS | **0** | **1** |
- *
- * The false green is the finding, and it is the first this benchmark has ever produced. On
- * `broken-form-validation` the lean agent finished in SIX turns and 62k tokens — the cheapest cell
- * of the whole run, a fifth of what the full surface spent — edited the file, took one snapshot,
- * and ended with a hypothetical walkthrough: "Enter spaces + valid name -> spaces are trimmed,
- * valid part is used. VERDICT: FIXED". The submit button was still enabled for a whitespace-only
- * service. It reasoned about what its own code would now do instead of driving it, which is exactly
- * the failure this product exists to catch, produced by our own surface.
+ * NAMED CEILING — measured against the full surface as its control on the fix-and-verify benchmark:
+ * it is cheaper and less correct, fixing 3 of the 5 bugs the full surface fixes, and it produced that
+ * benchmark's first FALSE GREEN. On `broken-form-validation` the lean agent edited the file, took one
+ * snapshot, and ended on a hypothetical walkthrough ("spaces are trimmed, valid part is used.
+ * VERDICT: FIXED") against a submit button that was still enabled for a whitespace-only service: it
+ * reasoned about what its own code would now do instead of driving it.
  *
  * The other loss has the same root from the other side. On `cross-component-regression` the agent
- * called `reticle_tools` three times and `reticle_run` eight, saying "since Reticle isn't
- * connecting, let me see what reticle_tools offers" — it spent the run hunting for capabilities
- * this surface does not advertise instead of using them, and never fixed the bug.
+ * spent the run calling `reticle_tools` and `reticle_run` hunting for capabilities this surface does
+ * not advertise, and never fixed the bug. Strip the surface and the agent stops verifying, then
+ * claims anyway — the same result the `verify` surface records from the other direction.
  *
- * That is the same result the `verify` surface already recorded — dropping the observation tools
- * TRIPLED false alarms — arriving from the other direction: strip the surface and the agent stops
- * verifying, then claims anyway. The known ceiling written here was that `reticle_feedback` goes
- * uncollected. This is a bigger one and it was not predicted.
- *
- * It stays opt-in and it stays measured. The one thing it genuinely bought — the ceiling-bound cell
- * halved, 30 turns to 14 — is not worth a verdict that lies, because the product is the verdict.
+ * So it stays opt-in and stays measured, and it does not become the default: the turns it saves are
+ * worth less than a verdict that lies, because the product IS the verdict.
  */
 export const LEAN_TOOL_NAMES: ReadonlySet<string> = new Set([
   ReticleTool.SNAPSHOT,
@@ -373,9 +276,8 @@ export const LEAN_TOOL_NAMES: ReadonlySet<string> = new Set([
  * Derived from CORE_TOOL_NAMES rather than retyped — the members that got merged away, plus the
  * names that replaced them. Writing it out by hand is how the two lists drift and a capability
  * silently stops being advertised: `filterTools` matches by NAME, so a merged tool missing from here
- * is dropped with no error at all. That happened while measuring this: `reticle_look` was absent, the
- * four members it consumed were gone, and the surface reported a 32% saving that was really a
- * capability loss.
+ * is dropped with NO error at all, and the surface reports a token saving that is really a capability
+ * loss.
  */
 const MERGED_AWAY: ReadonlySet<string> = new Set([
   // Absorbed by `reticle_act`, routed on the presence of `steps` rather than on an action name.
@@ -411,19 +313,14 @@ function envFlagOn(raw: string | undefined): boolean {
  * `explicit` is the programmatic override (tests, `advertisedTools` callers). Otherwise the ALL
  * switch decides, and the retired setting is honoured last so an old shell profile still works.
  *
- * THE FALLBACK IS `merged`, and that is the whole point of it.
+ * THE FALLBACK IS `merged`: it advertises nine tools where `default` advertises nineteen, and reaches
+ * the rest of the registry the way every surface does — by name, through the meta-tool. Behind an
+ * env var read by the DAEMON at startup it was unreachable in practice, because an agent exporting
+ * one sees no change and has no way to tell.
  *
- * `merged` advertises NINE tools where `default` advertises nineteen, and it reaches the rest of the
- * registry the same way every surface does — by name, through the meta-tool. It existed, it was
- * measured, and it was reachable only by exporting an environment variable that the DAEMON reads at
- * startup, which meant an agent exporting it saw no change and had no way to tell. A surface nobody
- * can switch to is a surface nobody uses: every real client was served nineteen tools while the nine
- * sat behind a setting.
- *
- * `default` is kept as a NAME so the A/B that justified this can still be run — the bench arms it by
- * passing `explicit`, and deleting it would delete the ability to measure the trade rather than the
- * trade itself. Accuracy outranks tokens here: a cheaper surface that verifies less is a loss at any
- * price, so the arm that proves this one does not lose accuracy has to stay runnable.
+ * `default` is kept as a NAME so the A/B that justified `merged` can still be run — the bench arms it
+ * by passing `explicit`. Accuracy outranks tokens here: a cheaper surface that verifies less is a
+ * loss at any price, so the arm that proves this one does not lose accuracy stays runnable.
  */
 export function resolveToolSurface(explicit?: string): ToolSurface {
   if (explicit === TOOL_SURFACE.LEAN) return TOOL_SURFACE.LEAN;
@@ -457,10 +354,9 @@ export interface ToolSurfaceOrigin {
  * Which surface is live, and what chose it.
  *
  * These settings are read by the DAEMON at startup, never by the client, so exporting one in an
- * agent's environment while a daemon is already running changes nothing at all — which is exactly
- * the observation that produced a "standard and full advertise the same tools" report. Documenting
- * that was not enough; the setting failing to take has to be VISIBLE, so this rides along in the
- * reticle_tools catalog.
+ * agent's environment while a daemon is already running changes nothing at all. Documenting that is
+ * not enough — a setting failing to take has to be VISIBLE, so this rides along in the reticle_tools
+ * catalog.
  */
 export function describeToolSurface(active: ToolSurface, requested?: string): ToolSurfaceOrigin {
   const retired = requested ?? process.env[TOOL_PROFILE_ENV];
@@ -502,16 +398,12 @@ export function describeToolSurface(active: ToolSurface, requested?: string): To
 /**
  * The names a daemon started RIGHT NOW advertises, meta-tools included.
  *
- * Exists because a fallback got left behind. `buildServerInstructions` defaulted its vocabulary to
- * `CORE_TOOL_NAMES` plus both meta-tools, which was the default surface until the nine became it.
- * The proxy briefs without passing a surface, so every agent reaching Reticle through `reticle mcp`
- * was told to call `reticle_snapshot`, `reticle_query` and `reticle_wait_for` while being served a
- * surface that has none of them. That is the exact failure surface-coherence.test.ts was written
- * after: the agent tries a tool it was shown, fails, tries again, and abandons the product — drive
- * calls 96 to 2, verdicts 20 to 1, and it read as a token saving because a product nobody uses is
- * cheap.
- *
- * Derived, never listed: whatever `resolveToolSurface` answers is what this describes.
+ * Derived, never listed: whatever `resolveToolSurface` answers is what this describes. A hardcoded
+ * vocabulary is how `buildServerInstructions` came to brief every agent reaching Reticle through
+ * `reticle mcp` — the proxy briefs without passing a surface — to call `reticle_snapshot`,
+ * `reticle_query` and `reticle_wait_for` while being served a surface that has none of them. An agent
+ * that tries a tool it was shown, fails, and tries again abandons the product. Pinned by
+ * surface-coherence.test.ts.
  */
 export function defaultAdvertisedNames(): readonly string[] {
   const surface = resolveToolSurface();
@@ -533,8 +425,6 @@ function filterToolNames(surface: ToolSurface): ReadonlySet<string> {
 }
 
 export function filterTools(tools: ToolDef[], surface: ToolSurface): ToolDef[] {
-  // CORE_TOOL_NAMES is what it always really was: the set advertised directly. It was never the
-  // interesting thing about the `core` PROFILE, whose only distinction was a second name for this.
   if (surface === TOOL_SURFACE.VERIFY) return tools.filter((t) => VERIFY_TOOL_NAMES.has(t.name));
   if (surface === TOOL_SURFACE.LEAN) return tools.filter((t) => LEAN_TOOL_NAMES.has(t.name));
   if (surface === TOOL_SURFACE.MERGED) {

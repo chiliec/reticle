@@ -1,8 +1,8 @@
 /**
  * Telling Vitest's browser-mode runner apart from every other Vite server.
  *
- * Split out of index.ts at the file cap. Small, but it is the discriminator a wrong first cut got
- * wrong in production, so it earns its own file and its own name.
+ * Small, but it is the discriminator a wrong cut gets wrong in production, so it earns its own file
+ * and its own name.
  */
 
 /**

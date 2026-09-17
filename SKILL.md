@@ -30,7 +30,7 @@ Everything between here and there is a rule the steps assume. Read it as you go,
 - The `reticle_*` tools appeared. Your client can reach a daemon. The app is very likely still uninstrumented.
 - A session is listed. The app dialled in. The user has still seen nothing happen.
 
-**Do not tell the user Reticle is set up until a verdict exists.** The most common failure in the field is an agent that writes the config, reports success, and leaves somebody with an uninstrumented page. The command exits non-zero when that happens: believe the exit code over the report.
+**Do not tell the user Reticle is set up until a verdict exists.** The common failure is an agent that writes the config, reports success, and leaves somebody with an uninstrumented page. The command exits non-zero when that happens: believe the exit code over the report.
 
 ## Setup runs to the end without you
 

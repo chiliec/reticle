@@ -242,7 +242,7 @@ describe('query empty hint', () => {
   });
 
   it('reports knownEmptyState false when present testids are not registered', () => {
-    render('<div data-testid="f4-unregistered-thing"></div>');
+    render('<div data-testid="unregistered-thing"></div>');
     const r = runQuery({ by: 'testid', value: 'no-such-id' });
     expect(r.hint?.knownEmptyState).toBe(false);
   });
@@ -257,10 +257,9 @@ describe('query empty hint', () => {
   });
 
   /**
-   * The field report this came from: a label rendered with `v-html` spans several child nodes, so
-   * `by: text` — which reads an element's OWN text nodes — matched nothing while the string was
-   * plainly on screen. The verdict was identical to "never rendered", and the drive ended in a bug
-   * report against an app that had worked.
+   * A label rendered with `v-html` spans several child nodes, so `by: text` — which reads an
+   * element's OWN text nodes — matches nothing while the string is plainly on screen. That verdict is
+   * identical to "never rendered", which invites a bug report against a working app.
    */
   it('names the container when the wanted text is split across children', () => {
     render(
@@ -448,7 +447,7 @@ describe('query: open shadow roots and attribute projection', () => {
 // drive.
 //
 // `data-testid` was tried as the fix, on the premise that it is "a handle its author put there to be
-// driven". Measured against our own instrumented bench app, that premise is false: the lean tree on
+// driven". Measured against Reticle's own instrumented bench app, that premise is false: the lean tree on
 // its dashboard went to 16 nodes and 175 tokens, and EIGHT of them were display elements —
 // kpi-deploys, kpi-success, kpi-p95, kpi-services, area-chart, activity-feed, brand. Half the
 // "interactive" view was things you cannot act on, and the mode roughly doubled to carry them. A

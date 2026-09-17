@@ -224,16 +224,13 @@ export interface FlowStep {
    * How long THIS step's `expect` waits for its consequence, in ms. Overrides the flow's
    * `signalTimeoutMs` and the built-in FLOW_SIGNAL_TIMEOUT_MS default.
    *
-   * Replay's wait was a fixed 4s with no way to raise it, and that is not a tuning knob — it decides
-   * whether an honest flow can ever be green. Two field reports, same shape: a login whose POST takes
-   * a measured 5.5s against a remote Postgres, and a CAD import whose LLM-backed perception takes
-   * ~22s. Both were verified live with `act_and_wait { timeout_ms }`, both drifted on replay at
-   * ~4020ms with `signal_not_observed`, and both were reported to the user as NO LONGER TRUE — a
-   * working feature called a regression. The only ways to green them were to weaken or delete the
-   * assertion, which the rules correctly forbid, so the flow was honest and permanently red.
+   * Not a tuning knob: the wait decides whether an honest flow can ever be green. A step whose
+   * consequence legitimately takes longer than the default drifts with `signal_not_observed` and
+   * reports a working feature as NO LONGER TRUE, and the only other ways to green it are to weaken
+   * or delete the assertion, which the rules forbid.
    *
-   * One agent tried exactly this field and `expect.timeout_ms`, and both were silently dropped.
-   * Replay must not be stricter than the tool that recorded the step.
+   * Replay must not be stricter than the tool that recorded the step: `act_and_wait` takes a
+   * `timeout_ms`, so a recorded step can carry one too.
    */
   timeoutMs?: number;
   /** sub-steps for an act_sequence, each independently anchored. */
@@ -335,8 +332,8 @@ export interface ReactionSummary {
  * The digest's counts: `total` always, every other counter only when it is NON-ZERO.
  *
  * This shape is sparse and the full `ReactionSummary` above is not, on purpose. The digest ships on
- * every step of every replay and on every `act_and_wait`; the full report does not. Measured on a
- * real four-step replay, 25 of 36 counters were zero — every step spelling out `"network":0,
+ * every step of every replay and on every `act_and_wait`; the full report does not. Across a
+ * four-step replay 25 of 36 counters are typically zero — every step spelling out `"network":0,
  * "domAdded":0,"routeChanges":0,…` whether or not anything moved.
  *
  * Omitting a zero is a ROUTE cut and never an evidence cut: an absent counter IS zero, so the reader
@@ -646,11 +643,9 @@ export interface FlowReplayResult {
    * behalf.
    *
    * Present only when the project is linked, memory sync is on, and the team has actually captured
-   * something about this flow. Consulting shared memory used to be a separate act an agent had to
-   * remember to perform — measured across a real corpus, every subject showed zero reads, not
-   * because the knowledge was useless but because nothing ever asked for it. A verification that
-   * asks on the agent's behalf is the difference between memory the platform stores and memory the
-   * platform uses.
+   * something about this flow. Shared memory an agent has to remember to consult is never consulted,
+   * so the verification asks on the agent's behalf — the difference between memory the platform
+   * stores and memory the platform uses.
    *
    * Deliberately additive and deliberately small: a verdict whose own result has been pushed below
    * a wall of statements is a worse verdict.
@@ -761,25 +756,6 @@ export const FlowFileSchema = z.object({
   /** Whether a suite runs this flow. Absent means active — see FlowStatus. */
   status: z.enum([FlowStatus.ACTIVE, FlowStatus.QUARANTINED, FlowStatus.DRAFT]).optional(),
   /**
-   * Why this flow is out of the suite, who owns getting it back, and since when.
-   *
-   * Required in full when quarantined, because a quarantine without a reason and an owner is a
-   * silent skip wearing a label: it removes the failure from the verdict AND the reason to ever fix
-   * it. `until` is the optional half — a date somebody has to look at it again.
-   */
-  /**
-   * Bugs this flow is KNOWN to expose, so a red for a filed reason is not re-investigated.
-   *
-   * Without it, a suite red for a known cause is indistinguishable from one that just broke: either
-   * somebody re-opens an investigation into a bug already filed, or the flow gets quarantined and
-   * stops watching the rest of the journey it covers.
-   *
-   * `assertions` is what keeps the note honest. A known-bug note is a claim about code, and code
-   * moves; a note recorded against assertions that have since changed explains away a NEW failure
-   * with an OLD excuse, which is a false green in a different costume. `staleKnownBugs` reports any
-   * note whose assertions no longer all exist, rather than trusting it.
-   */
-  /**
    * What this flow has learned from being run, as opposed to what a person wrote on it.
    *
    * Distinct from `knownBugs` above, and the difference is who is speaking. A known bug is a HUMAN
@@ -814,6 +790,18 @@ export const FlowFileSchema = z.object({
       }),
     )
     .optional(),
+  /**
+   * Bugs this flow is KNOWN to expose, so a red for a filed reason is not re-investigated.
+   *
+   * Without it, a suite red for a known cause is indistinguishable from one that just broke: either
+   * somebody re-opens an investigation into a bug already filed, or the flow gets quarantined and
+   * stops watching the rest of the journey it covers.
+   *
+   * `assertions` is what keeps the note honest. A known-bug note is a claim about code, and code
+   * moves; a note recorded against assertions that have since changed explains away a NEW failure
+   * with an OLD excuse, which is a false green in a different costume. `staleKnownBugs` reports any
+   * note whose assertions no longer all exist, rather than trusting it.
+   */
   knownBugs: z
     .array(
       z.object({
@@ -825,6 +813,13 @@ export const FlowFileSchema = z.object({
       }),
     )
     .optional(),
+  /**
+   * Why this flow is out of the suite, who owns getting it back, and since when.
+   *
+   * Required in full when quarantined, because a quarantine without a reason and an owner is a
+   * silent skip wearing a label: it removes the failure from the verdict AND the reason to ever fix
+   * it. `until` is the optional half — a date somebody has to look at it again.
+   */
   quarantine: z
     .object({
       reason: z.string().min(1),

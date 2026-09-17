@@ -119,10 +119,9 @@ describe('replay-from-panel wiring (bridge)', () => {
    * The registration used to be a single slot, so a second `attachSessionReady` silently replaced
    * the first and the earlier handler simply never ran again. Nothing threw and nothing went red.
    *
-   * It cost `app_instrumented` — the event that measures whether an app was ever instrumented, which
-   * is the whole point of the 2.7.0 funnel work — on its first day: the call was correct, registered
-   * before the flow-chip handler, and overwritten by it. The metric was permanently absent and the
-   * only symptom was an empty column nobody would look at for months.
+   * It cost `app_instrumented` — the event that measures whether an app was ever instrumented — on
+   * its first day: the call was correct, registered before the flow-chip handler, and overwritten by
+   * it. The event was permanently absent and nothing anywhere said so.
    */
   it('runs EVERY session-ready handler, not just the last one registered', async () => {
     const bridge = new Bridge({ port: 0 });

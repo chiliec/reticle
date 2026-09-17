@@ -1,10 +1,7 @@
 import type { Ref } from '@/identity/brand.js';
 import { z } from 'zod';
 import { CONTRACT_FILE_VERSION, ElementState, QueryBy } from './constants/constants.js';
-// Named where they actually live. These five reached this file through a `export * from
-// '../artifacts/flow-constants.js'` in `wire/constants/constants.ts`, which made artifact constants read as
-// wire constants at every call site -- including this one, which already imported
-// PROJECT_FILE_VERSION from the real path on the line below and the rest from the laundered one.
+// Imported from where they actually live: these are artifact constants, not wire constants.
 import {
   AnnotationKind,
   type AnnotationErrorCode,
@@ -169,9 +166,9 @@ export interface QueryEmptyHint {
    *
    * Role+name matching is exact, deliberately: substring matching on `name` would let a query for
    * "Save" select "Save and close", and acting on the wrong control is a worse failure than not
-   * finding the right one. But an exact miss used to say nothing about a label the caller was one
-   * word away from — reported from the field as a query for the button "Mesh" against a page whose
-   * button read "2 Mesh", costing a snapshot to discover. The match stays exact; the miss answers.
+   * finding the right one. An exact miss that says nothing costs a whole snapshot to discover the
+   * caller was one word away — a query for "Mesh" against a button reading "2 Mesh". The match
+   * stays exact; the miss answers.
    */
   nameNearMiss?: string[];
 }

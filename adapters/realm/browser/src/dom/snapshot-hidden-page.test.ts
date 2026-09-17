@@ -5,11 +5,10 @@ import { buildSnapshot } from './snapshot.js';
 /**
  * An empty tree must not read as an empty page (#672).
  *
- * Reported from the field: inside a lease, `reticle_snapshot` returned `{ tree: "", nodes: 0 }` for
- * BOTH `interactive` and `full` on a fully rendered page, while `reticle_query({ by: "role" })` on
- * that same page found 44 buttons and 12 textboxes — every one of them `visible: false`. It cost the
- * reporter about six tool calls and a large console dump to establish that the page was fine and the
- * snapshot was wrong, and the flow then had to be driven off query refs.
+ * `reticle_snapshot` can return `{ tree: "", nodes: 0 }` for BOTH `interactive` and `full` on a fully
+ * rendered page, while `reticle_query({ by: "role" })` on that same page finds dozens of buttons and
+ * textboxes — every one of them `visible: false`. Establishing that the page is fine and the snapshot
+ * is wrong then costs a diagnosis pass, and the flow has to be driven off query refs.
  *
  * `leanSkipped` already answers this for leanness and is lean-only by construction, so `full` had no
  * explanation available to it at all. These pin the count that gives it one — and, as much, pin what

@@ -2,9 +2,8 @@
  * The daemon's telemetry lifecycle, in one place: start, the periodic flush that survives a kill, the
  * one-shot project profile, and the rich summary on shutdown.
  *
- * Extracted from `cli.ts` because it is a cohesive unit with its own timers and its own failure rule
- * (nothing here may ever be able to fail a daemon start), and because `cli.ts` is a dispatcher — the
- * more of this that lives there, the harder it is to see what a command actually does.
+ * It lives apart from `cli.ts` because it has its own timers and its own failure rule — nothing here
+ * may ever be able to fail a daemon start — and because `cli.ts` is a dispatcher.
  */
 import { TelemetryEventKind, type SessionSummary } from '@reticlehq/core/telemetry';
 import { getTelemetry } from './telemetry.js';
@@ -22,10 +21,9 @@ import { markStallClock, STALL_AFTER_MS, stallUptime } from '@/portal/session/st
  * Whether an app for this project has ever reached Reticle, read from the same durable memory the
  * no-session diagnosis and the server instructions read.
  *
- * Best-effort: an unreadable state home must never be the reason a daemon start emits nothing, and
- * `undefined` here means "not measured" rather than "no". A `false` invented from a read error is
- * exactly the lie this field exists to avoid — it would put the working installs into the cohort we
- * are trying to size.
+ * Best-effort: an unreadable state home must never be the reason a daemon start emits nothing.
+ * `undefined` means "not measured"; a `false` invented from a read error would be wrong, not merely
+ * missing.
  */
 function installFacts(cwd: string, port: number | undefined): InstallFacts | undefined {
   if (port === undefined) return undefined;
@@ -44,10 +42,8 @@ const PROJECT_PROFILE_DELAY_MS = 5_000;
  * How often a running daemon rolls up its window.
  *
  * Exported because it is the BOUND ON WHAT IS LOST: a daemon that has served a tool never
- * idle-exits, so nothing calls shutdown, so its last partial window dies with the process. At 30
- * minutes against a median 28-minute session that meant the median session reported nothing at all.
- * Only non-empty windows emit, so a shorter interval costs nothing on the large majority of daemons
- * that never serve a tool.
+ * idle-exits, so nothing calls shutdown, so its last partial window dies with the process. Only
+ * non-empty windows emit, so a shorter interval costs nothing on a daemon that never serves a tool.
  */
 export const SESSION_FLUSH_MS = 5 * 60 * 1000;
 
@@ -58,15 +54,12 @@ export const SESSION_FLUSH_MS = 5 * 60 * 1000;
  * tick — a closed laptop, OOM, `kill -9`, a force-quit editor — reaches no shutdown handler and has
  * emitted nothing, so the whole session is invisible.
  *
- * In the field `daemon_started` outran `daemon_stopped` by a wide margin: **a meaningful share of
- * sessions never reported a summary at all.** Every "did anyone use Reticle" number is computed only
- * on the sessions that did, and undercounts by an unknown amount, which is the one thing a funnel
- * metric must not do.
+ * A session that never reports a summary is invisible, so every count computed over the sessions
+ * that did undercounts by an unknown amount.
  *
  * Ninety seconds is chosen against what it protects: a session that did real work usually does it
  * early (snapshot -> act -> assert is seconds), so one early tick captures nearly all of it. It
- * costs nothing on the daemons that dominate the population, because only a NON-EMPTY window emits
- * and most daemons never serve a tool at all.
+ * costs nothing on a daemon that never serves a tool, because only a NON-EMPTY window emits.
  */
 export const FIRST_FLUSH_MS = 90 * 1000;
 

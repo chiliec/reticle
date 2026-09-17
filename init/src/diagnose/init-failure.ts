@@ -2,8 +2,7 @@
  * Classified `reticle init` failures — our own vocabulary, never a raw error or a path.
  *
  * Lives here rather than beside the telemetry client because `run.ts` is what classifies a failed
- * run, and `@reticlehq/init` must not depend on the daemon. `@reticlehq/server`'s
- * `telemetry/init-telemetry.ts` re-exports it, so every existing consumer is unchanged.
+ * run, and `@reticlehq/init` must not depend on the daemon.
  */
 export const InitFailure = {
   /** Run outside a project root. The single most common first-run mistake. */

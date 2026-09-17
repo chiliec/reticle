@@ -6,15 +6,10 @@ import { execFileSync } from 'node:child_process';
  * Many checks in this package read files that live outside it -- the workflow file, the docs, the
  * skill, the benchmark scenarios -- and to do that they need the top of the repository.
  *
- * They used to find it by walking up a fixed number of directories: four `..` segments from a file
- * two levels inside `src`. That is not a fact about the repository, it is a fact about how deeply
- * this package happens to sit, and packages move. When one did, every count was off by one and each
- * check quietly started reading a directory that does not exist -- which, depending on the check,
- * either threw or passed on nothing.
- *
- * Git already knows the answer, so it is asked once here instead. This file sits at a fixed place
- * INSIDE the package, so the way its neighbours reach it never changes however far the package
- * itself moves.
+ * Asks git, because a fixed count of `..` segments is a fact about this package's depth, not about
+ * the repository: when the package moved, every count was off by one and each check quietly read a
+ * directory that does not exist. This file sits at a fixed place INSIDE the package, so the way its
+ * neighbours reach it never changes however far the package itself moves.
  *
  * Example: a check that wants the workflow file writes
  * `join(REPO_ROOT, '.github', 'workflows', 'ci.yml')`, and keeps working wherever this package ends

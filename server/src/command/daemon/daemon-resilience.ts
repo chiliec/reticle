@@ -58,12 +58,10 @@ const DISCONNECT_CODES: ReadonlySet<string> = new Set([
 /**
  * Nobody went away — nobody was ever there. A refused connect is the daemon not being up YET.
  *
- * This is the difference that made `runtime_crashed` useless. In the field **every crash event
- * carried one fingerprint, `connect ECONNREFUSED`, and every affected user was in the
- * never-verified set.** The proxy is BUILT to tolerate this — it answers the handshake from cache
- * and wakes a daemon on the next request — so reporting it as a crash meant the one metric that is
- * supposed to say "Reticle broke" said nothing but "the daemon had not booted yet", and a real crash
- * would have been invisible underneath it.
+ * This is the difference that made `runtime_crashed` useless. The proxy is BUILT to tolerate a
+ * refused connect — it answers the handshake from cache and wakes a daemon on the next request — so
+ * reporting it as a crash meant the one metric that is supposed to say "Reticle broke" said nothing
+ * but "the daemon had not booted yet", and a real crash would have been buried underneath it.
  *
  * Absorbed, not silenced: it still logs, and the outage it belongs to is already counted as
  * `connect_error` on `mcp_connection_lost`, which is the metric that can actually act on it.
@@ -77,11 +75,9 @@ const UNREACHABLE_CODES: ReadonlySet<string> = new Set(['ECONNREFUSED']);
  * rebuilds it. It is catastrophic for a stream of them, because the write that failed is retried
  * immediately, fails identically, and is absorbed again — a tight loop with no backoff and no exit.
  *
- * Measured in the field: one proxy ran four days after its editor closed, at 97-98% of a core, with
- * 1473 minutes of CPU time and ~930 MB/hour of identical log lines, every entry stamped to the same
- * millisecond. Nothing in Reticle's own output showed it — the daemon beside it reported healthy,
- * `sessions: 0` — so it was findable only by running `ps` by hand, and thirteen more idle pairs from
- * earlier sessions were still resident behind it.
+ * Left unbounded, such a proxy can pin a core for days after its editor closed, emitting identical
+ * log lines, with no daemon-side symptom at all: the daemon beside it reports healthy and
+ * `sessions: 0`, so it is findable only by running `ps` by hand.
  *
  * Chosen well above the handful a genuine reconnect produces and far below a runaway. The proxy's
  * whole purpose is to be the stdio server its editor launched; once that editor is gone there is

@@ -1,11 +1,10 @@
 /**
  * The FEEDBACK and IDENTITY contract — the only two things Reticle ever sends that a person wrote.
  *
- * Split out of `telemetry.ts` because they are a different privacy class from everything else there.
- * The rest of telemetry is counters and enums that cannot describe anyone; these two carry authored
- * text and a self-declared identity, they are never emitted passively, and they each have their own
- * consent story. Keeping them in one file makes that boundary something you can see rather than
- * something you have to remember — and it keeps the event contract under the size cap.
+ * They are a different privacy class from the rest of telemetry, which is counters and enums that
+ * cannot describe anyone: these two carry authored text and a self-declared identity, they are never
+ * emitted passively, and they each have their own consent story. Keeping them in one file makes that
+ * boundary something you can see rather than something you have to remember.
  *
  * Neither is ever populated by inference. A `Feedback` exists because an agent called
  * `reticle_feedback` or a human ran `reticle feedback`; an `Identity` exists because a human ran
@@ -22,9 +21,9 @@ export type FeedbackSource = (typeof FeedbackSource)[keyof typeof FeedbackSource
 
 /**
  * What kind of report this is. The first three are the agent's vocabulary — they name the three ways
- * Reticle fails an agent, and keeping them distinct is the whole point: a BUG is our defect, a GAP is
- * a thing we cannot see at all, and an AMBIGUITY is a verdict the agent could not act on. Lumping
- * them into "it didn't work" would destroy the only signal that says what to build next.
+ * Reticle fails an agent, and keeping them distinct is the whole point: a BUG is a Reticle defect, a
+ * GAP is something Reticle cannot see at all, and an AMBIGUITY is a verdict the agent could not act
+ * on. Lumping them into "it didn't work" destroys the only signal that says what to build next.
  */
 export const FeedbackKind = {
   /** A tool misbehaved: wrong result, crash, or a contract it did not honor. */
@@ -56,8 +55,8 @@ export const FeedbackKind = {
    *
    * Filed by a human at a terminal OR by an agent mid-task, and the agent case is the one that was
    * missing: every other kind an agent can file is a complaint, so the corpus could only ever grow
-   * into a defect list. Nothing in it said which parts were worth protecting when we changed them,
-   * which is the question a refactor actually needs answered.
+   * into a defect list, which never says which parts are worth protecting through a change — the
+   * question a refactor actually needs answered.
    *
    * A score alone is close to worthless here and the tool says so: a model asked for a number will
    * produce an agreeable one, and an agreeable number is indistinguishable from an earned one once
@@ -91,7 +90,7 @@ export type BrowserEngine = (typeof BrowserEngine)[keyof typeof BrowserEngine];
  * `attached`: Reticle launched nothing, so the page itself is the only thing that knows which
  * browser it is. A CLOSED list on purpose — the raw UA string and a raw `userAgentData` brand are
  * both unbounded and fingerprintable, so anything unrecognised reports `OTHER` rather than
- * forwarding a name we have never seen.
+ * forwarding an unrecognised name.
  */
 export const BrowserBrand = {
   CHROME: 'chrome',
@@ -168,7 +167,7 @@ export const FeedbackSchema = z.object({
    * The MODEL the agent is running, self-reported.
    *
    * Not obtainable any other way: MCP's `clientInfo` carries a client name and version and has no
-   * concept of a model, so the transport cannot tell us. The agent knows, and this report is already
+   * concept of a model, so the transport cannot say. The agent knows, and this report is already
    * something the agent authored — so asking is both the only mechanism and a reliable one.
    *
    * It matters more than it looks: a limitation that blocks a smaller model may be a docs problem

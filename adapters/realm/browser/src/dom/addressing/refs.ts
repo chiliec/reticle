@@ -7,11 +7,10 @@ import { TRANSPORT_LIMITS, asRef, type Ref } from '@reticlehq/core';
 /**
  * How many ref -> element entries are retained.
  *
- * The forward map is weak, so elements are always collectable; this bounds the BOOKKEEPING, which was
- * not. Refs are minted far more often than an agent asks about them — every meaningful DOM addition,
- * every transitionend, every scroll reveal — and the only eviction used to be "the agent happened to
- * resolve this exact dead ref". A busy app over a long session therefore accumulated entries for
- * elements that had been garbage for hours.
+ * The forward map is weak, so elements are always collectable; this bounds the BOOKKEEPING. Refs are
+ * minted far more often than an agent asks about them — every meaningful DOM addition, every
+ * transitionend, every scroll reveal — so with eviction only on "the agent resolved this exact dead
+ * ref", a busy app accumulates entries for elements that have been garbage for hours.
  *
  * Sized generously because eviction is not free of consequence (see refFor): the useful lifetime of a
  * ref is one agent turn, and this is far more than any one turn produces.
@@ -54,17 +53,17 @@ const SWEEP_EVERY_MINTS = 1000;
 /**
  * Where a document records the ref numbers it has claimed, so the next one starts past them.
  *
- * Refs are per-DOCUMENT: a reload or a cross-page link tears this module down and the next document
- * used to start minting from `e1` again. So `e7` from page A was a valid, resolvable, DIFFERENT
- * element on page B — nothing refused, the wrong element was acted on, and the result came back `ok`.
- * The SPA case was always safe (WeakRef liveness + isConnected); this was the other half, and the
- * more dangerous one, because it produced a false green instead of an error.
+ * Refs are per-DOCUMENT: a reload or a cross-page link tears this module down, and if the next
+ * document mints from `e1` again then `e7` from page A is a valid, resolvable, DIFFERENT element on
+ * page B — nothing refused, the wrong element acted on, and the result `ok`. The SPA case is already
+ * safe (WeakRef liveness + isConnected); this is the other half, and the more dangerous one, because
+ * it produces a false green instead of an error.
  *
- * Deliberately NOT a change to the ref grammar. Stamping refs `e7@3` would have worked too, but every
- * agent passes refs back verbatim and every saved flow on disk already holds bare ones, so it buys a
- * wire-format migration for a property the sequence itself can carry. A number that never restarts
- * means a stale ref simply misses the map, and the refusal that already exists — already worded for
- * exactly this case — fires unchanged.
+ * Deliberately NOT a change to the ref grammar. Stamping refs `e7@3` would work too, but every agent
+ * passes refs back verbatim and every saved flow on disk holds bare ones, so it buys a wire-format
+ * migration for a property the sequence itself can carry. A number that never restarts means a stale
+ * ref simply misses the map, and the existing refusal — already worded for this case — fires
+ * unchanged.
  *
  * Namespaced like the session key it sits beside; `sessionStorage` is the right scope for the same
  * reason session continuity uses it (survives reloads and same-tab navigations, not shared with
@@ -230,7 +229,7 @@ export class RefRegistry {
    * Takes a plain `string` ON PURPOSE: this is the untrusted-input path — the ref comes from the agent
    * over the wire, and a miss is answered with null rather than an error. Requiring a branded Ref here
    * would force a meaningless cast at every wire boundary and buy nothing; the brand's value is on the
-   * MINT (refFor) so our own code cannot pass, say, a sessionId where a handle is expected.
+   * MINT (refFor) so Reticle's own code cannot pass, say, a sessionId where a handle is expected.
    */
   resolve(ref: string): Element | null {
     const weak = this.#fromRef.get(ref);

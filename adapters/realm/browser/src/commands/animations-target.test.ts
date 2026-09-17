@@ -1,13 +1,9 @@
 /**
  * Nine concurrent animations came back as nine indistinguishable objects.
  *
- * Reported from the field, diagnosed to the line by the reporter:
- *
- * > `reticle_animations` advertises 'targets/timing' but the payload carries no target.
- * > `listAnimations()` reads `a.effect` only for `getTiming()` and never reads
- * > `(effect as KeyframeEffect).target`, so a page with nine concurrent animations returns nine
- * > indistinguishable `{playState, currentTime, duration}` rows with no way to tell which element
- * > each belongs to.
+ * `reticle_animations` advertises 'targets/timing', so the payload must carry a target:
+ * `listAnimations()` must read `(effect as KeyframeEffect).target`, not `a.effect` for `getTiming()`
+ * alone, or there is no way to tell which element each row belongs to.
  *
  * A list you cannot index is not a list. The tool's whole purpose is answering "is THAT thing still
  * animating", and every row was identical shape with nothing naming the subject.

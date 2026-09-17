@@ -7,12 +7,9 @@
  * and would leave the patch installed forever.
  *
  * `@typescript-eslint/unbound-method` exists to catch the common mistake this pattern deliberately
- * makes, so every such site used to carry an eslint-disable. Disabling a rule seven times to express
- * one intention is worse than naming the intention once: those disables also suppressed the rule for
- * any OTHER unbound access on the same lines, which is exactly what the rule is for.
- *
- * The generic index access here is not something the rule flags, so callers stay clean and the
- * "I meant to do this" is stated in one place instead of seven.
+ * makes. This function is the ONE place that intention is stated: an eslint-disable per call site
+ * would also suppress the rule for any other unbound access on those lines, which is what the rule is
+ * for. The generic index access here is not something the rule flags, so callers stay clean.
  */
 export function captureMethod<T, K extends keyof T>(target: T, key: K): T[K] {
   return target[key];

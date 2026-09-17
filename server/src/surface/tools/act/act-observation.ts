@@ -6,9 +6,9 @@
  * observer, never about the application, and the difference matters: every honest verdict this
  * engine can give depends on not converting "I stopped watching" into "your app is broken".
  *
- * Extracted from act-tools.ts, which had reached the file-size cap. It earns its own module because
- * it is one idea — follow the document that took over, and re-ask there — used from the two points
- * where observation can be lost: a write rejected at dispatch, and a wait cut off mid-predicate.
+ * Its own module because it is one idea — follow the document that took over, and re-ask there —
+ * used from the two points where observation can be lost: a write rejected at dispatch, and a wait
+ * cut off mid-predicate.
  */
 
 import type { Session } from '@/portal/session/session.js';

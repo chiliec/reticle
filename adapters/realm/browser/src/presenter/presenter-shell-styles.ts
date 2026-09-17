@@ -1,6 +1,5 @@
 /**
  * Floating HUD shell styles - FAB, morphing toolbar, and agent chat panel.
- * Split from presenter-styles.ts so the controller stays under the size cap.
  */
 import { LOG_TIME_ATTR } from './chrome/presenter-log.js';
 import { Z_HUD_TOOLTIP } from './presenter-config.js';
@@ -102,8 +101,8 @@ export const SHELL_CSS = `
 /**
  * Minimising the chat leaves a CAPSULE, not a hole: the same glass, the same state dot, the last
  * thing the agent did - sitting directly above the toolbar capsule and reopening the panel when
- * clicked. Minimise used to leave the toolbar alone above an empty gap, so a minimised session
- * looked identical to no session at all.
+ * clicked. Leaving the toolbar alone above an empty gap would make a minimised session look
+ * identical to no session at all.
  */
 [${CHAT_PILL_ATTR}]{
   display:none;position:absolute;right:0;left:auto;bottom:calc(100% + 8px);z-index:5;
@@ -275,10 +274,9 @@ export const SHELL_CSS = `
 [${HUD}] .reticle-hi-toggle .reticle-hi-icon--solid svg{
   transform:scale(1.12);transform-origin:center;}
 /*
- * Active toggles keep the OUTLINE icon. They used to swap to the solid heroicon, which is a filled
- * glyph next to 1.5px strokes everywhere else, so the pressed button read as a heavier typeface
- * rather than as a state. The state is already carried by accent colour and a background above,
- * which is enough and does not change the icon's weight.
+ * Active toggles keep the OUTLINE icon. The solid heroicon is a filled glyph next to 1.5px strokes
+ * everywhere else, so a pressed button reads as a heavier typeface rather than as a state. Accent
+ * colour and the background above already carry the state without changing the icon's weight.
  */
 [${HUD}] .reticle-tb-btn--toggle[data-active="1"] .reticle-hi-icon--outline{opacity:1;}
 [${HUD}] .reticle-tb-btn--toggle .reticle-hi-icon--solid{opacity:0;}
@@ -290,10 +288,10 @@ export const SHELL_CSS = `
 /**
  * The toolbar is a FIXED number of slots.
  *
- * Copy and Export appear when a session ends, and they used to be added to a bar that was already
- * full - eleven icons in a pill sized for nine, so the last one rendered outside the rounded box.
- * They take the two slots that Pause and End vacate: neither can do anything to a session that has
- * already ended, so the bar swaps two dead controls for two live ones and never changes width.
+ * Copy and Export appear when a session ends, and the bar is already full - eleven icons in a pill
+ * sized for nine renders the last one outside the rounded box. They take the two slots Pause and End
+ * vacate: neither can do anything to an ended session, so the bar swaps two dead controls for two
+ * live ones and never changes width.
  */
 [${HUD}] .reticle-tb-btn--export{display:none;}
 [${OVERLAY}][${STATE}="ended"] [${HUD}] .reticle-tb-btn--export{display:inline-flex;}
@@ -323,9 +321,8 @@ export const SHELL_CSS = `
  * The mode, ON the status row rather than under it.
  *
  * The action text beside it is flex:1, so this claims the right edge of the row and takes its space
- * from the elided action text. Nothing above or below moves: the panel used to grow and shrink by
- * the height of this pill on every single tool call, which is what made one status line look like a
- * second UI appearing and leaving.
+ * from the elided action text. Nothing above or below moves: growing and shrinking by the height of
+ * this pill on every tool call makes one status line look like a second UI appearing and leaving.
  */
 [${DOCK_ATTR}] .reticle-chip{display:none;flex:none;align-items:center;gap:4px;font-size:8px;font-weight:600;letter-spacing:.06em;
   height:16px;padding:0 7px;line-height:1;border-radius:999px;text-transform:uppercase;

@@ -62,7 +62,7 @@ export function installRoute(emit: Emit): Teardown {
   window.addEventListener('hashchange', onNav);
 
   return () => {
-    // Restore ONLY if the slot still holds our wrapper. If a router/analytics SDK wrapped
+    // Restore ONLY if the slot still holds Reticle's wrapper. If a router/analytics SDK wrapped
     // history.pushState AFTER connect(), unconditionally writing origPush back would silently
     // uninstall THEIR instrumentation too — the SDK harming the app it only meant to observe.
     if (history.pushState === patchedPush) history.pushState = origPush;
