@@ -42,13 +42,11 @@ interface InitRuntimeArgs {
    * user's home. The install gate caught it, because the gate runs with --no-mcp.
    */
   readonly mcp?: boolean | undefined;
-  readonly flow?: string | undefined;
   readonly env?: string[] | undefined;
   readonly url?: string | undefined;
   readonly timeoutSeconds?: number | undefined;
   /** Restart the calling client so IT gets the tools — see relaunch.ts. */
   readonly relaunch?: boolean | undefined;
-  readonly driveModel?: string | undefined;
   readonly licenseKey?: string | undefined;
 }
 

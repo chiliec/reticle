@@ -8,10 +8,6 @@
  *
  * What only an agent can know, and therefore what belongs in this type:
  *
- *   --flow      which journey proves the thing the user cares about. Code can enumerate buttons; it
- *               cannot know that checkout matters and the theme toggle does not. Measured, naming
- *               it took one app's drive from a ten-minute timeout to 138 seconds, because the turns
- *               go into FINDING a flow and naming one removes that search.
  *   --app       which app in a monorepo the user meant. init can find the ones that are servable;
  *               only the request says which of them is being worked on.
  *   --env       what the app needs to get past its own front door. A key in .env.example, a mock
@@ -23,19 +19,19 @@
  *               where. There is no flag that overrides the dev command; --url replaces the need.
  *
  * Everything else on this type is an operator's dial, not an agent's judgement.
+ *
+ * `--flow` used to head that list -- which journey to prove. Onboarding stopped driving in 7e698fea
+ * and the flag was retired with it, so naming the journey belongs to the FIRST RUN now
+ * (`reticle_verify { action: "explore", persona: ... }`), not to this type.
  */
 
 /** The bridge port. NOT the dev server's, and conflating them is a documented setup failure. */
 export const DEFAULT_BRIDGE_PORT = 4400;
-/** Per-phase budget. The drive gets its own, much larger one. */
+/** Per-phase budget. */
 export const DEFAULT_PHASE_TIMEOUT_MS = 120_000;
-/** What the drive may spend before it is stopped. */
-export const DEFAULT_DRIVE_BUDGET_USD = 3;
 
 interface SetupOptions {
   // ── what only an agent can know ────────────────────────────────────────────────────────────────
-  /** The journey to drive, in the caller's own words. */
-  readonly flow?: string | undefined;
   /** Which app in a monorepo. */
   readonly app?: string | undefined;
   /** Environment the app needs in order to reach a usable state. */
@@ -48,16 +44,10 @@ interface SetupOptions {
   // ── operator dials ────────────────────────────────────────────────────────────────────────────
   readonly bridgePort: number;
   readonly phaseTimeoutMs: number;
-  readonly driveBudgetUsd: number;
-  readonly driveModel?: string | undefined;
   /** Register the MCP with the other coding agents on this machine. */
   readonly registerAgents: boolean;
   /** Open a browser. False for CI, a headless box, or a tab the user already has. */
   readonly openBrowser: boolean;
-  /** Drive a flow. False leaves step five to the caller, and is the only honest way to skip it. */
-  readonly drive: boolean;
-  /** Re-record with the stronger model when the saved flow is graded weaker than `asserted`. */
-  readonly escalateWeakFlow: boolean;
   /** Restart a dev server whose bundle predates the build-config edit. */
   readonly restartStaleDevServer: boolean;
   /** Write files and stop, which is what `init` did before it grew the runtime phases. */
@@ -69,11 +59,8 @@ interface SetupOptions {
 export const DEFAULT_SETUP_OPTIONS: SetupOptions = {
   bridgePort: DEFAULT_BRIDGE_PORT,
   phaseTimeoutMs: DEFAULT_PHASE_TIMEOUT_MS,
-  driveBudgetUsd: DEFAULT_DRIVE_BUDGET_USD,
   registerAgents: true,
   openBrowser: true,
-  drive: true,
-  escalateWeakFlow: true,
   restartStaleDevServer: true,
   filesOnly: false,
 };

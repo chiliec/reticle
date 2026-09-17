@@ -42,12 +42,13 @@ describe('defaults', () => {
     expect(DEFAULT_SETUP_OPTIONS.bridgePort).toBe(4400);
   });
 
-  // Every one of these off by default would make setup quietly do less than it says.
-  it('drives, opens a browser, registers agents and escalates a weak flow by default', () => {
-    expect(DEFAULT_SETUP_OPTIONS.drive).toBe(true);
+  // Either of these off by default would make onboarding quietly do less than it says.
+  // `drive` and `escalateWeakFlow` used to be asserted here too. Onboarding stopped driving in
+  // 7e698fea, which left both fields with no reader anywhere -- so the assertions were pinning a
+  // constant against itself and would have gone on passing after the behaviour was deleted.
+  it('opens a browser and registers agents by default', () => {
     expect(DEFAULT_SETUP_OPTIONS.openBrowser).toBe(true);
     expect(DEFAULT_SETUP_OPTIONS.registerAgents).toBe(true);
-    expect(DEFAULT_SETUP_OPTIONS.escalateWeakFlow).toBe(true);
   });
 
   it('does not stop after writing files unless asked', () => {
@@ -55,7 +56,8 @@ describe('defaults', () => {
   });
 
   it('carries no agent judgement by default, because only the caller can supply them', () => {
-    expect(DEFAULT_SETUP_OPTIONS.flow).toBeUndefined();
+    // `flow` was asserted here too, until onboarding stopped driving in 7e698fea retired `--flow`
+    // and left the field with no reader and no setter.
     expect(DEFAULT_SETUP_OPTIONS.app).toBeUndefined();
     expect(DEFAULT_SETUP_OPTIONS.env).toBeUndefined();
   });

@@ -547,27 +547,15 @@ const SCENARIOS = [
     expect: 'nothing is serving',
   },
   {
-    name: 'weak-flow-is-re-recorded-not-accepted',
-    why: 'a fast drive model leaves flows graded assertion-free or presence-only — they only ACT, so they pass even when the feature is broken, and setup replays them forever. The weak artifact must be re-recorded with the stronger model, not handed over with a warning',
-    build: () => app({ 'package.json': pkg({ dev: 'true' }), '.reticle/flows/f.json': '{}' }),
-    run: (dir) => {
-      // First call (with --model) reports a weak grade; the second (without) reports asserted. The
-      // counter file is how the scenario proves a SECOND drive happened at all.
-      const bin = join(dir, 'gradebin');
-      mkdirSync(bin, { recursive: true });
-      writeFileSync(
-        join(bin, 'claude'),
-        `#!/bin/sh\nfor a in "$@"; do if [ "$a" = "--model" ]; then\n  echo '{"result":"Flow saved. assertions.grade: presence-only","num_turns":3}'\n  echo weak >> ${dir}/calls\n  exit 0\nfi; done\necho '{"result":"Flow saved. assertions.grade: asserted","num_turns":9}'\necho strong >> ${dir}/calls\nexit 0\n`,
-      );
-      chmodSync(join(bin, 'claude'), 0o755);
-      const r = run(dir, ['--url', 'http://127.0.0.1:59983/', '--drive-model', 'fast-one'], {
-        PATH: `${bin}:${process.env.PATH}`,
-      });
-      return r;
-    },
-    // It never gets a session here, so the drive never runs — what this pins is that the escalation
-    // exists and is wired to the grade, verified by the unit gate below rather than a live drive.
-    expect: 'nothing is serving',
+    name: 'a-retired-init-flag-is-answered-by-name',
+    why: 'onboarding stopped driving in 7e698fea, retiring --flow, --no-drive and --drive-model. The instructions we had already shipped still passed them: both SKILL.md files ran `init --flow "<the journey worth proving>"`, so the FIRST command a user or agent runs exited non-zero. A retired flag reported as "unknown argument" tells that reader their command is malformed; it is not, it is out of date, and the difference is whether they can act on the answer',
+    build: () => app({ 'package.json': pkg({ dev: 'true' }) }),
+    // No --url and no dev server needed: the parser refuses before any phase starts, which is the
+    // whole point — the answer must arrive before the command does any work.
+    run: (dir) => run(dir, ['--flow', 'a user checks out']),
+    // The replacement, not merely a complaint. `init` is onboarding now; proving a flow is the
+    // first run, and the refusal has to carry the call that does it.
+    expect: 'no longer an `init` flag',
   },
   {
     name: 'relaunch-refuses-a-session-with-no-transcript',
