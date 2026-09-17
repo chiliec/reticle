@@ -47,7 +47,15 @@ describe('what the web and desktop subjects reach between them', () => {
     // If this ever became nested, the desktop run would be costing three minutes of Electron to
     // re-answer a subset of what a browser tab already answered, and the honest thing would be
     // to say so rather than keep printing two scores.
-    expect(DESKTOP.filter((id) => !WEB.includes(id))).toEqual(['fire-and-forget']);
+    // `effect-failed-surface-advanced` joined this list when the web subject's entry for it was
+    // removed. The entry planted `swallowed-500-login`, which does not swallow anything: the app
+    // shows an error and stays put, so the scenario was never being exercised on the web surface.
+    // The desktop subject still plants it for real -- the Tauri app's `ipc://archive_todo` returns
+    // 500 while the list advances -- which is why the id is here rather than in PLANTED_NOWHERE.
+    expect(DESKTOP.filter((id) => !WEB.includes(id)).sort()).toEqual([
+      'effect-failed-surface-advanced',
+      'fire-and-forget',
+    ]);
     expect(WEB.filter((id) => !DESKTOP.includes(id)).sort()).toEqual([
       'double-submit-against-count-one',
       'subject-disappears-mid-window',

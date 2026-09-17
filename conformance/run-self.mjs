@@ -9,7 +9,7 @@
 //
 // It boots the bench app and a daemon in one process, drives each plantable scenario through
 // `conformanceClient`, and prints what was earned. Not a gate: it is a measurement, and the
-// number it prints today is eight of sixteen because our SUBJECT is incomplete, not because the
+// number it prints today is seven of sixteen because our SUBJECT is incomplete, not because the
 // implementation failed. Making it a gate before the subject is finished would turn a known gap
 // into a red board nobody can clear.
 //
@@ -334,7 +334,7 @@ async function main() {
         //   surface   net, log, state, signal, ui
         //
         // so the channel gate in `profileEarned` would pass at any of the three. What stops a
-        // higher claim is FIXTURES: `subjects/bench-app.mjs` can plant eight of sixteen
+        // higher claim is FIXTURES: `subjects/bench-app.mjs` can plant seven of sixteen
         // scenarios and none of the four above `effect`. Claiming `surface` would move those
         // four from "not asked" to ABSENT and buy no new evidence -- a bigger denominator and
         // the same numerator, which is the participation trophy this suite is built to refuse.

@@ -93,8 +93,12 @@ describe('what profile this subject could claim, and why it does not', () => {
     );
     // Negative control, because an empty result here is also what a broken `plantUrl` returns,
     // and the two would look identical. An `effect` scenario must still come back with a URL.
+    // Any `effect` scenario this subject really plants will do. It named
+    // `effect-failed-surface-advanced` until that entry was removed for planting a bug which does
+    // not reproduce its scenario — and then the negative control was itself the thing returning
+    // undefined, which is the failure it exists to tell apart.
     expect(
-      plantUrl('http://x', 'effect-failed-surface-advanced'),
+      plantUrl('http://x', 'double-submit-against-count-one'),
       'plantUrl answers nothing at all, so the assertion below proves nothing',
     ).toBeDefined();
     // The day one of these gets a planter, the claim should rise with it -- and this test is
@@ -129,10 +133,15 @@ describe('the published coverage fraction', () => {
     // first version of this test agreed with a number that was wrong.
     const catalogue = new Set(plantable());
     const covered = SCENARIOS.filter((scenario) => catalogue.has(scenario.id)).length;
+    // 8 -> 7 when `effect-failed-surface-advanced` lost its entry. That is a coverage number going
+    // DOWN and it is the honest direction: the entry planted `swallowed-500-login`, which the app
+    // handles correctly, so the scenario was counted as covered while never being exercised. A
+    // fraction that counts a plant which does not reproduce its scenario is the stale-denominator
+    // problem this test was written for, one level in.
     expect({ total, covered, absent: total - covered }).toEqual({
       total: 16,
-      covered: 8,
-      absent: 8,
+      covered: 7,
+      absent: 9,
     });
   });
 });

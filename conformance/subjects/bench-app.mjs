@@ -46,20 +46,33 @@ export const BENCH_APP_CHANNELS = Object.freeze([
   'state',
 ]);
 
+/*
+ * ── WHY `effect-failed-surface-advanced` HAS NO ENTRY ───────────────────────────────────────────
+ *
+ * It had one, and the entry was wrong. It planted `swallowed-500-login` and this comment said the
+ * bug "makes the login POST answer 500 while the UI advances to the signed-in state". Driven and
+ * measured, it does the opposite: `/api/login` answers 500, `api.ts` returns `ok: res.ok`, and
+ * `Login.tsx` only advances `if (ok)` -- so the app shows an error and stays on the login screen.
+ * The app handles the failure CORRECTLY. There is no swallowed rejection to find.
+ *
+ * The scoreboard did not say so. With no predicate on the entry nothing evaluated the claim, and
+ * the run came back `yes -- proved by independent evidence`: a request happened in the declared
+ * channel, which is not the same thing as the sign-in having completed. One scenario reporting a
+ * verdict about a defect that was never planted is the "scoreboard shaped around its author" this
+ * file's header says the suite exists to be incapable of.
+ *
+ * ABSENT is the honest answer, and it is never a pass.
+ *
+ * What a real plant needs: a flow where the app advances DESPITE a failed request. This app has
+ * one -- `views/Compose.tsx` sets `generating: false`, writes the result and emits
+ * `COMPOSE_GENERATED` whatever `generateScript` returned, so `swallowed-500-generate` is a genuine
+ * swallowed rejection. It cannot be planted here yet because reaching it takes four steps (sign in,
+ * route to compose, type a prompt, press generate) and an entry carries a SINGLE `act`. Either the
+ * subject format grows a setup sequence, or the app grows a bug that swallows on the login path.
+ * Measured on the sign-in action, nothing else is even requested: the only call in the window is
+ * `POST /api/login`, so there is no second request available to fail.
+ */
 export const BENCH_APP_SUBJECT = Object.freeze({
-  /**
-   * A request fails and the screen moves on anyway -- the swallowed rejection.
-   *
-   * `swallowed-500-login` makes the login POST answer 500 while the UI advances to the signed-in
-   * state. Every channel except the network agrees it worked.
-   */
-  'effect-failed-surface-advanced': {
-    bug: 'swallowed-500-login',
-    act: { capability: 'act', target: 'testid=login-submit', verb: 'click' },
-    claim: 'the sign-in completed',
-    reads: ['net'],
-  },
-
   /** One action, two identical writes, against a claim that named one. */
   'double-submit-against-count-one': {
     bug: 'double-login',
