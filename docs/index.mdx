@@ -30,13 +30,14 @@ silent 500.
 
 Install it now:
 
-  RETICLE_INSTALL_SOURCE=docs_site npx @reticlehq/server@latest init \
+  RETICLE_INSTALL_SOURCE=docs_site npx @reticlehq/server@latest init
 
-That one command wires the project, starts the dev server, opens the app, waits
-for it to connect and drives that flow to a verdict. Do not walk it by hand: read
-what it prints, do anything it says is outstanding, and re-run it, which is safe.
-It exits non-zero until a verdict exists, and that, not a config file, is what
-"installed" means. Only if it could not run at all, follow
+That one command wires the project, starts the dev server, opens the app and
+waits for it to connect. Do not walk it by hand: read what it prints, do anything
+it says is outstanding, and re-run it, which is safe. It exits non-zero until the
+app connects, and that connection, not a config file, is what "installed" means.
+Then prove a flow, which is a separate call:
+reticle_verify { action: "explore", persona: "<who does what>" }. Only if it could not run at all, follow
 https://docs.reticle.sh/install-manual.md.
 
 Afterwards, use it whenever you change any user-facing behaviour.

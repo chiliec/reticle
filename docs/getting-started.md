@@ -78,9 +78,9 @@ The bridge + MCP server is a single process that serves all your projects, so it
 
 Re-running is safe: already-registered and already-patched steps are skipped, and on a wired project it goes straight to proving the app still works. Preview without writing via `npx @reticlehq/server init --dry-run`.
 
-`init` does not stop at writing files. It starts your dev server (restarting one whose bundle predates the config edit), opens the app, waits for a session to connect from inside it, and drives one flow to a verdict, which it saves so later checks are a single call with no model involved. It exits non-zero if no verdict was produced and prints what is left to do.
+`init` does not stop at writing files. It starts your dev server (restarting one whose bundle predates the config edit), opens the app, and waits for a session to connect from inside it. That connection is the whole proof that onboarding worked. It exits non-zero if nothing connected and prints what is left to do. It does NOT drive. Then prove a flow. That is the FIRST RUN, and it is a separate call: `reticle_verify { action: "explore", persona: "<who does what>" }`. It drives with a model inside the daemon and records what it drove, so later checks replay it with no model in the loop.
 
-Three flags carry what the command cannot work out for itself:
+These carry what the command cannot work out for itself:
 
 | Flag | What only you know |
 | --- | --- |
@@ -88,7 +88,7 @@ Three flags carry what the command cannot work out for itself:
 | `--env KEY=VALUE` | What your app needs to reach a usable state: the key from `.env.example`, the mock backend, the variable that skips an auth wall. Repeatable. |
 | `--app <dir>` | Which app in a monorepo. It finds the servable ones; only you know which you are working in. |
 
-The rest are dials: `--license <key>` (writes it to `.env` and keeps `.env` out of git), `--json` (one object for an agent to read), `--files-only` (write, register, pre-approve, and stop, which is what `init` did before it learned to boot the app, and what an existing install re-runs to pick up new wiring), `--relaunch` (prints the command that restarts the conversation you are in, with the tools loaded: the restart step most installs stall on, and it composes with `--files-only`), `--no-open`, `--no-drive`, `--dry-run`, `--port N`, `--no-mcp`, `--no-install`.
+The rest are dials: `--license <key>` (writes it to `.env` and keeps `.env` out of git), `--json` (one object for an agent to read), `--files-only` (write, register, pre-approve, and stop, which is what `init` did before it learned to boot the app, and what an existing install re-runs to pick up new wiring), `--relaunch` (prints the command that restarts the conversation you are in, with the tools loaded: the restart step most installs stall on, and it composes with `--files-only`), `--no-open`, `--dry-run`, `--port N`, `--no-mcp`, `--no-install`.
 
 Then restart your dev server and skip to [Step 4](#step-4-run-it-and-verify-the-connection). The manual steps below explain what `init` sets up, if you prefer to wire it yourself.
 
@@ -512,7 +512,7 @@ pnpm add @reticlehq/next
 
 ### What exactly does `reticle init` change in my project?
 
-Four files, and none of them are mysterious: a `.reticle.json` project config, your build config (the `reticle()` Vite plugin, or `withReticle` in `next.config`), a dev-only capabilities file at `src/reticle-dev.ts` (or `app/reticle-dev.tsx` on Next.js), and your agent's rule files. It then starts your dev server, opens the app and drives one flow, none of which changes your source: the dev server is left running for you afterwards, and the only file the drive may edit is the capabilities file, and only when your app registers none. It also registers the MCP server globally, which is a once-per-machine step rather than a per-project one. Run `npx @reticlehq/server init --dry-run` first to see the exact plan before anything is written.
+Four files, and none of them are mysterious: a `.reticle.json` project config, your build config (the `reticle()` Vite plugin, or `withReticle` in `next.config`), a dev-only capabilities file at `src/reticle-dev.ts` (or `app/reticle-dev.tsx` on Next.js), and your agent's rule files. It then starts your dev server and opens the app, neither of which changes your source: the dev server is left running for you afterwards. It also registers the MCP server globally, which is a once-per-machine step rather than a per-project one. Run `npx @reticlehq/server init --dry-run` first to see the exact plan before anything is written.
 
 ### Do I have to re-register the MCP server for every project?
 

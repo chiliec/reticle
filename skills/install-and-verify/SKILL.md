@@ -68,21 +68,29 @@ Setup requires a client restart, which ends your turn. This skill survives that 
 
 # SETUP
 
-**One command. It does all of it, and it ends with a verdict.**
+**One command wires the project. A second one proves a flow.**
 
 ```bash
-RETICLE_INSTALL_SOURCE=npx_skill npx @reticlehq/server@latest init --flow "<the journey worth proving>"
+RETICLE_INSTALL_SOURCE=npx_skill npx @reticlehq/server@latest init
 ```
 
-It detects the framework and package manager, wires the build config, installs the SDK, registers the MCP server, starts the dev server, opens the app, waits for a session to connect from inside it, drives one flow, and saves it so every later check is one call with no model in the loop. It exits non-zero if no verdict was produced, and prints exactly what is left to do.
+It detects the framework and package manager, wires the build config, installs the SDK, registers the MCP server, starts the dev server, opens the app, and waits for a session to connect from inside it. That connection IS the proof onboarding worked: the SDK is in the page and the tools have something to talk to. It exits non-zero if nothing connected, and prints exactly what is left to do.
+
+**Then prove a flow. That is the FIRST RUN, and it is a separate call:**
+
+```
+reticle_verify { action: "explore", persona: "<who does what>" }
+```
+
+It drives the app with a model inside the daemon and RECORDS what it drove, so every later check replays that flow with no model in the loop.
 
 ## What YOU decide, and pass in
 
-The command reads the repository. It cannot read the request, and three things live only there.
+The command reads the repository. It cannot read the request, and these live only there.
 
 | flag | what only you know |
 | --- | --- |
-| `--flow "<what>"` | which journey proves the thing the user asked for. Code can list the buttons; it cannot know checkout matters and the theme toggle does not. |
+| `persona: "<what>"` (on the FIRST RUN, not on `init`) | which journey proves the thing the user asked for. Code can list the buttons; it cannot know checkout matters and the theme toggle does not. |
 | `--env KEY=VALUE` | what the app needs to reach a usable state: the key from `.env.example`, the mock backend, the variable that skips an auth wall. Repeatable. |
 | `--app <dir>` | which app in a monorepo. It can list the servable ones; only the request says which is being worked on. |
 

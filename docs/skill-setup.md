@@ -14,7 +14,7 @@ RETICLE_INSTALL_SOURCE=skill_file npx @reticlehq/server@latest init
 
 `@latest` is deliberate: `npx` caches, and a stale cached CLI is the most common silent setup failure. Never pin a version here.
 
-That single command detects the framework and package manager, wires the build config, installs the SDK, registers the MCP server, starts the dev server, opens the app, waits for a session to connect from inside it, drives one flow, and saves it so every later check is one call with no model in the loop. It exits non-zero if it did not produce a verdict, and prints exactly what is left to do.
+That single command detects the framework and package manager, wires the build config, installs the SDK, registers the MCP server, starts the dev server, opens the app, and waits for a session to connect from inside it. It exits non-zero if nothing connected, and prints exactly what is left to do. Then prove a flow. That is the FIRST RUN, and it is a separate call: `reticle_verify { action: "explore", persona: "<who does what>" }`. It drives with a model inside the daemon and records what it drove, so later checks replay it with no model in the loop.
 
 ## What YOU decide, and pass in
 
