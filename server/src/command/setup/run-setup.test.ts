@@ -30,8 +30,7 @@ function world(
     probePage: (): Promise<PageProbe> => Promise.resolve({ served: true, sdkInPage: true }),
     openBrowser: (u: string) => {
       opened.push(u);
-      // The default world has a working browser. A run that needs the other case overrides this.
-      return Promise.resolve(true);
+      return Promise.resolve();
     },
     listSessions: (): Promise<CandidateSession[]> => Promise.resolve([{ sessionId: 'new', url }]),
     now: () => (clock += 10),
@@ -235,43 +234,6 @@ describe('when it cannot continue, it says what is left', () => {
  * and then waiting as if we had is a promise to the reader that cannot be kept." Failing to open is
  * the same promise, made by accident.
  */
-describe('when the browser will not open', () => {
-  /** The same world twice, differing only in whether the launcher succeeded. */
-  async function sleptWaitingForASession(browserOpened: boolean): Promise<number> {
-    let slept = 0;
-    const fx = world({
-      listSessions: () => Promise.resolve([]),
-      openBrowser: () => Promise.resolve(browserOpened),
-      sleep: (ms: number) => {
-        slept += ms;
-        return Promise.resolve();
-      },
-    });
-    const r = await runSetupPhases({ ...INPUT, openBrowser: true }, fx);
-    expect(r.ok, 'no session either way, so both runs must fail').toBe(false);
-    return slept;
-  }
-
-  it('does not wait the full budget for a session nothing can create', async () => {
-    // No absolute figure: the budget belongs to the caller and the grace to a constant, so what is
-    // asserted is the RELATIONSHIP between the two runs. A duration compared against a number would
-    // be a statement about this machine, which is the flake this repository already documents.
-    const withoutBrowser = await sleptWaitingForASession(false);
-    const withBrowser = await sleptWaitingForASession(true);
-
-    expect(
-      withoutBrowser,
-      'a failed launch waited as long as a successful one — the failure is being swallowed',
-    ).toBeLessThan(withBrowser);
-  });
-
-  it('still spends the budget when the browser DID open', async () => {
-    // The control. Without it, "wait less" could be satisfied by making every run three seconds.
-    const withBrowser = await sleptWaitingForASession(true);
-    expect(withBrowser).toBeGreaterThan(0);
-  });
-});
-
 describe('a desktop app', () => {
   // The harmful one: the app's own window is the client, so a browser tab would be a SECOND session
   // that is not the app — the stale-tab false green, arranged deliberately.

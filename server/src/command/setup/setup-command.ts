@@ -194,8 +194,7 @@ export async function runSetupCommand(
     probePage,
     openBrowser: async (url) => {
       const failure = await openInBrowser(url);
-      if (null === failure) return true;
-      {
+      if (null !== failure) {
         print(
           `could not open a browser (${failure}). Nothing was opened, and nothing else here will ` +
             // Three wordings have been wrong in a row, each naming a way out that does not exist on
@@ -210,7 +209,6 @@ export async function runSetupCommand(
             `reach it at ${url}; the session appears within a second of the page loading.`,
         );
       }
-      return false;
     },
     listSessions: () => listSessions(input.bridgePort),
     now: () => Date.now(),

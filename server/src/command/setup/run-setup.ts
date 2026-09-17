@@ -102,14 +102,18 @@ export interface SetupEffects {
   /** Fetch the url and report what came back. */
   readonly probePage: (url: string) => Promise<PageProbe>;
   /**
-   * Open the app, and say whether a window was actually opened.
+   * Ask for the app to be opened. Deliberately `void`: whether a window APPEARED is not knowable here.
    *
-   * `Promise<void>` here was the whole of the defect: the launcher can fail -- CI, a container, an
-   * SSH session, WSL with no host browser -- and the only place that knew printed a sentence and
-   * resolved. The caller then waited the full connect budget for a session that nothing could
-   * create. A boolean is the smallest thing that makes the failure sayable.
+   * This returned a boolean for one commit, so that a launcher which failed could shorten the wait
+   * below instead of spending the whole connect budget on a session nothing could create. It was
+   * reverted because the premise is false. On the ubuntu CI runners `xdg-open` exits 3 -- the exit
+   * code this would have trusted -- and a browser STILL appears and dials in a little later, so
+   * four install-gate scaffolds that had passed for releases went red the moment the wait was cut
+   * short (`vite-react`, `vite-vue`, `next-app-router`, `monorepo-subdir`, run 35242186243 against
+   * 35232727716). A non-zero launcher exit means UNKNOWN, not "no browser": it reports whether the
+   * COMMAND succeeded, never whether a window opened. Do not shorten a wait on it.
    */
-  readonly openBrowser: (url: string) => Promise<boolean>;
+  readonly openBrowser: (url: string) => Promise<void>;
   readonly listSessions: () => Promise<CandidateSession[]>;
   readonly now: () => number;
   readonly sleep: (ms: number) => Promise<void>;
@@ -312,9 +316,10 @@ export async function runSetupPhases(input: SetupInput, fx: SetupEffects): Promi
       // Said BEFORE the window appears, so somebody watching a page that stays inert has already
       // been told which of the two it is.
       if (PageFinding.SDK_MISSING === finding) note(describePage(finding, url));
-      // Not `= true`: a launcher that failed leaves nothing to create a session, and the deadline
-      // below is chosen on exactly this.
-      openedBrowser = await fx.openBrowser(url);
+      // `= true` means ATTEMPTED, which is the most that is knowable — see openBrowser above for
+      // why the launcher's own exit code must not be read as "no window appeared".
+      await fx.openBrowser(url);
+      openedBrowser = true;
     }
   }
   // Waiting the full budget for a session when nothing was opened to create one is dead time, and
