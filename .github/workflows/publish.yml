@@ -27,6 +27,14 @@ name: Publish to npm
 # the id-token permission below. If the repo is still private, drop the NPM_CONFIG_PROVENANCE
 # line (or make the repo public) or the publish will fail.
 
+# Least privilege by default (OpenSSF Scorecard Token-Permissions), the same line `ci.yml` carries
+# and this file did not. Without it the workflow inherits the repository default, which can be
+# write-all — on the one workflow that holds an npm token and publishes thirteen packages. CodeQL
+# flagged it `high` on the first run over this branch. The job below still declares the `id-token:
+# write` it needs for provenance; that is the point of declaring it there rather than here.
+permissions:
+  contents: read
+
 on:
   release:
     types: [published]
