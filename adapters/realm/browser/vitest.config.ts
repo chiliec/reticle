@@ -16,7 +16,6 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig({
   plugins: [tsconfigPaths()],
   // Every package shares one bound; see vitest.shared.ts for the gate this kept red.
-  test: { ...sharedTestOptions },
   test: {
     environment: 'jsdom',
     /**
@@ -31,7 +30,12 @@ export default defineConfig({
      * still fails immediately, and a genuine hang still fails, just with headroom for a busy
      * machine. A test that sets its own timeout keeps it; the value below only applies where none
      * was chosen deliberately.
+     *
+     * The NUMBER moved to `vitest.shared.ts` once every other package needed the same thing for the
+     * same reason. The reasoning above is why this package hit it first — jsdom plus a whole HUD —
+     * and it is still the clearest statement of it, so it stays here rather than being deleted into
+     * a shared file nobody reads on the way past.
      */
-    testTimeout: 30_000,
+    ...sharedTestOptions,
   },
 });
