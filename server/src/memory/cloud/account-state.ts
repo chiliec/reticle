@@ -37,10 +37,14 @@ function fromSessionFile(home: string): AccountState | undefined {
     // claim that costs something when wrong, because it hides the way in.
     if ('string' !== typeof record['token'] || 0 === record['token'].length) return undefined;
     const org = record['orgName'];
+    const email = record['email'];
     const host = record['url'];
     return {
       signedIn: true,
       ...('string' === typeof org && org.length > 0 ? { org } : {}),
+      // No cloud writes this yet, so the absent branch is the live one. Read rather than derived, so
+      // a cloud that starts returning it needs no client release.
+      ...('string' === typeof email && email.length > 0 ? { email } : {}),
       ...('string' === typeof host && host.length > 0 ? { host } : {}),
     };
   } catch {

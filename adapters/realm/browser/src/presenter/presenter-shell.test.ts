@@ -425,8 +425,16 @@ describe('presenter HUD shell teardown', () => {
     restore();
 
     // Guards the guard: if the shell stops registering these, the loop below passes for free.
-    expect(seen.length, 'the shell should install its document listeners').toBe(2);
-    expect(seen.map((r) => r.type).sort()).toEqual(['keydown', 'pointerdown']);
+    // FOUR, not two: the shell's own pointerdown/keydown, plus the account menu's, which close it on
+    // an outside click and on Escape. Both pairs must be aborted by the same teardown, which is what
+    // the loops below are for.
+    expect(seen.length, 'the shell should install its document listeners').toBe(4);
+    expect(seen.map((r) => r.type).sort()).toEqual([
+      'keydown',
+      'keydown',
+      'pointerdown',
+      'pointerdown',
+    ]);
     for (const registration of seen) {
       expect(
         registration.signal,

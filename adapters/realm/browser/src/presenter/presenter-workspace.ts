@@ -1,7 +1,12 @@
 import { RETICLE_ROOT_GLOBAL, RETICLE_URL_PARAM } from '@reticlehq/core';
 import { PresenterIcon, PRESENTER_ICON_SIZE, hiIconHtml } from './icons/presenter-icons.js';
 import type { AccountState } from '@reticlehq/core';
-import { ACCOUNT_SIGNIN_ATTR, ACCOUNT_TEXT, accountCapsuleHtml } from './presenter-account.js';
+import {
+  ACCOUNT_SIGNIN_ATTR,
+  ACCOUNT_TEXT,
+  accountControlHtml,
+  type AccountDetails,
+} from './presenter-account.js';
 
 const WORKSPACE_BTN_ATTR = 'data-reticle-workspace-btn';
 const WORKSPACE_MENU_ATTR = 'data-reticle-workspace-menu';
@@ -235,8 +240,9 @@ export function paintToolbarAccount(
   root: HTMLElement,
   account: AccountState | undefined,
   dashboardUrl: string | undefined,
+  details: AccountDetails = {},
 ): void {
   const slot = root.querySelector(`[${TOOLBAR_ACCOUNT_ATTR}]`);
   if (!(slot instanceof HTMLElement)) return;
-  slot.innerHTML = accountCapsuleHtml(account, dashboardUrl, true);
+  slot.innerHTML = accountControlHtml(account, { ...details, dashboardUrl }, true);
 }

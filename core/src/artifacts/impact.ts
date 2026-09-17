@@ -138,16 +138,25 @@ export type ImpactScope = z.infer<typeof ImpactScopeSchema>;
 /**
  * Whether this machine is signed in to a Reticle workspace, as the HUD is allowed to know it.
  *
- * Deliberately the smallest shape that answers the question, because it is pushed to a BROWSER: a
- * token here would be a token in the DOM of the user's own app, readable by anything else running
- * on it. There is no field for one and the reader is tested for never emitting one.
+ * Deliberately small, because it is pushed to a BROWSER: a token here would be a token in the DOM of
+ * the user's own app, readable by anything else running on it. There is no field for one and the
+ * reader is tested for never emitting one.
  *
- * `org` and `host` are present only when signed in. `host` matters because a self-hosted install is
- * not app.reticle.sh, and telling that user to visit a host they do not use is worse than silence.
+ * `org`, `email` and `host` are present only when signed in. `host` matters because a self-hosted
+ * install is not app.reticle.sh, and telling that user to visit a host they do not use is worse than
+ * silence.
+ *
+ * `email` IS personal data, and it is here because a capsule that cannot name who you are does not
+ * answer the question it exists to answer -- an org name is shared by a whole team. It is rendered
+ * only inside the account menu, never in the always-visible capsule, so it reaches the DOM on the
+ * same terms as the org name and no sooner. It stays OPTIONAL because no cloud sends it yet: the
+ * device flow returns `{ status, token, org }` and the session file stores `{ url, token, orgName }`,
+ * so today every reader takes the absent branch.
  */
 export const AccountStateSchema = z.object({
   signedIn: z.boolean(),
   org: z.string().optional(),
+  email: z.string().optional(),
   host: z.string().optional(),
 });
 export type AccountState = z.infer<typeof AccountStateSchema>;

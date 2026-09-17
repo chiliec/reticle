@@ -56,10 +56,18 @@ describe('the three states of the account capsule', () => {
     );
   });
 
-  it('labels the avatar with the org, because two letters announce nothing to a screen reader', () => {
-    expect(accountCapsuleHtml({ signedIn: true, org: 'Acme Corp' })).toContain(
-      'aria-label="Acme Corp"',
+  it('announces the org, because two letters announce nothing to a screen reader', () => {
+    // On the TRIGGER rather than the avatar: the avatar is a decorative glyph inside a button, and
+    // the accessible name belongs on the thing that takes the click.
+    const html = accountCapsuleHtml({ signedIn: true, org: 'Acme Corp' });
+    expect(html).toContain('Acme Corp');
+    expect(html, 'the org must reach a screen reader as a label, not only as drawn text').toMatch(
+      /aria-label="[^"]*Acme Corp/,
     );
+    expect(
+      html,
+      'the two drawn letters must be hidden, or a reader announces "AC" as well',
+    ).toContain('aria-hidden="true"');
   });
 });
 

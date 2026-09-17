@@ -136,24 +136,9 @@ export const REPORT_CSS = `
 [${REPORT_PANEL_ATTR}] .reticle-report-identity{
   display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:10px 14px 0;min-height:0;}
 [${REPORT_PANEL_ATTR}] .reticle-report-identity:empty{display:none;}
-[${REPORT_PANEL_ATTR}] .reticle-account{display:flex;align-items:center;gap:6px;}
-[${REPORT_PANEL_ATTR}] .reticle-account-avatar{
-  display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
-  border-radius:999px;font-size:9px;font-weight:600;letter-spacing:.02em;
-  background:color-mix(in srgb,var(--reticle-c-active) 30%,transparent);
-  border:1px solid color-mix(in srgb,var(--reticle-c-active) 45%,transparent);
-  color:var(--reticle-fg);user-select:none;}
-[${REPORT_PANEL_ATTR}] .reticle-account-signin{
-  border:1px solid color-mix(in srgb,var(--reticle-c-active) 45%,transparent);
-  background:transparent;color:var(--reticle-fg);font:inherit;font-size:10.5px;
-  border-radius:999px;padding:2px 10px;cursor:pointer;}
-[${REPORT_PANEL_ATTR}] .reticle-account-signin:hover{
-  background:color-mix(in srgb,var(--reticle-c-active) 18%,transparent);}
-[${REPORT_PANEL_ATTR}] .reticle-account-dashboard,
 [${REPORT_PANEL_ATTR}] .reticle-sync-now{
   display:inline-flex;align-items:center;justify-content:center;
   border:none;background:transparent;color:var(--reticle-faint);cursor:pointer;line-height:0;padding:2px;}
-[${REPORT_PANEL_ATTR}] .reticle-account-dashboard:hover,
 [${REPORT_PANEL_ATTR}] .reticle-sync-now:hover{color:var(--reticle-fg);}
 /* The one moment this control has an opinion: it says it is going, not that it has arrived. */
 [${REPORT_PANEL_ATTR}] .reticle-sync-now[data-syncing="1"]{

@@ -3,6 +3,7 @@ import { LOG_CSS } from './chrome/presenter-log.js';
 import { CONTROLS_CSS } from './presenter-controls.js';
 import { SHELL_CSS } from './presenter-shell-styles.js';
 import { SETTINGS_CSS } from './presenter-settings-styles.js';
+import { ACCOUNT_CSS } from './presenter-account-styles.js';
 import { HUD_CHROME_CSS, HUD_LOG_WELL_CSS } from './chrome/presenter-hud-chrome.js';
 import { REPORT_CSS } from './presenter-report-styles.js';
 /**
@@ -67,5 +68,6 @@ ${HUD_LOG_WELL_CSS}
 ${SHELL_CSS}
 ${SETTINGS_CSS}
 ${REPORT_CSS}
+${ACCOUNT_CSS}
 ${LOG_CSS}
 ${CONTROLS_CSS}`;

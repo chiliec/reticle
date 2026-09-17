@@ -162,18 +162,4 @@ export const SETTINGS_CSS = `
 [${'data-reticle-overlay'}][data-reticle-hidden="1"] [${DOCK_ATTR}],
 [${'data-reticle-overlay'}][data-reticle-hidden="1"] [${SETTINGS_PANEL_ATTR}]{display:none !important;}
 
-/* The account row. Same greys as this panel's other rows, which predate the report panel's tokens. */
-[${SETTINGS_PANEL_ATTR}] .reticle-account{display:inline-flex;align-items:center;gap:6px;}
-[${SETTINGS_PANEL_ATTR}] .reticle-account-avatar{
-  display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
-  border-radius:999px;font-size:9px;font-weight:600;
-  background:rgba(255,255,255,.12);color:rgba(255,255,255,.92);user-select:none;}
-[${SETTINGS_PANEL_ATTR}] .reticle-account-signin{
-  border:none;border-radius:6px;padding:2px 9px;cursor:pointer;font:inherit;font-size:10.5px;
-  background:rgba(255,255,255,.06);color:rgba(255,255,255,.75);transition:background .12s,color .12s;}
-[${SETTINGS_PANEL_ATTR}] .reticle-account-signin:hover{background:rgba(255,255,255,.12);color:#fff;}
-[${SETTINGS_PANEL_ATTR}] .reticle-account-dashboard{
-  display:inline-flex;align-items:center;justify-content:center;
-  border:none;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;line-height:0;padding:2px;}
-[${SETTINGS_PANEL_ATTR}] .reticle-account-dashboard:hover{color:#fff;}
 `;

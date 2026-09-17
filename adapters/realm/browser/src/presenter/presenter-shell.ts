@@ -1,6 +1,7 @@
 import { PresenterReport, reportPanelHtml } from './presenter-report.js';
 import type { AccountState } from '@reticlehq/core';
 import { paintToolbarAccount, TOOLBAR_ACCOUNT_ATTR } from './presenter-workspace.js';
+import { mountAccountControl, type AccountDetails } from './presenter-account.js';
 import { paintSettingsAccount } from './presenter-settings.js';
 import {
   CHAT_MIN_ATTR,
@@ -117,16 +118,28 @@ export class HudShell {
    * and reached the DOM on 2, so a signed-in user saw an empty capsule two times in three.
    */
   #pushedAccount:
-    { account: AccountState | undefined; dashboardUrl: string | undefined } | undefined;
+    | {
+        account: AccountState | undefined;
+        dashboardUrl: string | undefined;
+        details: AccountDetails;
+      }
+    | undefined;
+  /** Torn down with the shell: the delegated listeners for every account menu under the root. */
+  #accountTeardown: (() => void) | undefined;
 
-  /** Paint the toolbar's account capsule, and remember it in case the push beat the mount. */
-  paintAccount(account: AccountState | undefined, dashboardUrl: string | undefined): void {
-    this.#pushedAccount = { account, dashboardUrl };
+  /** Paint the account control, and remember it in case the push beat the mount. */
+  paintAccount(
+    account: AccountState | undefined,
+    dashboardUrl: string | undefined,
+    details: AccountDetails = {},
+  ): void {
+    this.#pushedAccount = { account, dashboardUrl, details };
     if (this.#root === undefined) return;
-    paintToolbarAccount(this.#root, account, dashboardUrl);
+    paintToolbarAccount(this.#root, account, dashboardUrl, details);
     // The settings panel asks the same question and answers it from the same push, so the two can
-    // never disagree about whether this machine is signed in.
-    paintSettingsAccount(this.#root, account, dashboardUrl);
+    // never disagree about whether this machine is signed in. The report panel paints itself from
+    // the same snapshot through `setSnapshot`.
+    paintSettingsAccount(this.#root, account, dashboardUrl, details);
   }
   constructor(callbacks: HudShellCallbacks = {}) {
     this.#callbacks = callbacks;
@@ -346,12 +359,18 @@ export class HudShell {
     }
     document.addEventListener('pointerdown', this.#onDocPointerDown, { signal });
     document.addEventListener('keydown', this.#onKeyDown, { signal });
+    // One delegated listener set for every account menu under this root, including the ones the
+    // panels re-render on each push.
+    this.#accountTeardown = mountAccountControl(root);
     // Replay a push that arrived before this mount. Last, so every element it paints into exists.
     if (this.#pushedAccount !== undefined) {
-      this.paintAccount(this.#pushedAccount.account, this.#pushedAccount.dashboardUrl);
+      const pushed = this.#pushedAccount;
+      this.paintAccount(pushed.account, pushed.dashboardUrl, pushed.details);
     }
   }
   teardown(): void {
+    this.#accountTeardown?.();
+    this.#accountTeardown = undefined;
     // One call for all nine registrations. It cannot fall out of step with mount() the way a list
     // of removeEventListener calls can, which is the whole point.
     this.#listeners?.abort();

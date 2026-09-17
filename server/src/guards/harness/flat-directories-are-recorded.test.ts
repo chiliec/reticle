@@ -61,7 +61,12 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // panel that shows it. One builder rather than the same rule copied into three panels — and the
   // rule is load-bearing, because absent account state means UNKNOWN and a panel that read it as
   // signed-out would ask a paying user to sign in every time they opened one.
-  'adapters/realm/browser/src/presenter': 18,
+  // 19 with `presenter-account-styles.ts`, which is the other half of that same consolidation: the
+  // account control used to be styled three times, once per panel, and the copies had drifted to
+  // different gaps and avatar sizes. Raised rather than grouped because this directory already pairs
+  // a component with its stylesheet — settings, report and shell all do — so the file sits where the
+  // convention puts it, and moving one pair out would be the inconsistent choice.
+  'adapters/realm/browser/src/presenter': 19,
   // Newly over the line at 11, with `presenter-safe-html.ts`. It crossed because two SECURITY
   // helpers left `presenter-report.ts` when the account capsule became their second caller: HTML
   // escaping, and the dashboard-url scheme check that exists because `javascript:` once produced a

@@ -208,7 +208,15 @@ export class Presenter {
         // The toolbar capsule too, from the same push. Signing in happens in a terminal while this
         // page stays open, so the chrome has to learn about it from the next snapshot rather than
         // from the mount it missed.
-        this.#shell.paintAccount(snapshot.account, snapshot.dashboardUrl);
+        // The menu's detail rows come from the SAME snapshot as the avatar, so the two can never
+        // describe different moments. Project counts, not machine-wide: the question the menu answers
+        // is "what has happened HERE".
+        this.#shell.paintAccount(snapshot.account, snapshot.dashboardUrl, {
+          projectName: snapshot.projectName,
+          dashboardUrl: snapshot.dashboardUrl,
+          verdicts: snapshot.project.counts.verdicts,
+          defects: snapshot.project.counts.failed,
+        });
       }
       return;
     }

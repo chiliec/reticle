@@ -24,11 +24,7 @@ import { resetHudDockPosition } from './presenter-drag.js';
 import { findDock, scheduleSyncDockLayout } from './presenter-dock-layout.js';
 import { SETTINGS_CSS } from './presenter-settings-styles.js';
 import type { AccountState } from '@reticlehq/core';
-import {
-  ACCOUNT_SIGNIN_ATTR,
-  ACCOUNT_TEXT,
-  accountCapsuleHtml,
-} from '@/presenter/presenter-account.js';
+import { accountControlHtml, type AccountDetails } from '@/presenter/presenter-account.js';
 
 export { SETTINGS_CSS };
 
@@ -246,8 +242,6 @@ function settingsCheckRow(key: string, label: string, checked: boolean): string 
 /** Where the account state lands. Filled from a snapshot, like the workspace capsule. */
 export const SETTINGS_ACCOUNT_ATTR = 'data-reticle-settings-account';
 const SETTINGS_ACCOUNT_ROW_ATTR = 'data-reticle-settings-account-row';
-/** How long the Sign in control says "Copied" before returning to its label. */
-const ACCOUNT_COPIED_MS = 1_200;
 const ACCOUNT_HELP =
   'Whether this machine is signed in to a Reticle workspace. Signing in happens in your terminal.';
 
@@ -266,11 +260,13 @@ export function paintSettingsAccount(
   root: HTMLElement,
   account: AccountState | undefined,
   dashboardUrl: string | undefined,
+  details: AccountDetails = {},
 ): void {
   const row = root.querySelector(`[${SETTINGS_ACCOUNT_ROW_ATTR}]`);
   const slot = root.querySelector(`[${SETTINGS_ACCOUNT_ATTR}]`);
   if (!(row instanceof HTMLElement) || !(slot instanceof HTMLElement)) return;
-  const html = accountCapsuleHtml(account, dashboardUrl, true);
+  // `offerSignIn` is true here: somebody who opened Settings is asking exactly this question.
+  const html = accountControlHtml(account, { ...details, dashboardUrl }, true);
   row.hidden = 0 === html.length;
   slot.innerHTML = html;
 }
@@ -420,27 +416,6 @@ export class PresenterSettingsPanel {
         e.stopPropagation();
       });
     }
-    /*
-     * Sign in, DELEGATED on the panel root.
-     *
-     * The account row is repainted on every snapshot push, so a listener bound to the button would
-     * work until the first push and then silently stop — the shape of broken that demos perfectly.
-     * Copies the command rather than starting anything: signing in is a device flow in a terminal,
-     * a page cannot run a CLI, and a button that quietly does nothing is worse than a line of text.
-     */
-    root.addEventListener('click', (e) => {
-      const target = e.target;
-      if (!(target instanceof Element)) return;
-      const signin = target.closest(`[${ACCOUNT_SIGNIN_ATTR}]`);
-      if (null === signin) return;
-      e.stopPropagation();
-      void navigator.clipboard?.writeText(ACCOUNT_TEXT.SIGNIN_COMMAND).catch(() => undefined);
-      const previous = signin.textContent;
-      signin.textContent = ACCOUNT_TEXT.COPIED;
-      setTimeout(() => {
-        signin.textContent = previous;
-      }, ACCOUNT_COPIED_MS);
-    });
     for (const toggle of root.querySelectorAll(`[${SETTING_KEY_ATTR}]`)) {
       const activateToggle = (): void => {
         if (!(toggle instanceof HTMLElement)) return;

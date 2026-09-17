@@ -11,7 +11,7 @@ import {
   ACCOUNT_SIGNIN_ATTR,
   ACCOUNT_TEXT,
   SYNC_BTN_ATTR,
-  accountCapsuleHtml,
+  accountControlHtml,
   syncButtonHtml,
 } from './presenter-account.js';
 import { REPORT_PANEL_ATTR, REPORT_ATTR, REPORT_CLOSE_ATTR } from './presenter-config.js';
@@ -167,6 +167,7 @@ export function reportBodyHtml(
   scope: ImpactScope,
   dashboardUrl?: string,
   account?: AccountState,
+  projectName?: string,
 ): string {
   const c = scope.counts;
   if (0 === c.calls) return `<p class="reticle-report-empty">${REPORT_TEXT.EMPTY}</p>`;
@@ -206,7 +207,7 @@ export function reportBodyHtml(
    * it is about. This is a control, and a control somebody has to scroll a panel to find is one they
    * will not find. The two never both render — `localOnly` is gated on there being NO dashboard.
    */
-  const identity = `<div class="reticle-report-identity">${accountCapsuleHtml(account, dashboardUrl)}${syncButtonHtml(dashboardUrl)}</div>`;
+  const identity = `<div class="reticle-report-identity">${accountControlHtml(account, { dashboardUrl, projectName, verdicts: c.verdicts, defects: c.failed })}${syncButtonHtml(dashboardUrl)}</div>`;
   return `${identity}${streak}${hero}${verdicts}<div class="reticle-report-grid">${cards}</div>${defects(scope, dashboardUrl)}${chart(scope)}${localOnly(scope, dashboardUrl, account)}`;
 }
 
@@ -397,7 +398,12 @@ export class PresenterReport {
     this.#body.innerHTML =
       scope === undefined
         ? `<p class="reticle-report-empty">${REPORT_TEXT.EMPTY}</p>`
-        : reportBodyHtml(scope, this.#snapshot?.dashboardUrl, this.#snapshot?.account);
+        : reportBodyHtml(
+            scope,
+            this.#snapshot?.dashboardUrl,
+            this.#snapshot?.account,
+            this.#snapshot?.projectName,
+          );
   }
 
   #openShare(url: string): void {
