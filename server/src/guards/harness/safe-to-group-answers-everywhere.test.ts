@@ -103,5 +103,12 @@ describe('the advice tool answers about every directory in this repository', () 
     // asks it — that has not changed, only whether they wait in a queue. The invariant is the
     // verdict, never the duration, and a timeout tuned to the machine is how a green gate goes red
     // under load and nowhere else.
-  }, 120_000);
+    //
+    // Which is what 120 s turned out to be. MEASURED on Windows: 36 s run alone, and over 120 s
+    // twice in a row inside the full guard suite, where 27 turbo tasks and vitest's own workers are
+    // competing for the same cores — a red gate, twice, with every assertion passing. The sentence
+    // above is right and the number under it was not, so the number now says only "something is
+    // wedged": a hundred spawns that genuinely need ten minutes are a machine having a bad day, and
+    // the failure worth catching here is a crash, which arrives in milliseconds either way.
+  }, 600_000);
 });
