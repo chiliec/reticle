@@ -69,3 +69,47 @@ describe('errorSkeleton redacts what must never leave the machine', () => {
     expect(errorSkeleton('no browser session connected')).toBe('no browser session connected');
   });
 });
+
+/**
+ * The ReDoS, and why this asserts a BOUND rather than a duration.
+ *
+ * CodeQL flagged `errorSkeleton` `high`: `[\w.+-]+@` retries from every start position on a run of
+ * `+` with no `@`, so the cost is quadratic in the run's length. The input is an error message,
+ * which comes from the page under test — somebody's app, and the most attacker-influenceable string
+ * this daemon handles.
+ *
+ * `Date.now() - t < N` is banned here for good reason: it is a statement about the machine and
+ * fails only under parallel load, which is to say only in CI. So the assertions below are about the
+ * bound — the output is capped, the shape survives — and the RUNNER's own timeout is what catches a
+ * hang. Without the input cap these cases take quadratic time in the input, and the size is chosen
+ * from a MEASUREMENT rather than a guess: at 60,000 characters the uncapped version took 1.7s and
+ * the test passed, which made it a check that could not fail. At 400,000 it runs past vitest's
+ * default timeout, so removing the cap turns this red.
+ */
+describe('a hostile error message cannot make the skeleton expensive', () => {
+  it('bounds a long run of the character that makes the email pattern backtrack', () => {
+    const hostile = `${'+'.repeat(400_000)} no match here`;
+    const skeleton = errorSkeleton(hostile);
+    expect(skeleton.length).toBeLessThanOrEqual(200);
+  });
+
+  it('bounds the other two polynomial shapes as well', () => {
+    // `(?:\/[\w.-]+){2,}` on a run of slashes, and the 24-plus secret catch-all on a long word.
+    expect(errorSkeleton('/'.repeat(400_000)).length).toBeLessThanOrEqual(200);
+    expect(errorSkeleton('a'.repeat(400_000)).length).toBeLessThanOrEqual(200);
+  });
+
+  it('still redacts a secret that sits inside the part it does read', () => {
+    // The cap must not become a way to smuggle something past the redaction: anything beyond it is
+    // DROPPED rather than passed through, and anything inside it is masked as before.
+    // Shaped to trip the `(?:sk|pk|rk|ghp|…)[_-][A-Za-z0-9_-]{8,}` rule and NOTHING else. The first
+    // version read `sk_live_` + lowercase, which is Stripe's live-key format closely enough that
+    // GitHub's push protection rejected the push. A fixture that cannot be pushed is not a fixture.
+    const secret = 'sk-EXAMPLE-not-a-real-key-000000';
+    expect(errorSkeleton(`auth failed with ${secret}`)).not.toContain(secret);
+  });
+
+  it('is unchanged for a message shorter than the cap', () => {
+    expect(errorSkeleton('no browser session connected')).toBe('no browser session connected');
+  });
+});

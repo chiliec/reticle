@@ -48,9 +48,35 @@ const VARIABLE_PARTS: readonly RegExp[] = [
   /\d+/g, // any remaining number — ports, counts, timeouts
 ];
 
+/**
+ * How much of a message is even looked at.
+ *
+ * ── THE DEFECT ──────────────────────────────────────────────────────────────────────────────────
+ * Several patterns above are polynomial-ReDoS shapes, and CodeQL flagged this function `high`:
+ * `[\w.+-]+@` is the clearest — on a long run of `+` with no `@` anywhere, the engine retries the
+ * `+` from every start position and rescans to the end each time, so the cost is quadratic in the
+ * length of the run. `(?:\/[\w.-]+){2,}` and the 24-plus-character secret catch-all have the same
+ * shape. The input is an error message, and an error message is the most attacker-influenceable
+ * string this daemon handles: it comes from the page under test, which is somebody's app.
+ *
+ * The cap is the fix rather than twelve rewritten regexes, because these patterns are a PRIVACY
+ * boundary. Rewriting each one to be provably linear risks changing what gets redacted, and a
+ * mistake there leaks a credential rather than costing milliseconds.
+ *
+ * Capping the INPUT cannot leak anything the old code did not, and that is what makes it safe: the
+ * output was already `.slice(0, 200)`, so everything past this bound was being discarded after
+ * being scanned. Now it is discarded without being scanned. 1024 is five times the output bound,
+ * which leaves ample room for the masking to shrink text before the 200 chars are taken.
+ *
+ * The wire caps an error at `MAX_ERROR_LENGTH` (4096) so the worst case was bounded already; this
+ * is about the paths that do not come off the wire, and about not relying on a limit set elsewhere
+ * for a reason unrelated to this one.
+ */
+const MAX_SKELETON_INPUT = 1024;
+
 /** The skeleton of a message: variable parts blanked, whitespace collapsed, length bounded. */
 export function errorSkeleton(message: string): string {
-  let skeleton = message;
+  let skeleton = message.slice(0, MAX_SKELETON_INPUT);
   for (const pattern of VARIABLE_PARTS) skeleton = skeleton.replace(pattern, '*');
   return skeleton.replace(/\s+/g, ' ').trim().slice(0, 200);
 }
