@@ -48,6 +48,43 @@ import { unevaluablePredicateReason } from '@reticlehq/engine/question/predicate
  */
 const CONSEQUENCE_KEYS = ['until', 'assert', 'waitFor'] as const;
 
+/**
+ * What a step says about ITSELF rather than about the action: everything else is an action argument.
+ *
+ * A step is one `reticle_act` call, and `reticle_act` takes its arguments flat — so
+ * `{ ref, action: "fill", value: "…" }` is the obvious way to write one, and the sequence dropped
+ * `value` silently. The browser then refused ("fill requires a string `value` — pass it nested"),
+ * which is the RIGHT refusal for a missing value: filling with nothing wipes the field, dispatches a
+ * real input event so the framework commits the empty string, and reports ok. But the value was not
+ * missing, it was discarded here, so a correct-looking call cost a round trip. Measured driving a
+ * real install.
+ */
+const STEP_STRUCTURE_KEYS: ReadonlySet<string> = new Set([
+  'ref',
+  'target',
+  'action',
+  'args',
+  'timeout_ms',
+  'label',
+  ...CONSEQUENCE_KEYS,
+  'expect',
+]);
+
+/**
+ * The action arguments of one step, from either spelling.
+ *
+ * An explicit `args` wins key by key: it is the form the schema documents, so a caller who wrote it
+ * meant it.
+ */
+export function sequenceStepArgs(step: Record<string, unknown>): Record<string, unknown> {
+  const flat: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(step)) {
+    if (!STEP_STRUCTURE_KEYS.has(key)) flat[key] = value;
+  }
+  const nested = step['args'];
+  return { ...flat, ...(null !== nested && 'object' === typeof nested ? nested : {}) };
+}
+
 export function assertSequenceSteps(steps: readonly unknown[]): void {
   if (0 === steps.length) {
     throw new Error(

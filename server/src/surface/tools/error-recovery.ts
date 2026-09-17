@@ -196,11 +196,16 @@ export const RECOVERY = {
     'connected session with its sessionId: pass that sessionId to this tool to target it, or ' +
     "restart the daemon from that app's directory so it becomes the default. Call reticle_sessions " +
     'for the same list at any time.',
+  // "comes back under a NEW sessionId" was stated as fact and is not one: measured on a real
+  // reload, the tab came back under the SAME id, so an agent told to look for a new one finds the
+  // old one still listed and concludes the reload never happened. Refs are the part that is always
+  // gone, and saying THAT is what the reader can act on either way.
   SESSION_GONE:
     'The tab this call was targeting disconnected while the command was in flight, so the command ' +
     'never completed — do not assume it applied or that it did not. Call reticle_sessions: a tab ' +
-    'that reloaded comes back under a NEW sessionId (every ref taken before it is gone — re-query), ' +
-    'and an empty list means the page was closed and the human has to reopen it.',
+    'that reloaded may come back under the same sessionId or a new one, so match on url rather than ' +
+    'on the id, and re-query for refs either way — every ref taken before the reload is gone. An ' +
+    'empty list means the page was closed and the human has to reopen it.',
   COMMAND_TIMEOUT:
     'The page did not answer within the command window. That is a fact about the page, not a Reticle ' +
     'failure: check reticle_sessions for `throttled`/`stale` on this session — a backgrounded tab is ' +

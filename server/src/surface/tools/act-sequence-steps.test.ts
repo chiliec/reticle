@@ -7,8 +7,58 @@
  * so a typo in step three cannot leave one and two applied.
  */
 import { describe, expect, it } from 'vitest';
-import { assertSequenceSteps } from './act/act-preflight.js';
+import { assertSequenceSteps, sequenceStepArgs } from './act/act-preflight.js';
 import { describeStepResult } from './act/act-sequence-retry.js';
+
+/**
+ * A step IS one `reticle_act` call, and `reticle_act` takes its arguments flat.
+ *
+ * MEASURED driving a real install: `{ ref, action: "fill", value: "…" }` is the obvious way to write
+ * it, and the sequence dropped `value` on the floor. The browser then refused — correctly, because a
+ * fill with no value used to wipe the field and report success — so the round trip was spent on
+ * "pass it nested, as args: { value }". The nested form is what the schema shows and stays valid;
+ * the flat one now works too, which is what the tool's own description already implies.
+ */
+describe('a step written the way reticle_act takes one', () => {
+  it('accepts an action argument at the top level', () => {
+    expect(sequenceStepArgs({ ref: 'e1', action: 'fill', value: 'a@b.com' })).toEqual({
+      value: 'a@b.com',
+    });
+  });
+
+  it('still accepts the nested form the schema documents', () => {
+    expect(sequenceStepArgs({ ref: 'e1', action: 'fill', args: { value: 'x' } })).toEqual({
+      value: 'x',
+    });
+  });
+
+  // An explicit `args` is the one the caller wrote deliberately, so it wins.
+  it('prefers the nested value when a step carries both', () => {
+    expect(
+      sequenceStepArgs({ ref: 'e1', action: 'fill', value: 'flat', args: { value: 'nested' } }),
+    ).toEqual({ value: 'nested' });
+  });
+
+  // Structure is not an argument: sweeping these in would send `expect` to the browser as one.
+  it("never treats the step's own structure as an action argument", () => {
+    expect(
+      sequenceStepArgs({
+        ref: 'e1',
+        target: { testid: 't' },
+        action: 'fill',
+        expect: { kind: 'settled' },
+        timeout_ms: 500,
+        value: 'v',
+      }),
+    ).toEqual({ value: 'v' });
+  });
+
+  it('carries confirmDangerous through from the top level', () => {
+    expect(sequenceStepArgs({ ref: 'e1', action: 'click', confirmDangerous: true })).toEqual({
+      confirmDangerous: true,
+    });
+  });
+});
 
 describe('refusing a sequence that cannot act', () => {
   it('accepts a step written with `target` instead of `ref`', () => {
