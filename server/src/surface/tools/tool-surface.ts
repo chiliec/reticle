@@ -269,12 +269,9 @@ export const CORE_TOOL_NAMES: ReadonlySet<string> = new Set([
  * 48 by itself can push a user's other servers out or be dropped wholesale. The budget is a count,
  * so no amount of trimming parameter prose buys anything back — only advertising fewer names does.
  *
- * That is true of the COUNT cap and false of everything else, which is worth separating here before
- * somebody reads it as "prose is free". Measured against two competitor MCP servers on the same
- * agent loop: this server advertises the FEWEST tools of the three and ships the HEAVIEST schema
- * block, and 83% of that weight is parameter descriptions, not tool descriptions. The block is
- * re-sent every turn, so it is multiplied by turn count before one byte of evidence is counted, and
- * it was most of the gap in that run.
+ * That is true of the COUNT cap and false of everything else, so prose is NOT free: most of this
+ * server's schema weight is parameter descriptions rather than tool descriptions, and the whole block
+ * is re-sent every turn, multiplied by turn count before one byte of evidence is counted.
  *
  * Which does NOT license trimming by eye. Those descriptions are what make a tool get called
  * correctly, and one malformed call costs a whole extra turn — more than the bytes saved. The

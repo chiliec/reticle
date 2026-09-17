@@ -492,7 +492,7 @@ const REACHES_FOR: Record<string, readonly string[]> = {
   // `mcp` dropped out when the proxy files left it: what setup actually wanted from that
   // directory was the proxy, and nothing else. The extraction made an existing dependency
   // legible rather than adding one -- see `would FREE` in scripts/safe-to-group.mjs.
-  // `resolve` arrived with 2.14.0: `setup-command` reports the project id in its result, and
+  // `resolve` is here because `setup-command` reports the project id in its result, and
   // `readProjectId` lives there. One way, and the same edge `mcp` and `tools` already had -- it
   // is the only module that exports it, so the alternative was a second copy of the reader.
   setup: ['bringup', 'daemon', 'launch', 'probe', 'resolve', 'terminal'],
@@ -681,70 +681,22 @@ const REACHES_FOR: Record<string, readonly string[]> = {
 /**
  * The pairs that reach for each other -- the shape that makes a directory unmovable.
  *
- * A count rather than a list: the list is derivable and printed on failure, and a hand-written copy
- * would be one more thing to keep in step.
+ * A count rather than a list: the list is derivable and printed on failure.
  *
- * ── WHAT THE REMAINING 22 ARE MADE OF ───────────────────────────────────────────────────────────
- * Computed across every pair rather than guessed at, and the answer ends the leaf-extraction
- * phase in this package: **fifteen of the twenty-two hinge on exactly ONE file, and not one of
- * those files is a leaf.** Every one imports a sibling, so the rule that produced the last four
- * reductions -- move only what imports no sibling -- cannot reach any of them.
+ * The definition, because a figure nobody can reproduce is a figure nobody can correct: for each
+ * mutual pair, count the non-test files in A that import anything under B, and the same for B into
+ * A. The pair HINGES when either direction has exactly one such file, because moving that one file
+ * would break the pair.
  *
- * That said seventeen when the count was twenty-four, and the definition was not written down,
- * so re-deriving it took a wrong answer first. It is this: for each mutual pair, count the
- * non-test files in A that import anything under B, and the same for B into A. The pair HINGES
- * when either direction has exactly one such file, because moving that one file would break the
- * pair. Fifteen of twenty-two today. A figure nobody can reproduce is a figure nobody can
- * correct, which is why the method is here and not just the number.
+ * Asserted with equality rather than `<=`, which makes it a RECORD instead of a ceiling. A bound
+ * only says "no worse"; equality forces the number down in the same commit that earns it, and
+ * forces somebody to look when it moves either way.
  *
- * Two structures account for nearly all of it, and neither is a misfiling:
- *
- *   - **The tool registry.** `tools.ts` imports every feature's tool module by name, because a
- *     registry that advertises tools has to know them. That is `tools -> crawl`, `-> domain`,
- *     `-> memory`, `-> visual`, and `telemetry -> feedback-tools`. Each feature imports back for
- *     shared helpers, and the pair closes.
- *   - **The shared kit.** `tool-kit` is the thin side of `intent`, `version`, `runs`, `input`,
- *     `project`, `session` and `flows`. It is a leaf by the import-no-sibling rule and a HUB by
- *     the only measure that matters here: it reaches into eight directories, so giving it a node
- *     of its own hands four of them a mutual partner. Measured: frees two, creates four.
- *
- * So the next reduction is a SPLIT of `tool-kit` or of the registry, not another lift. That is a
- * refactor of code thirteen directories depend on, and it is not something to start because a
- * number looks improvable.
- *
- * ── AND THE SAME QUESTION ASKED OF EVERY OTHER PACKAGE ──────────────────────────────────────────
- * Swept with `scripts/safe-to-group.mjs` rather than read off the graph, across roughly
- * twenty-five directories in six packages: server, browser, core, engine, init, spec-runner.
- * The sweep asks two things of every candidate, SAFE and `would FREE`, and the result is short:
- *
- *   - Every remaining candidate that is SAFE is a SINGLE FILE. Moving one file into a new
- *     subdirectory is moving a file. It adds an edge from each importer and buys one freed
- *     reach, and the directory it creates is named after one thing rather than a category.
- *   - Every multi-file group that IS a category came back UNSAFE. In `core/src/wire`, the three
- *     event files are mutual with the package root; the three constants files are mutual with
- *     `artifacts`; `net`/`channel`/`platform` are mutual with `verdict`.
- *
- * One coherent SAFE category existed in the whole repository and it is `portal/session/facts`,
- * extracted the day this note was written. The leaf rule is spent, and now measured spent rather
- * than assumed so -- an earlier version of this claim was made three times from reading the
- * import graph, and the sweep that settles it takes thirty milliseconds per candidate.
- *
- * Asserted with equality rather than `<=`, which is what makes it a RECORD instead of a ceiling.
- * A bound only ever says "no worse"; equality forces the number down in the same commit that
- * earns it, and forces somebody to look when it moves either way. It came down from 24 when
- * `run-store`, `run-diff` and `run-context` left `runs` for `runs/artifact`: `project` had
- * reached into `runs` only for those three, so the pair stopped being mutual. It came down
- * again, 23 to 22, when `mcp-is-error` and `mcp-outage` left `mcp` for `mcp/faults` -- the same
- * shape a third time, since what `tools` wanted from `mcp` was those two files. The move was
- * predicted safe and turned out to be subtractive, which is the pattern worth looking for --
- * see `would FREE` in scripts/safe-to-group.mjs.
- *
- * 22 to 21, a fourth time, and the smallest yet: what `project` wanted from `flows` was the `Clock`
- * INTERFACE -- two lines, declared four times across this package because rule 7 says to inject a
- * clock and nothing said where the type lives. `project-store` needed one, found the nearest
- * declaration inside a 975-line module, and imported it. One `machine/clock.ts` and the pair is not
- * mutual any more. Three directories now reach into `machine`, which costs nothing: it imports none
- * of its siblings, so it cannot be half of a pair.
+ * Most of what remains is two structures, and neither is a misfiling: the tool registry (`tools.ts`
+ * must know every feature's tool module to advertise it) and `tool-kit`, which is a leaf by the
+ * import-no-sibling rule and a hub by the only measure that counts here — it reaches into eight
+ * directories. So the next reduction is a SPLIT of one of those, not another lift, and that is a
+ * refactor of code thirteen directories depend on. `scripts/safe-to-group.mjs` scores a candidate.
  */
 const MUTUAL_PAIRS_TODAY = 21;
 

@@ -1,12 +1,12 @@
 /**
  * Server-side snapshot delta — return only what CHANGED since the agent's last look.
  *
- * Why (grounded): screenshot/Playwright-MCP agents accrue 60–80K tokens of stale accessibility-tree
- * data over a session and start hallucinating selectors that no longer exist. The agent-facing cost
- * is the MCP result it reads (not the internal WS payload), so computing the delta here — and
- * returning only added/removed lines — directly cuts the tokens the model spends AND removes the
- * stale full-tree that drives hallucination. Reuses the same normalize+diff the baseline layer uses,
- * so "what changed" means the same thing everywhere.
+ * An agent that re-reads a full accessibility tree every look accumulates tens of thousands of
+ * tokens of STALE structure over a session, and then starts naming selectors that no longer exist.
+ * The agent-facing cost is the MCP result it reads, not the internal WS payload, so computing the
+ * delta here and returning only added/removed lines cuts the tokens the model spends AND removes the
+ * stale full tree. Reuses the same normalize+diff as the baseline layer, so "what changed" means the
+ * same thing everywhere.
  *
  * Pure decision (`snapshotDelta`) + a small route-invalidated cache (`SnapshotCache`). A route change
  * invalidates the prior snapshot (a diff across pages would be meaningless), so the next snapshot

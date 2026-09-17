@@ -1,9 +1,8 @@
 /**
  * Anonymous product telemetry — the contract for how the OSS `reticle` runtime reports ADOPTION
  * (not verification results): is it installed, how often is it invoked, which tools get used, how many
- * distinct machines/projects run it. This is what turns "npm downloads" (which an investor discounts)
- * into DAU/WAU/MAU, active sessions, and retention. Uninstall/churn is deliberately NOT an event —
- * npm 7+/pnpm run no uninstall lifecycle scripts, so churn is inferred server-side from inactivity.
+ * distinct machines/projects run it. Uninstall is deliberately NOT an event — npm 7+ and pnpm run no
+ * uninstall lifecycle script, so inactivity is the only signal available.
  *
  * Privacy is structural, not a policy: the ONLY identifiers on the wire are a random per-machine UUID
  * (`anonymousId`, minted locally, never derived from anything personal) and a one-way HASH of the
@@ -57,12 +56,10 @@ export const TELEMETRY_EVENT_VERSION = 3;
  * `tool`, emitted from a file called `invoke-tool.ts`. A name you have to look up is a name that gets
  * misread on a dashboard six months from now.
  *
- * VOLUME IS PART OF THE DESIGN. PostHog bills per ingested event, so the taxonomy is deliberately
- * shaped around one high-frequency thing (tool calls) being AGGREGATED rather than emitted. A single
- * agent verification loop is 50–200 tool calls; at one event each, a thousand users would push
- * millions of events a day for a question — "which tools get used" — that one summary property
- * answers better, because it also preserves the SHAPE of a session instead of scattering it across
- * 200 rows. See `SessionSummary`.
+ * VOLUME IS PART OF THE DESIGN. Tool calls are AGGREGATED into a session summary rather than emitted
+ * one event each: a single verification loop is 50–200 calls, and the summary answers "which tools
+ * get used" better anyway, because it preserves the SHAPE of a session instead of scattering it
+ * across 200 rows. See `SessionSummary`.
  */
 export const TelemetryEventKind = {
   /** First-ever run on this machine — powers install count + the new-user curve. */
@@ -88,20 +85,16 @@ export const TelemetryEventKind = {
    * A PERIODIC roll-up from a daemon that is still running — same payload shape as DAEMON_STOPPED,
    * `final: false`.
    *
-   * It used to be emitted AS `daemon_stopped`, which made an event named for an exit fire while the
-   * process was alive. Measured over one day: 98 `daemon_stopped` events were 73 real exits plus 25
-   * flushes, so anything counting sessions over-stated by 34% — and worse, the two populations are
-   * opposites. Every one of the 25 flushes had tool calls; not one of the 73 exits did (a daemon that
-   * served a tool never idle-exits, so only the idle ones ever reach a clean shutdown). A funnel over
-   * the raw event therefore describes active sessions at one end and abandoned ones at the other.
+   * Separate from DAEMON_STOPPED because the two populations are OPPOSITES: a daemon that served a
+   * tool never idle-exits, so only idle ones reach a clean shutdown. Emitting a periodic flush under
+   * an exit's name therefore describes active sessions at one end and abandoned ones at the other.
    *
    * Count sessions with DAEMON_STOPPED. Sum work with both.
    */
   SESSION_PROGRESS: 'session_progress',
   /**
-   * A verification produced a verdict. The product's reason to exist, and the one metric an investor
-   * should be shown: not "tools were called" but "an app was actually verified, and here is how often
-   * that caught something a green test would have missed".
+   * A verification produced a verdict — an app was actually verified, rather than merely that tools
+   * were called.
    */
   VERIFICATION_COMPLETED: 'verification_completed',
   /**
@@ -182,14 +175,12 @@ export const TelemetryEventKind = {
   /**
    * Reticle found a defect in the app under test.
    *
-   * THE metric the product exists to produce. Everything else here measures whether Reticle is used;
-   * this measures whether it WORKS — and it is the only number that can honestly be put in front of
-   * an investor or published, because it counts outcomes for users rather than activity by them.
+   * Everything else here measures whether Reticle is USED; this measures whether it WORKS, because it
+   * counts outcomes rather than activity.
    *
    * Deliberately a discrete event rather than only a counter: each bug carries its KIND, and the
-   * distribution is the interesting part. "We found 4,000 bugs" is a claim; "1,200 of them were
-   * greens that lied — a passing assertion sitting on a failed write, which no screenshot and no
-   * human watching the screen would have caught" is the argument.
+   * distribution is the interesting part — a passing assertion sitting on a failed write is a
+   * different finding from a console error, and a single count cannot tell them apart.
    */
   BUG_FOUND: 'bug_found',
   /**
@@ -303,7 +294,6 @@ export const VerificationSchema = z.object({
   passed: z.boolean(),
   /**
    * TRUE when the assertion passed but Reticle refused to call it verified — a caught false green.
-   * This is the product's whole thesis expressed as one boolean, and the number to put in a deck.
    */
   falseGreenCaught: z.boolean(),
   durationMs: z.number().int().nonnegative().optional(),

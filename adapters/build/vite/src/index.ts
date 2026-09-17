@@ -183,12 +183,9 @@ export interface ReticleVitePluginOptions {
    * Off by default because a body is the one part of a request that routinely carries a card
    * number, a token or a customer's address, and the daemon journals what it is told.
    *
-   * It matters that this is reachable at all. The SDK has supported `captureNetworkBodies` on
-   * `connect()` since bodies existed, but the plugin — the documented one-line integration, and the
-   * only `connect()` most apps ever have — had no way to pass it, and calling `connect()` a second
-   * time is a no-op. So for every app wired the recommended way, a payload was unreachable: on a
-   * real payments dashboard, a refund POSTing `amount: 1187.01` into a paise field (a 100x
-   * under-refund) was visible to Playwright's request inspector and invisible here.
+   * Reachable here because the plugin is the only `connect()` most apps ever have, and calling
+   * `connect()` a second time is a no-op — so without this option a body is unreachable for every app
+   * wired the recommended way. A wrong amount in a request body is invisible to every other channel.
    *
    * Also settable as `VITE_RETICLE_CAPTURE_BODIES=1`, so it can be turned on for one debugging
    * session without editing vite.config.

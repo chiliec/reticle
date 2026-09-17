@@ -87,7 +87,7 @@ export * from './realm/registry.js';
 // own way -- see wire/channel.ts, which imports the rule rather than restating it.
 export * from './telemetry-session.js'; // the session/project rollup payloads
 export * from './telemetry-license.js'; // LicenseActivation — shared by the licence gate and telemetry
-export * from './telemetry-feedback.js'; // the two things a PERSON writes: feedback + a self-declared identity // anonymous adoption telemetry wire contract (DAU/WAU/MAU/installs)
+export * from './telemetry-feedback.js'; // the two things a PERSON writes: feedback + a self-declared identity
 export * from './artifacts/impact.js'; // the user's own record of what Reticle has done for them (local only)
 export * from './artifacts/impact-savings.js'; // the savings model - one file, so every claim is derivable there
 export {

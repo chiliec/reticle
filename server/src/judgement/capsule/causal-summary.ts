@@ -15,7 +15,7 @@ interface StateDiff {
    *
    * The whole reason a transient was invisible. A store that ends internally consistent can have been
    * inconsistent on the way there, and a from→to pair cannot express that — measured on a real
-   * merchant dashboard, an account switch moved `accountId` immediately and `payments` 160 ms later,
+   * dashboard, an account switch moved `accountId` immediately and `payments` 160 ms later,
    * so for 160 ms the header named one tenant while the rows belonged to another. Both diffs were
    * reported; nothing said they were 160 ms apart, and waiting for the page to settle is by
    * construction waiting for the evidence to disappear. The timestamp was on the event all along.

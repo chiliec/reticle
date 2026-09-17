@@ -316,7 +316,7 @@ describe('the two gate entry points must agree', () => {
   const PUBKEY_PEM = publicKey.export({ type: 'spki', format: 'pem' }).toString();
 
   it('assertEnterprise honours a BAKED issuer key, exactly as the env-resolved gate does', () => {
-    // Found on the published 2.10.0 package: same build, same valid key, opposite answers.
+    // Found on a published package: same build, same valid key, opposite answers.
     // assertEnterpriseFromEnv ALLOWED and assertEnterprise(ctx) DENIED with `no-issuer-key`,
     // because the ctx path read only the environment and never the key baked at release. The only
     // gated feature calls the ctx path, so on a real release it refused every valid licence, and
@@ -351,10 +351,9 @@ describe('what an ACTIVE licence is told about gating', () => {
     ...over,
   });
 
-  it('does not list gated features to a customer whose licence already works', () => {
+  it('does not list gated features when the licence already works', () => {
     // `gated` exists so an UNLICENSED reader is not told to set a variable with no idea what it
-    // unlocks. A paying customer has already bought; listing feature names at them reveals the
-    // product surface for no benefit they need.
+    // unlocks. Once active, the reader already has it.
     const report = describeLicense(NOW, env({ [LICENSE_KEY_ENV]: key() }));
     expect(report.status).toBe('active');
     expect(report.gated).toBeUndefined();

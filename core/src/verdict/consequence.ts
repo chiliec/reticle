@@ -1,10 +1,12 @@
 /**
- * The product thesis, in one place: a verification "kind" is either a CONSEQUENCE (the app provably
- * did something a locator healed to the WRONG element, or a stale render, cannot fake) or a mere
- * PRESENCE check (which such a wrong locator CAN still satisfy). This classification is the moat —
- * it decides when "green" actually means the feature worked. It was implemented three times over
- * (flow classification, ad-hoc assert grading, flow-success compilation); keeping the vocabulary here
- * means a contributor can never strengthen one grader and silently leave the others weaker.
+ * A verification "kind" is either a CONSEQUENCE — the app provably did something that a locator
+ * healed to the WRONG element, or a stale render, cannot fake — or a mere PRESENCE check, which such
+ * a wrong locator CAN still satisfy. The classification decides when "green" actually means the
+ * feature worked.
+ *
+ * The vocabulary lives here because three separate graders depend on it (flow classification, ad-hoc
+ * assert grading, flow-success compilation), and a contributor must not be able to strengthen one and
+ * silently leave the others weaker.
  */
 
 /** Kinds whose satisfaction proves an observable outcome — a wrong/healed element cannot fake them. */

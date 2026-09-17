@@ -1,7 +1,6 @@
 /**
- * Anonymous adoption telemetry — the OSS runtime's ONLY phone-home for product metrics (DAU/WAU/MAU,
- * invocations, sessions, installs, tool usage). It answers the "npm downloads don't count, show me
- * platform usage" question without collecting anything personal:
+ * Anonymous adoption telemetry — the runtime's ONLY phone-home for product metrics (invocations,
+ * sessions, installs, tool usage). It reports platform usage without collecting anything personal:
  *
  *   - identity is a random UUID minted locally at `~/.reticle/telemetry-id` (never derived from you),
  *   - the project is a one-way HASH of the cwd (counts DISTINCT projects, reveals none),

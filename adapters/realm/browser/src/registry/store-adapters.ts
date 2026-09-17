@@ -4,12 +4,11 @@ import { markAdapterSource, type StoreLike, type StoreSubscribe } from './stores
 /**
  * Adapters that give non-`{getState, subscribe}` state libraries the shape `registerStore` wants.
  *
- * `registerStore` duck-types on `{getState, subscribe}`, which zustand and Redux satisfy natively — so
- * those two needed nothing and got support for free. Everything else was unserved, and the gap was not
- * evenly distributed: by weekly npm downloads TanStack Query (~64M) is larger than zustand (~46M) and
- * redux (~39M), and it holds the state most likely to be WRONG in a way nothing else can see.
+ * `registerStore` duck-types on `{getState, subscribe}`, which zustand and Redux satisfy natively, so
+ * those two need nothing. A query cache does not satisfy it, and it holds the state most likely to be
+ * WRONG in a way nothing else can see.
  *
- * That last point is the reason this file exists rather than a docs page. A stale-cache bug — the UI
+ * That is the reason this file exists rather than a docs page. A stale-cache bug — the UI
  * rendering data the server has since changed, a mutation that never invalidated its query, an
  * optimistic update that was never rolled back — fires NO network request. An outside-in tool watching
  * the network sees silence and calls it healthy; the DOM shows a plausible number. The only witness is

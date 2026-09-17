@@ -41,6 +41,11 @@ export default tseslint.config(
       // rules are now errors rather than paragraphs.
       'reticle/no-internal-tags': 'error',
 
+      // A doc comment authored through an unquoted heredoc had `git ls-files` evaluated inside it,
+      // pasting 407 lines of a private repository's layout into shipped source and deleting every
+      // other code span the comment named. It compiled and reached the published tarball.
+      'reticle/no-runaway-comment': 'error',
+
       // Foundation skill — non-negotiable type-safety rules
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'error',
@@ -218,6 +223,6 @@ export default tseslint.config(
     // in fixtures asserting it fires. Exempting only this package keeps the rule enforceable everywhere
     // else while letting it document itself.
     files: ['adapters/lint/eslint/src/**'],
-    rules: { 'reticle/no-internal-tags': 'off' },
+    rules: { 'reticle/no-internal-tags': 'off', 'reticle/no-runaway-comment': 'off' },
   },
 );

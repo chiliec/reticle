@@ -2,8 +2,7 @@
  * Counting the defects Reticle actually finds.
  *
  * Every other metric in this product measures whether Reticle is USED. This one measures whether it
- * WORKS — and it is the only number that can honestly be put in front of an investor or published,
- * because it counts outcomes for users rather than activity by them.
+ * WORKS, because it counts outcomes rather than activity.
  *
  * It is read off tool RESULTS at the single chokepoint every tool already crosses, rather than
  * emitted from the four places that produce findings. That is deliberate: the detectors are pure

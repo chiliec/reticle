@@ -1,18 +1,13 @@
 /**
- * Find an enterprise licence key the customer actually placed, wherever they reasonably placed it.
+ * Find an enterprise licence key wherever it was reasonably placed.
  *
- * The daemon folded in `<cwd>/.env` and nothing else. It is spawned without an explicit `cwd`, so it
- * inherits whatever directory the editor launched the MCP server from — in a monorepo that is the
- * workspace root while the key sits in the app's own `.env`, and under some editors it is the user's
- * home. The key was never read, `describeLicense` reported `missing`, and every event that customer
- * produced said they had no licence, which is indistinguishable from a customer who has none.
+ * The daemon is spawned without an explicit `cwd`, so it inherits whatever directory the editor
+ * launched the MCP server from — in a monorepo that is often the workspace root while the key sits in
+ * the app's own `.env`. Reading `<cwd>/.env` alone therefore misses the key and reports `missing`,
+ * which is indistinguishable from having no licence at all: the failure is silent on both sides.
  *
- * That is the worst shape a licensing bug can take. A key that fails LOUDLY gets reported by the
- * customer within the hour. A key that silently fails to register leaves them believing they are
- * licensed and us believing they are not, and neither side finds out.
- *
- * Two directions, because the field hits both: DOWN one level into app directories (the daemon
- * starts at the workspace root) and UP to the project root (the editor starts inside the app).
+ * So the search runs in two directions: DOWN one level into app directories (the daemon started at
+ * the workspace root) and UP to the project root (the editor started inside the app).
  *
  * ONLY the licence key is ever taken out of a file found this way, and that restriction is the point
  * rather than an optimisation. Bulk-importing a `.env` discovered by walking would let a directory
@@ -83,7 +78,7 @@ function isRoot(dir: string): boolean {
  *
  * `discoverProjectConfigs` descends only into DECLARED workspaces, which is right and is what a real
  * monorepo has. But `apps/web` with no `workspaces` entry is a shape people genuinely ship, and for
- * a licence key the cost of one extra `readdir` is nothing against reporting a paying customer as
+ * a licence key the cost of one extra `readdir` is nothing against reporting a licensed install as
  * unlicensed. Strictly widens coverage; it can never contradict the discovery, only add to it.
  */
 const CONVENTIONAL_DIRS = ['apps', 'packages'] as const;

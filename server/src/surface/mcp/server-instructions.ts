@@ -9,34 +9,20 @@ import { surfaceVocabulary, listOf, type SurfaceVocabulary } from './surface-voc
  * restart, no action from the user. For an agent that arrived through a plugin listing or a pasted
  * config block rather than through the skill, it is the ONLY thing Reticle ever says unprompted.
  *
- * It used to open on tool grammar. That is the right thing to say to an agent that has an app to
- * point the tools at, and the wrong thing to say to one that does not — and in the field the
- * overwhelming majority of daemons never see an app connect, never run a command and never call a
- * tool. Those sessions are not agents failing a hard step. They are agents that were never asked to
- * take an easy one: the MCP server registers itself in a single line of config, so a user reaches
- * "the tools are here" without ever reaching "the app is wired", and nothing in that state reads as
- * unfinished. Registering the server is the cheapest part of the product and it is the only part
- * many installs ever complete.
+ * The lead is state-dependent, because registering the MCP server and instrumenting an app are two
+ * separate acts and only the first is a single line of config. A user therefore reaches "the tools
+ * are here" without reaching "the app is wired", and nothing in that state reads as unfinished. So a
+ * project that has never had an app connect is told the one thing it needs, and a project that has is
+ * not nagged about a step it already took. The verdict discipline and the feedback ask are constant,
+ * because they matter in both states.
  *
- * So the lead is state-dependent. A project that has never had an app connect is told the one thing
- * it needs; a project that has is not nagged about a step it already took. The verdict discipline
- * and the feedback ask are constant, because they matter in both states.
+ * The stopping rule is here because every OTHER instruction pushes toward more checking — which is
+ * right when something is broken, and is the whole bill when nothing is. Without it an agent will
+ * keep driving a page whose first verdict already came back "yes" over a clean capture.
  *
- * The stopping rule is here for a measured reason. On a HEALTHY app in the competitor benchmark,
- * this agent spent 22 turns and roughly 3.5x the cheapest competitor's tokens confirming that
- * nothing was wrong — and it was not payload, which was the smallest of its five runs. It was
- * turns: three navigations, four queries, a console read, a network read and an assert, on a page
- * whose first verdict had already come back "yes" over a clean capture. Nothing anywhere told it
- * when it was finished. Every other instruction here pushes toward MORE checking, which is right
- * when something is broken and is the whole bill when nothing is.
- *
- * The diagnose-from-source rule has the same provenance and a bigger number behind it. Measured on
- * a fix-and-verify benchmark, split at the call that writes the fix: this agent spent 14 and 18
- * calls BEFORE its first edit where chrome-devtools-mcp spent 8 and 9 — and the sequences say why.
- * It drove the app to understand it (snapshot, act, wait_for, snapshot, act, act_and_wait) and only
- * then opened a file, while the competitor read six files and then looked once. Per-turn cost was
- * IDENTICAL on the hardest cell (22,575 against 22,466), so the whole gap was turns, and most of
- * those turns were spent asking a browser a question that only source can answer.
+ * The diagnose-from-source rule is here because driving the app cannot answer a question only the
+ * source can. An agent that explores to UNDERSTAND the code, rather than to confirm a fix, spends its
+ * turns asking a browser about intent.
  */
 
 /**

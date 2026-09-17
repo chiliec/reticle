@@ -1,8 +1,7 @@
 /**
- * Cloud subcommands for the `reticle` CLI — the user/agent door to the hosted service, folded into the ONE
- * tool (was the standalone `reticle-cloud` bootstrap script). These are THIN clients over the `/v1` API:
- * the moat is the server, not these verbs, and OSS reticle already ships the cloud-sync client — this just
- * surfaces it. Creds live under `~/.reticle`: `session.json` (human token from `reticle login`) and
+ * Cloud subcommands for the `reticle` CLI — the door to the hosted service, folded into the one tool.
+ * These are thin clients over the `/v1` API; the logic is server-side and these verbs just surface it.
+ * Credentials live under `~/.reticle`: `session.json` (human token from `reticle login`) and
  * `credentials.json` (per-project api keys from `reticle link`). The non-secret repo binding + sync policy
  * is `<repo>/.reticle/cloud.json`. Auth for a command = `RETICLE_CLOUD_KEY` env (agent) OR the login token.
  */

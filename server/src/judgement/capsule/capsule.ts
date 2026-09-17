@@ -93,7 +93,7 @@ export function buildDivergenceCapsule(
  *
  * The same response already carries `summary`, computed by `causalSummary()` over the same window,
  * so shipping the capsule's copy sent the identical block twice. Measured on a 61-call drive of the
- * razorpay merchant-dashboard fixture: 9 of 9 capsules duplicated it exactly, 11,171 B, **14% of the
+ * a 61-call drive, 9 of 9 capsules duplicated it exactly — **14% of the
  * whole run's token cost**, carrying nothing the reader did not already have two fields up.
  *
  * Wire-only. `capsule-store` persists the FULL capsule, because a stored capsule is read on its own

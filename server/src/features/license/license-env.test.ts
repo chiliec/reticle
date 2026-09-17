@@ -4,11 +4,8 @@
  * The daemon folded in `<cwd>/.env` and nothing else, and it is spawned without an explicit `cwd`,
  * so it inherits whatever directory the editor launched the MCP server from. In a monorepo that is
  * the workspace root while the key sits in the app's own `.env`; under some editors it is the user's
- * home. Either way the key was never read, `describeLicense` reported `missing`, and every event for
- * that customer said they had no licence — indistinguishable from a customer who has none.
- *
- * An enterprise key that silently fails to register is worse than one that fails loudly: the
- * customer believes they are licensed, we believe they are not, and neither side finds out.
+ * home. Either way the key is never read and `describeLicense` reports `missing`, which is
+ * indistinguishable from having no licence at all — a failure that is silent on both sides.
  */
 
 import { describe, expect, it } from 'vitest';

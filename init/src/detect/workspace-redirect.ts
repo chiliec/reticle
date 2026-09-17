@@ -45,13 +45,11 @@ export function redirectToWorkspaceApp(
   // `--app` is an INSTRUCTION, and it is read before the guess below. The guess answers "where is
   // the app?" for somebody who did not say; when somebody said, there is nothing left to infer.
   //
-  // It used to be read after, and the check underneath returns early for any directory that looks
-  // like an app — which a JS monorepo ROOT does, because shared tooling puts `vite` in its
-  // devDependencies. So on a real pnpm+turbo monorepo (measured on nuclear, a Tauri v2 app at
-  // product scale) `reticle init --app packages/player` silently ignored the flag, installed the
-  // SDK into the root's package.json, wrote `.reticle.json` and a whole `src/reticle-dev.ts` into a
-  // repository root that has no `src/`, left `packages/player` untouched — and reported three ✓ and
-  // one ⚠. The one flag documented for this shape wired the wrong directory and said it worked.
+  // Read BEFORE the check underneath, which returns early for any directory that looks like an app —
+  // which a JS monorepo ROOT does, because shared tooling puts `vite` in its devDependencies. Read
+  // after, `reticle init --app packages/player` silently ignored the flag on a pnpm+turbo monorepo:
+  // it installed the SDK into the root's package.json, wrote `.reticle.json` and `src/reticle-dev.ts`
+  // into a repository root that has no `src/`, left the named app untouched, and reported success.
   //
   // Existence is the test, not membership of the discovered list: discovery scans conventional
   // directories, and somebody who names a path knows their own layout better than the scan does.

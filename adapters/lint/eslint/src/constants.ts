@@ -27,3 +27,18 @@ export const DOCS_URL_ROOT =
 
 /** Rule that keeps design-doc codes and internal version strings out of source comments. */
 export const INTERNAL_TAGS_RULE_NAME = 'no-internal-tags';
+
+/** Rule that caps how long one block comment may be. */
+export const RUNAWAY_COMMENT_RULE_NAME = 'no-runaway-comment';
+
+/**
+ * Longest permitted block comment, in lines.
+ *
+ * Set above the longest genuine comment in the repository (45) and far below the 423-line accident
+ * this rule exists to catch, so it reports a paste and never a paragraph.
+ */
+export const MAX_COMMENT_LINES = 60;
+
+/** The human-readable report text (the assertion in tests matches this verbatim). */
+export const RUNAWAY_COMMENT_MESSAGE =
+  'block comment is {{lines}} lines (max {{max}}) — a comment this long is usually pasted output, not prose';

@@ -29,12 +29,11 @@ export type LicenseStatus = (typeof LicenseStatus)[keyof typeof LicenseStatus];
  * The signed claims inside a key. `exp` is epoch ms; `features` (optional) scopes which ee features
  * unlock.
  *
- * `lid` is the STABLE LICENSE ID and the only safe join key for per-customer usage: `org` is a display
- * name a human typed at signing time, so two customers called "Acme" merge into one and a customer who
- * renames splits into two. Every key carries one (minted by the issuer, `scripts/issue-license.mjs`),
- * which is why it is required rather than optional — an optional id is one that goes missing on exactly
- * the keys somebody later needs to attribute, and a key without it should be re-issued, not silently
- * counted as nobody.
+ * `lid` is the stable licence id and the only safe identity: `org` is a display name a human typed at
+ * signing time, so two organisations with the same name collapse into one and a rename splits one into
+ * two. Every key carries one, minted by the issuer (`scripts/issue-license.mjs`), and it is required
+ * rather than optional because an optional id goes missing on exactly the keys that later need
+ * identifying.
  */
 const LicensePayloadSchema = z.object({
   lid: z.string().min(1),
@@ -223,16 +222,9 @@ interface LicenseReport {
   /** The stable license id — what usage is attributed to. Present only when `status` is `active`. */
   licenseId?: string;
   /**
-   * What a licence unlocks in THIS build, and where to get one. Always reported, including on an
-   * unlicensed install: `reticle license` was the one command that talks about licensing and it named
-   * neither, so it told an interested reader to set a variable without saying what it would unlock or
-   * how to obtain it. A dead end at exactly the moment somebody is asking.
-   */
-  /**
-   * What a licence unlocks in this build. Present on every branch a PROSPECTIVE customer lands on,
-   * because being told to set a variable with no idea what it unlocks is the dead end this exists to
-   * close. Absent once a licence is `active`: that reader has already bought, so naming features at
-   * them reveals the product surface and answers nothing they asked.
+   * What a licence unlocks in this build, reported alongside where to get one — being told to set a
+   * variable with no idea what it unlocks is a dead end at the moment somebody is asking. Omitted
+   * once a licence is `active`, where the reader already has it.
    */
   gated?: readonly string[];
   contact: string;
@@ -338,8 +330,8 @@ export function describeLicense(
     };
   }
   if (check.status === LicenseStatus.EXPIRED) {
-    // The id rides an expired key so a lapse can be attributed to a CUSTOMER. Without it, telemetry
-    // reports that somebody's licence ran out and cannot say whose, which is not a renewal signal.
+    // The id rides an expired key so the lapse can be identified; without it an expiry is
+    // indistinguishable from any other.
     return {
       ...LICENSE_OFFER,
       status: LicenseActivation.EXPIRED,

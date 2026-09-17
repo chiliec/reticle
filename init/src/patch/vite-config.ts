@@ -13,19 +13,18 @@ const RETICLE_MARKER = '@reticlehq/vite-plugin';
 /**
  * The `reticle(...)` call — the bridge port so the injected connect targets it.
  *
- * **`captureNetworkBodies` is OPT-IN.** It was written in by default, and the argument for that was
- * a good one: without a body, a write that answers 2xx grades `unknown / outcome_unread`, because a
- * 200 describes the transport and not the result. Measured on a real payments UI — a refund posted
- * rupees into a paise field, the server answered 200 having refunded a hundredth of it, the page
- * rendered the amount the user had typed, and every DOM-level check passed.
+ * **`captureNetworkBodies` is OPT-IN.**
  *
- * That argument justifies the CAPABILITY. It does not justify the default, and the distinction is
- * what #705 is about. A healthcare workspace proxying authenticated API traffic through Vite ran
- * `init`, and on the first drive their login tokens and patient payloads were in the daemon's
- * buffer. The old comment here conceded the exact gap — "the credential classes are redacted ... but
- * an address or an email is not, and nothing here should decide that for someone silently" — and
- * then decided it for them, because writing the line into their config IS deciding. `init` is run
- * unattended by an agent; the person who knows the data is sensitive is not in the room.
+ * The case FOR capturing bodies is real: without one, a write that answers 2xx grades
+ * `unknown / outcome_unread`, because a 200 describes the transport and not the result. A request
+ * that posts a wrong amount can answer 200, render the amount the user typed, and pass every
+ * DOM-level check.
+ *
+ * That justifies the CAPABILITY, not the default. Any app proxying authenticated API traffic through
+ * Vite puts request bodies in the daemon's buffer on the first drive, and the credential classes are
+ * redacted while an address or an email is not. Writing the line into someone's config IS deciding
+ * that for them — and `init` is run unattended by an agent, so the person who knows whether the data
+ * is sensitive is not in the room.
  *
  * So the default is off and the ways in are all deliberate:
  *   - `reticle init --capture-bodies` writes the line, for someone who has decided

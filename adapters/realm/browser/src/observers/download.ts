@@ -11,7 +11,7 @@ import { observeSafely, observeValue, type Emit, type Teardown } from './types.j
  * has no tool that returns a downloaded file at all. Reticle runs inside the page, where the Blob is
  * constructed, so the export is observable before it reaches the disk.
  *
- * Measured on a real merchant dashboard: one Export click produced a CSV wrong three ways at once —
+ * One Export click can produce a CSV wrong three ways at once —
  * 25 data rows in a file named `transactions-128-rows.csv`, an unquoted `3 Aug, 10:00 pm` that
  * shifts every column after it, and an `amount_inr` header over rows denominated in USD — while the
  * click itself reported a clean success and every other channel agreed. The benchmark's ground truth

@@ -188,8 +188,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  * of pure logic for good reason. Reading the result also means all the verification tools are covered
  * by one site instead of N handler edits, and the next one is covered the moment it joins the set.
  *
- * The RULE itself lives in verification-of.ts, because getting it wrong is silent and it feeds the
- * one number shown to investors — see that file for the two ways it was wrong.
+ * The RULE itself lives in verification-of.ts, because getting it wrong fails silently.
  */
 function recordVerification(
   toolName: string,

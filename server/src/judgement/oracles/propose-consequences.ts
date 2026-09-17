@@ -2,12 +2,12 @@ import { EventType, type ReticleEvent, PredicateKind } from '@reticlehq/core';
 import { routeOfEvent } from '@reticlehq/engine/question/predicate/predicate-route.js';
 
 /**
- * Self-generating oracles, v1. Given the window a recording captured, propose ranked mustHold
- * predicates — the practical answer to "you recorded a flow, now what should it assert?". Ranking
- * follows the moat's tiering: a signal (the app attested it) beats net/state/route (observable
- * consequences) beats presence (a wrong/healed locator can fake it). Deterministic; accepting a
- * proposal is one existing-tool call. The learned RANKING across projects is the paid layer
- * (OSS-VS-SERVER); these local rules are OSS.
+ * Given the window a recording captured, propose ranked `mustHold` predicates — the practical answer
+ * to "you recorded a flow, now what should it assert?".
+ *
+ * Ranking follows the consequence tiering: a signal (the app attested it) beats net/state/route
+ * (observable consequences) beats presence (a wrong or healed locator can fake it). Deterministic,
+ * and accepting a proposal is one ordinary tool call.
  */
 
 interface ProposedConsequence {

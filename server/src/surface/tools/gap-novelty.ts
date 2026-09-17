@@ -6,7 +6,7 @@
  * page". The vocabulary honoured that. The emission did not — the same remedy shipped on every
  * verdict that hit the same absence.
  *
- * Measured on a 61-call drive of the razorpay merchant-dashboard fixture: `no-source-mapping` was
+ * Measured on a 61-call drive of a production-sized dashboard fixture: `no-source-mapping` was
  * emitted **11 times, byte-identical, 365 B each**, and `instrumentationGaps` as a whole was 11.5%
  * of the run's entire token cost, of which 17 occurrences were repeats of advice already given.
  *

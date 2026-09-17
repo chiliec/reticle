@@ -384,7 +384,7 @@ function findCandidates(query: ElementQuery): { candidates: HTMLElement[]; scope
       if (seen.has(el)) continue; // reachable from both host and root - count once
       // Reticle's OWN UI is not part of the app under test. `snapshot` has always excluded it; query
       // did not, so the presenter panel and the annotator answered `by: role` like app controls -
-      // measured on a real merchant dashboard, 7 of the 40 buttons an agent could see were ours
+      // on a production-sized dashboard, 7 of the 40 buttons an agent could see were ours
       // ("Pause", "End", "Chat", "Export"). Two of those
       // share a NAME with a real control on that page, so an agent resolving "Export" could drive the
       // observer instead of the app and then reason about the result. Filtered here, at the one

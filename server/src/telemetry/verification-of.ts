@@ -9,7 +9,7 @@
  *     `bugsInResult` fired on the reds — bugs with no verifications to divide them by;
  *   - an EMPTY suite ("all 0 flows pass") emitted `verified: yes, passed: true`.
  *
- * Extracted because a rule this easy to get wrong, feeding the one number shown to investors, should
+ * Kept in one place because a rule this easy to get wrong should
  * be readable and testable on its own rather than inferred from a ternary inside a dispatcher.
  */
 import { type BrowserBrand, CaptureLoss, type Verification, VerifiedReason } from '@reticlehq/core';

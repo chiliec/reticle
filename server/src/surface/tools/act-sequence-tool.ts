@@ -65,7 +65,7 @@ function effectOf(session: Session, since: number): StepEffect {
  *
  * HOW TO PICK A GAP, because both edges are real and neither is guessable. It must outlast the
  * handler committing and dispatching its request, and undercut the response it is racing.
- * Measured against the razorpay filter race (superseded query 700ms, the one replacing it 90ms):
+ * Measured against a superseded-filter race (the superseded query 700ms, the one replacing it 90ms):
  * at 0ms the first request was never issued at all, and at the ordinary settle (~500ms in a
  * throttled tab, where rAF never fires and the frame budget always times out) the two clicks
  * serialised and never overlapped. 50ms sat in the window. A different app needs a different

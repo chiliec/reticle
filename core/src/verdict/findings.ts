@@ -154,9 +154,8 @@ export const ContradictionKind = {
    * `dispatched: true, settled: true`, and every observation channel reports an empty window. The
    * settle half is the trap — a page that does nothing is quiet, and quiet is exactly what `settled`
    * tests for, so `until: { kind: 'settled' }` PASSES on a dead click and the verdict read
-   * `verified: "yes", because: "no channel disagreeing"`. Measured on a real merchant dashboard by
-   * clicking a `styled.div` that `reticle_query { by: 'text' }` had resolved instead of the button
-   * beside it: zero events, store unchanged, green verdict.
+   * `verified: "yes", because: "no channel disagreeing"`. The shape that produces it: a `by: 'text'`
+   * query resolves a `styled.div` instead of the button beside it, and the click lands on nothing.
    */
   ACTION_HAD_NO_EFFECT: 'action-had-no-effect',
   /**
@@ -164,22 +163,18 @@ export const ContradictionKind = {
    * The URL says you arrived somewhere; the page is blank.
    *
    * This is the class every "did the control work" heuristic misses, because the control DID work:
-   * it navigated. Measured on a real merchant dashboard with nine such links (Invoices, Route,
-   * Subscriptions, QR Codes, Customers…), `reticle_crawl` drove all nine and reported
-   * `deadControls: 0` — correctly, by its own definition, since a route change is activity.
+   * it navigated. A crawler counting dead controls reports none, correctly by its own definition,
+   * since a route change IS activity.
    *
-   * The discriminator came from executing both cases and comparing, not from reasoning: a working
-   * nav emitted `domAdded: 1, network: 2`; a blank one emitted `domAdded: 0, domRemoved: 0,
-   * network: 0` and left the page at an eighth the size. A real transition either fetches something
-   * or renders something.
+   * The discriminator: a working nav emits `domAdded: 1, network: 2`; a blank one emits
+   * `domAdded: 0, domRemoved: 0, network: 0`. A real transition either fetches something or renders
+   * something.
    *
-   * MEASURED PRECISION, and the limit is real: 11 findings on that dashboard, 10 of them genuinely
-   * blank destinations (verified by reading the DOM directly, not by asking Reticle), 1 false
-   * positive. The false positive is instructive rather than fixable by tuning — a route whose view
-   * is REVEALED from DOM that already existed emits `route.change` + `dom.attr` and nothing else,
-   * which is byte-for-byte the window a blank destination emits. No event-only rule separates them.
-   * Over-warning is the safe direction here (a false alarm costs a glance; a blank page shipped as
-   * working does not), so it is reported with that ceiling stated rather than tuned into silence.
+   * THE LIMIT IS REAL, and is not fixable by tuning: a route whose view is REVEALED from DOM that
+   * already existed emits `route.change` + `dom.attr` and nothing else, which is byte-for-byte the
+   * window a blank destination emits. No event-only rule separates them. Over-warning is the safe
+   * direction (a false alarm costs a glance; a blank page shipped as working does not), so this is
+   * reported with the ceiling stated rather than tuned into silence.
    */
   ROUTE_RENDERED_NOTHING: 'route-rendered-nothing',
   /**
