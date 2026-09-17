@@ -127,9 +127,22 @@ jobs:
           # so the MCP surface can answer from them offline. Recorded at 5,200,000, which is
           # about 350KB of room. Same rule as the SDK above: if the reason is not in the diff,
           # do not move the number.
+          #
+          # RAISED to 5,400,000 on 2026-09-17, with the reason, on the first CI run that ever
+          # measured this branch: 5,272,323 bytes, 72KB past the ceiling. The 350KB of room was
+          # spent by v3.1.0 itself — recording, flows, hooks and the tour all land in `server/dist`.
+          #
+          # Two contributor docs came out of the tarball in the same change and are NOT what bought
+          # the headroom: `telemetry-contract.md` and `telemetry-events.mdx` are about ADDING
+          # telemetry to Reticle, so they should never have shipped to somebody who installed it.
+          # That is 88KB and it only got the package back under the OLD number by 9KB, which is not
+          # headroom, it is a coincidence waiting to fail on the next doc edit.
+          #
+          # So: 5,400,000, which is ~210KB of room over the measured 5,190,356. The docs are still
+          # ~1MB of this package and are the first place to look when this is next hit.
           server_bytes=$(cd server && npm pack --dry-run --json 2>/dev/null | sed -n '/^\[/,$p' | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d)[0].unpackedSize))")
           echo "server unpacked: $server_bytes bytes"
-          if [ "$server_bytes" -gt 5200000 ]; then
-            echo "::error::@reticlehq/server unpacked size $server_bytes exceeds the 5200KB budget"
+          if [ "$server_bytes" -gt 5400000 ]; then
+            echo "::error::@reticlehq/server unpacked size $server_bytes exceeds the 5400KB budget"
             exit 1
           fi
