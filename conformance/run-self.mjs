@@ -97,6 +97,11 @@ async function refuseIfPortsAreTaken() {
   for (const [port, what] of [
     [APP_PORT, 'the bench app'],
     [API_PORT, 'the demo API'],
+    // The bridge was missing from this list, which is the port that actually collides: a daemon
+    // left running by any other work on this machine owns 4400, and the run died on a raw
+    // EADDRINUSE stack trace from inside `start()` instead of the sentence below. A guard that
+    // checks two of the three ports reads as "ports are checked" and is why this was not noticed.
+    [PORT, 'the bridge it starts itself'],
   ]) {
     if (!(await listening(port))) continue;
     console.error(

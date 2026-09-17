@@ -5,7 +5,12 @@
 set -uo pipefail
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Ask git which tree is being committed, rather than deriving it from this script's own path.
+# `.git/hooks/pre-commit` is a symlink into the MAIN checkout, so `BASH_SOURCE[0]` resolved there
+# no matter which worktree ran `git commit` -- the hook then read `git diff --cached` in the main
+# checkout and verified a tree nobody was committing. With two worktrees open on this repo that is
+# a gate reporting green over the wrong files.
+ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT" || exit 1
 
 fail=0
