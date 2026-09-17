@@ -188,7 +188,7 @@ describe('when it cannot continue, it says what is left', () => {
     const r = await runSetupPhases(INPUT, fx);
     expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
     expect(r.notes.join(' ')).toContain('before the build config was edited');
-    expect(r.fallback.join(' ')).toContain('reticle_sessions');
+    expect(r.fallback.join(' ')).toContain('reticle_session { action: "list" }');
   });
 
   // The false green this guards: another tab on the same daemon is not this install.

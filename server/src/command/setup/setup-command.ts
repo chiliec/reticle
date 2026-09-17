@@ -197,8 +197,10 @@ export async function runSetupCommand(
       if (null !== failure) {
         print(
           `could not open a browser (${failure}). On a machine with none — CI, a container, an SSH ` +
-            'session — take a tab Reticle owns instead: reticle_run({ tool: "reticle_lease", args: ' +
-            `{ action: "acquire", url: "${url}" } }).`,
+            // Was `reticle_run({ tool: "reticle_lease", ... })`. The default surface advertises
+            // NEITHER name and ships no dispatch hatch to reach the second, so the one instruction
+            // printed at a reader who has just been told the browser failed could not be followed.
+            `session — take a tab Reticle owns instead: \`reticle open ${url}\`.`,
         );
       }
     },

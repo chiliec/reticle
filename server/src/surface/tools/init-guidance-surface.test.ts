@@ -27,10 +27,24 @@ import { REPO_ROOT } from '@/machine/repo-root.js';
 import { advertisedTools } from '@/surface/mcp/mcp.js';
 import { TOOL_SURFACE } from './tool-surface.js';
 
-/** The sources of the guidance init installs into a project. */
+/**
+ * The sources of the guidance init installs into a project, and the guidance it PRINTS.
+ *
+ * The printed half was added after `install-gate (ubuntu, cra)` went red on 3.1.0: `init` exited 1
+ * and its own fallback -- the steps a reader follows precisely BECAUSE the run did not finish --
+ * told them to call `reticle_sessions`, `reticle_snapshot`, `reticle_act_sequence`, `reticle_record`
+ * and `reticle_flow_save`. Five names, none of them advertised, on the one path where the reader
+ * has nothing else to go on. The browser-launcher fallback beside it named
+ * `reticle_run({ tool: "reticle_lease", ... })`, which is neither advertised nor reachable.
+ *
+ * Written and printed are the same defect with the same fix, so they are one list: a guard that
+ * covered only the written half passed through this release with the printed half broken.
+ */
 const WRITTEN_GUIDANCE = [
   join(REPO_ROOT, 'init', 'src', 'register', 'slash-command.ts'),
   join(REPO_ROOT, 'init', 'src', 'project', 'agent-rules.ts'),
+  join(REPO_ROOT, 'server', 'src', 'command', 'setup', 'remaining-steps.ts'),
+  join(REPO_ROOT, 'server', 'src', 'command', 'setup', 'setup-command.ts'),
 ];
 
 /**
@@ -54,18 +68,32 @@ function toolNamesIn(source: string): string[] {
   return [...new Set(withoutComments(source).match(/reticle_[a-z][a-z_]*/g) ?? [])];
 }
 
-describe('the files init writes name only tools the reader was given', () => {
+describe('the guidance init writes and prints names only tools the reader was given', () => {
   const advertised = new Set(advertisedTools(TOOL_SURFACE.MERGED).map((tool) => tool.name));
 
-  it('finds the sources of the guidance init installs', () => {
+  it('finds the sources of the guidance init installs and prints', () => {
     for (const file of WRITTEN_GUIDANCE) expect(existsSync(file), file).toBe(true);
   });
 
-  // The negative control for the check below: if this set ever goes empty, the guard is vacuous.
+  /*
+   * The negative control for the check below: if this set ever goes empty, the guard is vacuous.
+   *
+   * Corpus-wide rather than per-file. A file earns its place here by being guidance a reader acts
+   * on, not by currently containing a tool name: `setup-command.ts` names none today, because the
+   * fix for its defect was to replace `reticle_run({ tool: "reticle_lease", ... })` with the CLI's
+   * own `reticle open <url>`. Demanding a name from every file would have forced that file back
+   * out of the list precisely because it had been fixed.
+   */
   it('reads real tool names out of them', () => {
-    for (const file of WRITTEN_GUIDANCE) {
-      expect(toolNamesIn(readFileSync(file, 'utf8')).length, file).toBeGreaterThan(0);
-    }
+    const all = WRITTEN_GUIDANCE.flatMap((file) => toolNamesIn(readFileSync(file, 'utf8')));
+    expect(
+      all.length,
+      'no tool names found at all — the matcher has stopped matching',
+    ).toBeGreaterThan(0);
+    // The file this guard was extended for. Its advice is what a reader follows when init FAILED,
+    // so it going quiet would be the guard losing the case it was written for.
+    const fallback = WRITTEN_GUIDANCE.find((f) => f.endsWith('remaining-steps.ts'));
+    expect(toolNamesIn(readFileSync(fallback ?? '', 'utf8')).length).toBeGreaterThan(0);
   });
 
   it('every reticle_* name in them is on the default surface', () => {
@@ -77,7 +105,7 @@ describe('the files init writes name only tools the reader was given', () => {
     }
     expect(
       broken,
-      `guidance init writes into a user's repo names tools the default surface does not advertise: ${broken.join(', ')}`,
+      `guidance init writes or prints names tools the default surface does not advertise: ${broken.join(', ')}`,
     ).toEqual([]);
   });
 });

@@ -32,7 +32,7 @@ export function remainingSteps(p: Progress): string[] {
   }
   if (!p.sessionConnected) {
     steps.push(
-      'Confirm a session appears with `reticle_sessions`. If the list is empty, read its ' +
+      'Confirm a session appears with `reticle_session { action: "list" }`. If the list is empty, read its ' +
         '`next_action`: the usual cause is a dev server that was already running when the build ' +
         'config was edited, so restart it and hard-reload' +
         (undefined === p.url ? '.' : ` ${p.url}.`),
@@ -40,10 +40,11 @@ export function remainingSteps(p: Progress): string[] {
   }
   if (!p.flowSaved) {
     steps.push(
-      'Drive one flow and produce a verdict: `reticle_snapshot({mode:"interactive"})` once, ' +
-        '`reticle_act_sequence` for the setup steps, then ONE `reticle_act_and_wait({ref,action,until})`. ' +
-        'Wrap it in `reticle_record` start/stop and `reticle_flow_save`, and check the grade it ' +
-        'returns is `asserted` — anything else only acts, so it passes even when the feature breaks.',
+      'Prove one flow, which is the first run and is yours to start. Drive it yourself with the ' +
+        '`reticle_*` tools, ending in `reticle_act_and_wait` or `reticle_assert` — those two are ' +
+        'what produce a verdict. Or hand the whole drive to Reticle with `reticle_verify { action: ' +
+        '"explore", persona: "<who does what>" }`, which records what it drove so later runs replay ' +
+        'with no model in the loop; that route needs ANTHROPIC_API_KEY.',
     );
   }
   steps.push(`The whole procedure, if you need it: \`curl ${DOCS_INDEX}\`.`);
