@@ -67,3 +67,46 @@ describe('a Reticle tool that is real but not advertised', () => {
     expect(missing).toEqual([]);
   });
 });
+
+/**
+ * The advice has to be true on the surface that is actually shipping.
+ *
+ * Every test above hands `reticle_run` to the advertised set, so the case the default profile is in
+ * was never covered. On the MERGED surface — what a daemon advertises with `RETICLE_ADVERTISE_ALL_TOOLS`
+ * unset — `reticle_run` is not advertised either, and `reticle_tools` says so in as many words:
+ * "there is no hidden tail and no dispatch hatch to reach one".
+ *
+ * MEASURED against a live daemon while driving bench-app:
+ *
+ *     reticle_baseline  -> "It is NOT missing: invoke it with reticle_run { tool: … }"
+ *     reticle_run       -> "Tool reticle_run not found"
+ *
+ * So the one message whose entire purpose is to stop an agent concluding "this does not exist"
+ * handed it a call that does not exist, and cost the turn it was written to save. The fix this file
+ * describes — "a name Reticle owns never comes back as not found; it comes back with the call that
+ * WORKS" — has to mean the call that works HERE.
+ */
+describe('when the dispatch hatch is not advertised either', () => {
+  const MERGED = new Set<string>([ReticleTool.LOOK, ReticleTool.TOOLS]);
+
+  it('does not tell an agent to call a tool this surface does not have', () => {
+    const help = unadvertisedToolHelp(ReticleTool.BASELINE, MERGED, KNOWN);
+    expect(help).toBeDefined();
+    expect(help ?? '').not.toContain(ReticleTool.RUN);
+  });
+
+  it('still refuses to let the name read as missing, and says what to do instead', () => {
+    const help = unadvertisedToolHelp(ReticleTool.BASELINE, MERGED, KNOWN) ?? '';
+    expect(help).toContain(ReticleTool.BASELINE);
+    // The only route that actually opens it on this profile.
+    expect(help).toContain(ADVERTISE_ALL_ENV);
+  });
+
+  // The existing advice is still right wherever the hatch IS advertised.
+  it('keeps pointing at the hatch on a profile that has one', () => {
+    const withHatch = new Set<string>([ReticleTool.RUN, ReticleTool.TOOLS]);
+    expect(unadvertisedToolHelp(ReticleTool.BASELINE, withHatch, KNOWN) ?? '').toContain(
+      ReticleTool.RUN,
+    );
+  });
+});

@@ -15,9 +15,9 @@ import { fileURLToPath } from 'node:url';
  */
 export default defineConfig({
   plugins: [tsconfigPaths()],
-  // Every package shares one bound; see vitest.shared.ts for the gate this kept red.
-  test: { ...sharedTestOptions },
   test: {
     environment: 'jsdom',
+    // Every package shares one bound; see vitest.shared.ts for the gate this kept red.
+    ...sharedTestOptions,
   },
 });

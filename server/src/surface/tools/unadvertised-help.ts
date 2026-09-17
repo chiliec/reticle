@@ -32,6 +32,26 @@ export function unadvertisedToolHelp(
   const moved = mergedNameRedirect(name);
   if (moved !== undefined) return mergedNameMessage(name, moved, advertised.has(moved.tool));
   if (!known.has(name)) return undefined;
+  /*
+   * The hatch is not on every profile, and advice that names a tool this surface does not have is
+   * the very failure this file exists to prevent.
+   *
+   * On the MERGED surface — a daemon started without the env below — `reticle_run` is un-advertised
+   * too, and `reticle_tools` states plainly that "there is no hidden tail and no dispatch hatch to
+   * reach one". Measured against a live daemon: `reticle_baseline` answered "invoke it with
+   * reticle_run", and `reticle_run` answered "Tool reticle_run not found". The one message whose
+   * whole job is to stop an agent concluding "this does not exist" spent its turn proving it.
+   */
+  if (!advertised.has(ReticleTool.RUN)) {
+    return (
+      `${name} exists in this build but is not reachable on this tool surface, which advertises the ` +
+      `verify loop and nothing else — there is no dispatch tool here to route through. It is NOT a ` +
+      `missing feature and NOT a retired name. To use it, start the daemon with ` +
+      `${ADVERTISE_ALL_ENV}=1, which advertises the wider surface including ${name}; the daemon reads ` +
+      `that at startup, so it takes effect on the next one. Until then, prefer what this surface ` +
+      `does advertise — ${ReticleTool.TOOLS} {} lists it.`
+    );
+  }
   return (
     `${name} exists and works, but is not advertised under this tool profile — the schemas for all ` +
     `tools are re-sent every turn, so the default advertises a subset and keeps the rest one call ` +
