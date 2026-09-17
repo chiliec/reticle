@@ -50,6 +50,7 @@ import { causalSummary } from '@/judgement/capsule/causal-summary.js';
 import { findContradictions } from '@reticlehq/engine/disagreement/contradictions.js';
 import { crashedRuleNotes } from '@reticlehq/engine/disagreement/contradiction-folds.js';
 import { gapsForAction } from '@reticlehq/engine/evidence/instrumentation-gaps.js';
+import { withGapNovelty } from './gap-novelty.js';
 import { noteSessionGaps } from '@reticlehq/engine/evidence/gap-ledger.js';
 import { isChangeUndeclared } from '@reticlehq/engine/evidence/undeclared-change.js';
 import { intentDebt, openSessionIntents } from '@/memory/intent/open-intents.js';
@@ -78,7 +79,7 @@ import {
 } from '@reticlehq/engine/evidence/already-true.js';
 import { describeWaitTarget, namedNetIsInFlight } from '@reticlehq/engine/evidence/unsettled.js';
 import { saveFailedAssertCapsule } from './act-capsule.js';
-import { blastRadius, buildDivergenceCapsule } from '@/judgement/capsule/capsule.js';
+import { blastRadius, buildDivergenceCapsule, wireCapsule } from '@/judgement/capsule/capsule.js';
 import { predicateToExpectedLinks } from '@reticlehq/engine/question/predicate/predicate-to-links.js';
 import { buildHonestyBlock } from '@reticlehq/engine/evidence/honesty.js';
 import {
@@ -437,7 +438,7 @@ export const ACT_TOOLS: ToolDef[] = [
         .unknown()
         .optional()
         .describe(
-          'Present only on a FAILED verdict: the divergence capsule { summary, firstDivergence (declared vs observed), blastRadius (undeclared side effects) } — the fault, located, no re-exploration needed.',
+          'Present only on a FAILED verdict: the divergence capsule { firstDivergence (declared vs observed), blastRadius (undeclared side effects) } — the fault, located, no re-exploration needed. Its causal summary is not repeated here; it is `summary` on this same response.',
         ),
       blastRadius: z
         .array(z.string())
@@ -955,9 +956,14 @@ export const ACT_TOOLS: ToolDef[] = [
            * optional capability nobody is told about is one nobody uses, measured on `bodies` this
            * same week.
            */
+          // Remedy once per session, facts every time — see gap-novelty.ts. `no-source-mapping`
+          // shipped 11 identical copies of its fix text in one measured drive.
           ...(gaps.length > 0 || intentGap !== undefined
             ? {
-                instrumentationGaps: intentGap === undefined ? gaps : [...gaps, intentGap],
+                instrumentationGaps: withGapNovelty(
+                  session.id,
+                  intentGap === undefined ? gaps : [...gaps, intentGap],
+                ),
               }
             : {}),
           // Cross-channel disagreement, reported WITH the action that caused it.
@@ -971,7 +977,8 @@ export const ACT_TOOLS: ToolDef[] = [
           // pays nothing.
           ...(contradictions.length > 0 ? { contradictions } : {}),
           honesty: honestyForVerdict(String(decision.verified), honesty),
-          ...(capsule === undefined ? {} : { capsule }),
+          // Without its summary: it is byte-identical to `summary` two fields up. See wireCapsule.
+          ...(capsule === undefined ? {} : { capsule: wireCapsule(capsule) }),
           ...(0 === greenRadius.length ? {} : { blastRadius: greenRadius }),
           since,
           ...(session.id === actedSessionId ? {} : { sessionId: session.id }),

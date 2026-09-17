@@ -87,3 +87,19 @@ export function buildDivergenceCapsule(
     blastRadius: blastRadius(expected, observed),
   };
 }
+
+/**
+ * The capsule as it travels on a verdict RESPONSE — without its causal summary.
+ *
+ * The same response already carries `summary`, computed by `causalSummary()` over the same window,
+ * so shipping the capsule's copy sent the identical block twice. Measured on a 61-call drive of the
+ * razorpay merchant-dashboard fixture: 9 of 9 capsules duplicated it exactly, 11,171 B, **14% of the
+ * whole run's token cost**, carrying nothing the reader did not already have two fields up.
+ *
+ * Wire-only. `capsule-store` persists the FULL capsule, because a stored capsule is read on its own
+ * and a summary-less one would be unreadable.
+ */
+export function wireCapsule(capsule: DivergenceCapsule): Omit<DivergenceCapsule, 'summary'> {
+  const { summary: _omitted, ...rest } = capsule;
+  return rest;
+}

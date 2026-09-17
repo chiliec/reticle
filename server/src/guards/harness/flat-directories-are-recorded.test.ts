@@ -124,7 +124,12 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // who gives no ref -- and the explanation of why the merged surface cannot enforce that -- pushed
   // that file past the 1000-line cap. It is a tool module beside `act-tools.ts` and
   // `observe-tools.ts` rather than a new leaf, because one tool is not a grouping.
-  'server/src/surface/tools': 35,
+  // 36 since `gap-novelty.ts`: the per-session filter that says an instrumentation gap's remedy
+  // once instead of on every call. It sits beside `act-tools.ts`/`observe-tools.ts` because BOTH
+  // assemble responses that carry gaps, and it holds session-scoped state -- so it belongs at the
+  // surface, not in the pure engine that computes the gaps. Recorded rather than grouped: one
+  // filter is not a cluster, and `tools/act/` is for the act path specifically.
+  'server/src/surface/tools': 36,
   // Crossed the line when a planned step gained its own `expect`: the grading rule and its test
   // joined the act cluster (preflight, target, retry, capsule). Recorded rather than grouped,
   // because this directory IS the grouping -- these files were split out of act-tools.ts when it

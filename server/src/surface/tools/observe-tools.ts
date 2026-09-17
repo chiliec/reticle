@@ -62,6 +62,7 @@ import {
   PRESENCE_ONLY_ADVICE,
 } from './assert/assert-grade.js';
 import { assertVerdict } from './assert/assert-verdict.js';
+import { withGapNovelty } from './gap-novelty.js';
 import { assertionSource } from './assert/assert-source.js';
 import { isChangeUndeclared } from '@reticlehq/engine/evidence/undeclared-change.js';
 import { openSessionIntents } from '@/memory/intent/open-intents.js';
@@ -539,7 +540,12 @@ export const OBSERVE_TOOLS: ToolDef[] = [
         ...annotateStarvedFailure(session, verdict),
         ...(contradictions.length > 0 ? { contradictions } : {}),
         // What the app did not tell Reticle, on the same rule the act path uses.
-        ...(gaps.length > 0 ? { instrumentationGaps: gaps } : {}),
+        // Remedy once per session, facts every time. Applied HERE rather than inside
+        // assert-verdict: that file lives in `assert/`, and importing this from there added a new
+        // directory reach (and a 22nd mutual pair) that `directory-reach.test.ts` rightly refused.
+        // The filter belongs where the response is assembled anyway — telemetry above keeps the
+        // full text. See gap-novelty.ts.
+        ...(gaps.length > 0 ? { instrumentationGaps: withGapNovelty(session.id, gaps) } : {}),
         ...advice,
         ...coverage,
         // The SAME pointer the journal keeps, not a second lookup — one verdict, one file:line.
