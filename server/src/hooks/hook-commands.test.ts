@@ -60,23 +60,46 @@ process.stdin.on('end', () => { writeFileSync(process.argv[2], data); });
 
 const sinkTo = (out: string): string => `node ${JSON.stringify(sink)} ${JSON.stringify(out)}`;
 
+const roots: string[] = [];
+
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'reticle-hooks-'));
+  roots.push(root);
   writeFileSync(sink, SINK_SOURCE);
 });
 
 afterAll(() => {
-  rmSync(sinkHome, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  for (const dir of roots) removeQuietly(dir);
+  removeQuietly(sinkHome);
 });
+
+/**
+ * Every root this suite makes, removed at the END and never allowed to fail a test.
+ *
+ * `runHookCommand` spawns with `cwd: reticleRoot`, and a process's working directory is an OPEN
+ * HANDLE on Windows, so the root cannot be removed until the child exits. Hooks are deliberately
+ * fire-and-forget — the product spawns and returns without waiting, which is the behaviour these
+ * tests exist to confirm — so there is no moment at which the test can know the child has gone.
+ *
+ * Retrying was not enough: twenty attempts over five seconds still reported `EBUSY: resource busy
+ * or locked, rmdir` on two separate CI runs, against test bodies that had PASSED. Failing a green
+ * assertion because a fire-and-forget child has not exited yet is a flake by construction, and what
+ * these tests assert is the payload, not the tidiness of a temp directory.
+ *
+ * Best effort here, a sweep at the end, and never a throw. What can be left behind is a handful of
+ * empty directories under the OS temp root, which the OS already owns.
+ */
+const removeQuietly = (dir: string): void => {
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  } catch {
+    // The child outlived the test. See above.
+  }
+};
 
 afterEach(() => {
   resetHooks();
-  // Retries because the child may still hold the directory: Windows refuses to remove a directory
-  // with an open handle in it, and this suite spawns real processes on purpose. `EBUSY: resource
-  // busy or locked, rmdir` is what that looks like, and it failed the run rather than the assertion.
-  // Generous, because the child that wrote into this directory may not have exited yet: the hook
-  // bus spawns it and returns, so teardown can arrive first. Windows reports that as EBUSY.
-  rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 });
+  removeQuietly(root);
 });
 
 const writeConfig = (config: Record<string, string>): void => {
