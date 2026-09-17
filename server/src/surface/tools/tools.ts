@@ -46,6 +46,7 @@ import { LIVE_CONTROL_TOOLS } from '@/portal/session/live-control-tools.js';
 import { type ToolDef, sessionIdShape, commandOrThrow } from './tool-kit.js';
 import { TOOL_SURFACE, type ToolSurface } from './tool-surface.js';
 import { mergeActWithSequence } from './act-merged.js';
+import { INSPECT_TOOL } from './inspect-tool.js';
 import { applyMerges, type MergePlan } from './merge-tools.js';
 import { ACT_TOOLS } from './act-tools.js';
 import { ACT_SEQUENCE_TOOL } from './act-sequence-tool.js';
@@ -514,98 +515,8 @@ export const RAW_TOOLS: ToolDef[] = [
       }).then((result) => withSizeCost(shapeQueryResult(result, args)));
     },
   },
-  {
-    name: ReticleTool.INSPECT,
-    example: { ref: 'e42' },
-    description:
-      'Deep info on one element by ref: full a11y props, visibility, box, and (with @reticlehq/react) component stack + source file.',
-    inputSchema: {
-      ref: z
-        .string()
-        .describe(
-          `Element ref (e.g. 'e42') from reticle_snapshot/reticle_query — stable until the element leaves the DOM, so no re-snapshot between actions.`,
-        ),
-      ...sessionIdShape,
-    },
-    outputSchema: {
-      ref: z.string(),
-      role: z.string(),
-      name: z.string(),
-      value: z.string().optional(),
-      states: z.array(z.string()),
-      visible: z.boolean(),
-      box: z
-        .object({ x: z.number(), y: z.number(), width: z.number(), height: z.number() })
-        .optional(),
-      // True when another element covers this one's center (z-index/overlay bug — unclickable).
-      occluded: z.boolean().optional(),
-      // Computed style the a11y tree omits: cursor/display/visibility/color so a "present but
-      // unusable" UI bug (dead cursor, invisible, recolored) is observable in one inspect.
-      styles: z
-        .object({
-          color: z.string(),
-          backgroundColor: z.string(),
-          opacity: z.string(),
-          cursor: z.string(),
-          display: z.string(),
-          visibility: z.string(),
-        })
-        .partial()
-        .optional(),
-      scroll: z
-        .object({
-          scrollTop: z.number(),
-          scrollHeight: z.number(),
-          clientHeight: z.number(),
-          overflowY: z.string(),
-        })
-        .optional(),
-      // Theme compliance vs the app's design tokens: { colorToken, colorTokens, backgroundToken,
-      // backgroundTokens, offTheme, tokenCount, themeScope }. The plural fields carry EVERY token
-      // matching the resolved colour; the singular ones abstain (null) when several tokens share it,
-      // because returning an arbitrary winner was the defect (#313). `themeScope` names the theme
-      // that was active at capture, so two inspects minutes apart are comparable at all.
-      // Kept as unknown — the structured-content serializer can truncate a large inspect payload's
-      // fields to strings, which a strict shape would reject; the full object is always present in
-      // the text content the agent reads.
-      theme: z.unknown().optional(),
-      /**
-       * Where this element is written, as `file:line`. Present when the app is built with the
-       * Reticle build plugin in dev; absent in production builds.
-       */
-      source: z.string().optional(),
-      /**
-       * Why `source` is missing, when it is.
-       *
-       * Distinguishes "this element has no stamp" from "nothing on this page has one, so the
-       * stamping loader is not running" — the second means `file:line` is unavailable for the
-       * whole session and the fix is a build-config change, which used to be discoverable only by
-       * reading the adapter's own source.
-       */
-      sourceUnavailable: z.string().optional(),
-      /**
-       * Component identity from the framework adapter (@reticlehq/react).
-       *
-       * Declared to match what the handler actually returns. It previously declared
-       * `{ name, sourceFile }` while the runtime returned `{ componentStack, source }` — the SDK
-       * passes structured content through, so the real shape won and the declaration was simply
-       * wrong. An agent reads this schema to decide what to ask for, which makes a wrong schema worse
-       * than a missing one.
-       */
-      component: z
-        .object({
-          componentStack: z.array(z.string()).optional(),
-          source: z
-            .object({ file: z.string(), line: z.number(), column: z.number().optional() })
-            .optional(),
-        })
-        .optional(),
-    },
-    handler: (deps, args) =>
-      commandOrThrow(deps, asString(args['sessionId']), ReticleCommand.INSPECT, {
-        ref: args['ref'],
-      }),
-  },
+  // reticle_inspect: one element in full detail. See inspect-tool.ts.
+  INSPECT_TOOL,
   // reticle_capabilities (live | fromDisk) + reticle_contract_save. See contract-tools.ts.
   ...RECONCILE_TOOLS,
   ...CONTRACT_TOOLS,
