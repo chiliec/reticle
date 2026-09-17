@@ -107,8 +107,21 @@ export class HudShell {
   });
   #callbacks: HudShellCallbacks;
 
-  /** Paint the toolbar's account capsule. No-op before mount, like every other painter here. */
+  /**
+   * The last account push, replayed at mount.
+   *
+   * Unlike every other painter here, this one cannot no-op before mount and forget. The daemon pushes
+   * the impact snapshot IMMEDIATELY on connect, which races the shell's mount, and a dropped paint is
+   * only repaired by the NEXT snapshot — which on an idle page never comes, because a snapshot is
+   * pushed by a tool call. Measured on the bench app: the account reached the page on 6 of 6 loads
+   * and reached the DOM on 2, so a signed-in user saw an empty capsule two times in three.
+   */
+  #pushedAccount:
+    { account: AccountState | undefined; dashboardUrl: string | undefined } | undefined;
+
+  /** Paint the toolbar's account capsule, and remember it in case the push beat the mount. */
   paintAccount(account: AccountState | undefined, dashboardUrl: string | undefined): void {
+    this.#pushedAccount = { account, dashboardUrl };
     if (this.#root === undefined) return;
     paintWorkspaceAccount(this.#root, account, dashboardUrl);
     // The settings panel asks the same question and answers it from the same push, so the two can
@@ -332,6 +345,10 @@ export class HudShell {
     }
     document.addEventListener('pointerdown', this.#onDocPointerDown, { signal });
     document.addEventListener('keydown', this.#onKeyDown, { signal });
+    // Replay a push that arrived before this mount. Last, so every element it paints into exists.
+    if (this.#pushedAccount !== undefined) {
+      this.paintAccount(this.#pushedAccount.account, this.#pushedAccount.dashboardUrl);
+    }
   }
   teardown(): void {
     // One call for all nine registrations. It cannot fall out of step with mount() the way a list

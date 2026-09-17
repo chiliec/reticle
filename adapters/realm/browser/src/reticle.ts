@@ -241,6 +241,8 @@ export class Reticle {
   #start = 0;
   #overlay: OverlayHandle | undefined;
   #presenter: Presenter | undefined;
+  /** Presenter pushes that arrived before the presenter existed, replayed on construction. */
+  readonly #pendingPushes = new Map<string, { name: string; args: Record<string, unknown> }>();
   /**
    * Reading the panel's settings, once the panel has arrived.
    *
@@ -490,6 +492,10 @@ export class Reticle {
         const panel = new Presenter(panelOptions);
         this.#presenter = panel;
         panel.mount();
+        // Drain pushes that arrived before this existed. After mount(), so the DOM they paint into is
+        // there; the presenter's own painters no-op on a missing element rather than throwing.
+        for (const buffered of this.#pendingPushes.values()) panel.handlePush(buffered);
+        this.#pendingPushes.clear();
         /*
          * The first-run tour, once, over the app the person just wired up.
          *
@@ -711,8 +717,17 @@ export class Reticle {
       command.name === ReticleCommand.FLOWS ||
       command.name === ReticleCommand.IMPACT
     ) {
-      this.#presenter?.handlePush(command);
-      return { ok: true, result: { applied: this.#presenter !== undefined } };
+      if (this.#presenter === undefined) {
+        // The presenter is imported and constructed asynchronously, and the daemon pushes the impact
+        // snapshot the instant a session connects — so this arrives BEFORE there is anything to apply
+        // it to, routinely rather than rarely. Dropping it loses the account for the whole session,
+        // because nothing re-pushes a snapshot on a page nobody drives. Last push per kind wins: a
+        // later snapshot supersedes an earlier one, and replaying a stale one would be worse.
+        this.#pendingPushes.set(command.name, command);
+        return { ok: true, result: { applied: false, buffered: true } };
+      }
+      this.#presenter.handlePush(command);
+      return { ok: true, result: { applied: true } };
     }
 
     const handler = this.#registry.get(command.name);
