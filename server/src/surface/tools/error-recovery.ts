@@ -367,6 +367,14 @@ const RULES: readonly { readonly match: RegExp; readonly hint: string }[] = [
     match: /(?:^|[\s'"`(])reticle_[a-z_]+(?![\w/.-])|(?:^|[\s'"`(])args\.[a-z][\w]*/i,
     hint: RECOVERY.BAD_ARGUMENTS,
   },
+  // And a message telling the caller to SET something, which is one we wrote about their
+  // configuration rather than an unanticipated failure. The FIFTH patch to this default, and keyed
+  // on the instruction rather than on another phrasing: measured live, a first run with no key
+  // answered "No model configured to drive the app: set ANTHROPIC_API_KEY to let Reticle explore it
+  // for you" — the exact fix — and then told the reader it might be a Reticle defect worth a
+  // root-cause report. Matching bare SCREAMING_SNAKE was considered and rejected: `ERR_MODULE_NOT_
+  // FOUND` in a crash is precisely the report worth keeping.
+  { match: /\bset\s+[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/, hint: RECOVERY.BAD_ARGUMENTS },
 ];
 
 /**

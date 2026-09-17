@@ -54,8 +54,15 @@ describe('intent is captured while building, not only while verifying', () => {
    * than what stopped being true, unless somebody wrote down what it was FOR — and the only moment
    * anybody knows that is while the change is being made.
    */
+  /*
+   * Keyed on the CAPABILITY, not on `reticle_intent`, which the default surface does not advertise:
+   * measured on a real install, that surface is `merged` and has no dispatch tool to reach it
+   * through. Naming it taught the reader to call something that answers "not reachable on this tool
+   * surface". What has to survive is the instruction — capture the reason WHILE building — and the
+   * field that carries it onto the saved flow.
+   */
   it('tells the agent to record what a change was meant to do, during the build', () => {
-    expect(RULE_BODY).toMatch(/reticle_intent/);
+    expect(RULE_BODY).toMatch(/\bintent\b/);
     expect(RULE_BODY).toMatch(
       /while you (are )?building|as you build|when you build|during the build/i,
     );

@@ -38,21 +38,31 @@ describe('the every-turn rules name the verdict values an agent will meet', () =
   });
 });
 
+/**
+ * The escape hatch these used to name does not exist on the surface the reader gets.
+ *
+ * They required `reticle_run`, `reticle_context` and `reticle_intent` by name, on the premise —
+ * written in this file's header — that `reticle_run` is "the only route to the ~30 tools the default
+ * surface does not advertise". MEASURED by driving a real install: the default surface is `merged`,
+ * and `advertisedTools` DROPS `reticle_run` from it. Calling an unadvertised tool answers "exists in
+ * this build but is not reachable on this tool surface … there is no dispatch tool here to route
+ * through". So the rules file promised a route that is not there, and these guards required it to.
+ *
+ * The INTENT survives and is what is checked now: a tool-not-found must not be terminal, so the
+ * rules have to name something the reader can actually do about it. On this surface that is
+ * `reticle_tools` (advertised, and the only way to see a merged tool's full parameters) and the
+ * daemon flag that advertises the wider set.
+ */
 describe('the every-turn rules name the escape hatches', () => {
-  /**
-   * Without this, a "tool not found" is terminal: the agent has no way to learn that the capability
-   * exists behind another name.
-   */
-  it('names `reticle_run` as the route to unadvertised tools', () => {
-    expect(RULE_BODY).toContain('reticle_run');
+  it('names `reticle_tools`, which is the one that is actually advertised', () => {
+    expect(RULE_BODY).toContain('reticle_tools');
   });
 
-  it('names `reticle_context` for re-entry after losing context', () => {
-    expect(RULE_BODY).toContain('reticle_context');
-  });
-
-  it('names `reticle_intent`', () => {
-    expect(RULE_BODY).toContain('reticle_intent');
+  it('says how to reach the wider surface, rather than naming a dispatch tool that is absent', () => {
+    expect(RULE_BODY).toContain('RETICLE_ADVERTISE_ALL_TOOLS');
+    expect(RULE_BODY, 'the merged surface has no dispatch tool to route through').not.toContain(
+      'reticle_run',
+    );
   });
 });
 

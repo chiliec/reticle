@@ -153,7 +153,7 @@ A dev server that is already running does not pick up an edited build config or 
 
 **Verify each feature as you finish it, not all of them at the end.** Asked for four, build one, drive it, get a verdict, then start the second. A red verdict after four builds has four suspects; after one it has none.
 
-**Capture what a change is FOR while you are building it, not afterwards.** \`reticle_intent\` records the business outcome a change is meant to produce, and the only moment anybody knows it is while the change is being made. Pass \`intent\` when you save a flow, so the saved flow carries the reason it exists. A flow without one replays for months and then reports "step 3 failed" instead of what stopped being true for a user.
+**Capture what a change is FOR while you are building it, not afterwards.** The business outcome a change is meant to produce is known only while the change is being made. Pass \`intent\` when a flow is saved, so the saved flow carries the reason it exists. A flow without one replays for months and then reports "step 3 failed" instead of what stopped being true for a user.
 
 **Honesty, which is the whole point:**
 
@@ -165,7 +165,7 @@ A dev server that is already running does not pick up an edited build config or 
 
 **The \`/reticle\` skill runs this whole loop for you** — detect, connect, drive one flow, report. If your client does not have it, install it once: \`/plugin marketplace add reticlehq/reticle\` then \`/plugin install reticle@reticlehq\` in Claude Code, or \`npx skills add reticlehq/reticle\` anywhere the skills CLI works.
 
-**A tool you need is missing? It exists.** The default surface advertises a subset; reach any other by name with \`reticle_run { tool, args }\`, and list them with \`reticle_tools\`. Two worth knowing: \`reticle_context\` returns this run's own memory — what is established, what is proven, what is still unverified — which is what you want after a compaction or when picking up work you did not start; \`reticle_intent\` records what a change was MEANT to do, while somebody still knows.
+**A tool you need is missing?** Call \`reticle_tools\` before assuming it: this surface merges several families behind an \`action\`, so what looks absent is usually one argument away. It is the verify loop and nothing else on purpose, and a daemon started with \`RETICLE_ADVERTISE_ALL_TOOLS=1\` advertises the wider set — it reads that at startup, so it takes effect on the next one.
 
 **Report Reticle's own defects with \`reticle_session { action: "feedback" }\` the moment you notice**, then carry on with your task. You are the user Reticle is built for and the only one who can say what it cost you, and that knowledge is gone when your context is.
 

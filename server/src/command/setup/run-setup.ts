@@ -361,11 +361,16 @@ export async function runSetupPhases(input: SetupInput, fx: SetupEffects): Promi
   // `<url>` stays a placeholder in this string on purpose: `guidance-commands-run` feeds every
   // command we print to the real parser, and an interpolated value reads there as a missing operand.
   // The live url is named in the sentence instead, where a reader needs it anyway.
+  // Both routes, because `explore` needs a model: without ANTHROPIC_API_KEY it answers "No model
+  // configured to drive the app". Naming only that one hands the reader a dead end on any machine
+  // without a key, which is the same defect this release spent its time removing everywhere else.
   note(
     `Connected, and the app at ${url} is instrumented. Onboarding is done. Nothing is PROVED ` +
-      'yet: that is the first run. Drive one flow with `reticle_verify { action: "explore", ' +
-      'persona: "<who does what>" }`, or from a terminal ' +
-      '`npx @reticlehq/server verify <url> --explore --persona "<who does what>"`.',
+      'yet: that is the first run, and it is yours to start. Drive one flow yourself with the ' +
+      '`reticle_*` tools, ending in `reticle_act_and_wait` or `reticle_assert` — those two are ' +
+      'what produce a verdict. Or hand the whole drive to Reticle with `reticle_verify { action: ' +
+      '"explore", persona: "<who does what>" }`, which records what it drove so later runs replay ' +
+      'with no model in the loop; that route needs ANTHROPIC_API_KEY.',
   );
   return {
     ok: true,

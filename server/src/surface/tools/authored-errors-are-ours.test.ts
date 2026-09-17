@@ -53,6 +53,25 @@ describe('a message we authored about the caller is recognized as ours', () => {
   it('keeps recognizing the braced form', () => {
     expect(recoveryFor('reticle_query { by } requires a string `value`')).toBeDefined();
   });
+
+  /**
+   * The FIFTH spelling, measured live: a first run on a machine with no key answered
+   *
+   *   error:    "No model configured to drive the app: set ANTHROPIC_API_KEY to let Reticle explore
+   *              it for you. Without it, flows are recorded by your own coding agent..."
+   *   feedback: "This error is not one Reticle recognizes, which means it may be a defect in
+   *              Reticle rather than in the app..."
+   *
+   * It names no tool and no `args.*`, so the catch-all above missed it — the message states the
+   * exact fix AND tells the reader it might be our bug. Keyed on the instruction, "set <VARIABLE>",
+   * because a message telling the caller to set something is one we wrote about their configuration.
+   */
+  it('tells the caller to set a variable, and is still ours', () => {
+    const missingKey =
+      'No model configured to drive the app: set ANTHROPIC_API_KEY to let Reticle explore it for ' +
+      'you. Without it, flows are recorded by your own coding agent through the MCP tools.';
+    expect(recoveryFor(missingKey)).toBeDefined();
+  });
 });
 
 describe('it does not swallow genuine failures', () => {

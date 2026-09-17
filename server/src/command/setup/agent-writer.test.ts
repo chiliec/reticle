@@ -6,13 +6,16 @@ import {
   RETICLE_SKILL,
   type AgentWriterIo,
 } from './agent-writer.js';
-import { tableForSurface } from '@/surface/tools/tools.js';
 import { TOOL_SURFACE } from '@/surface/tools/tool-surface.js';
+import { advertisedTools } from '@/surface/mcp/mcp.js';
 
-/** Read from the real table, so the guard tracks the surface rather than a copy of it. */
-const DEFAULT_SURFACE = new Set(
-  tableForSurface(TOOL_SURFACE.MERGED).map((tool: { name: string }) => tool.name),
-);
+/**
+ * What an agent is actually handed, not the tool table.
+ *
+ * The table for the merged surface is every tool with some folded together, so checking against it
+ * passes while the text names `reticle_run` — which this guard exists to catch.
+ */
+const DEFAULT_SURFACE = new Set(advertisedTools(TOOL_SURFACE.MERGED).map((tool) => tool.name));
 
 /** A pretend disk that records what was written. */
 function disk(

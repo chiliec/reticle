@@ -62,9 +62,9 @@ ${DEV_SERVER_POLICY}
    npx @reticlehq/server open <the url the dev server is serving>
    \`\`\`
 
-   That reuses an already-connected tab or opens a new one, and waits for the page to register. On a
-   machine with no browser to open, take a tab Reticle owns instead:
-   \`reticle_run({ tool: "reticle_lease", args: { action: "acquire", url: "<the same url>" } })\`.
+   That reuses an already-connected tab or opens a new one, and waits for the page to register. It is
+   also the answer on a machine with no browser of its own (CI, a container, an SSH session): the CLI
+   is the one escape hatch that exists on every tool surface, because it is not a tool.
 
 Then, once something is serving the app and a page is on it:
 
