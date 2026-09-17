@@ -7,7 +7,10 @@
   },
   "type": "module",
   "exports": {
-    "./preload": "./preload.cjs",
+    "./preload": {
+      "types": "./preload.d.cts",
+      "default": "./preload.cjs"
+    },
     "./main": {
       "types": "./main.d.cts",
       "default": "./main.cjs"
@@ -34,6 +37,7 @@
   "bugs": "https://github.com/reticlehq/reticle/issues",
   "files": [
     "preload.cjs",
+    "preload.d.cts",
     "main.cjs",
     "main.d.cts",
     "README.md",

@@ -6,6 +6,7 @@ import { writeFileSync } from 'node:fs';
 import { makeAdapter, NAV } from './adapters.mjs';
 import { inject, revert, revertAll } from './inject.mjs';
 import { isObservationRetryable } from './observation-retry.mjs';
+import { RETICLE_URL_PARAM } from '@reticlehq/core';
 import { BENCH_URL } from './ports.mjs';
 
 // Never a port literal: ports.mjs is the one place the app, the daemon and every harness agree, and
@@ -553,9 +554,27 @@ const list = wanted ? SCENARIOS.filter((s) => wanted.includes(s.id)) : SCENARIOS
  * scenario that asks for none drives the byte-identical URL it drove before.
  */
 function scenarioUrl(sc) {
-  if (sc.ambient === undefined) return URL;
   const u = new globalThis.URL(URL);
-  u.searchParams.set('ambient', sc.ambient);
+  // Nobody is sitting in front of a benchmark arm, and `__reticle_opened` is the one fact the page
+  // needs to know that.
+  //
+  // Without it the SDK mounts its first-run tour, and the tour's scrim takes `pointer-events:auto`
+  // on purpose -- "a tour that lets you click through is not a tour". That is right for a human and
+  // fatal here: every competitor arm drives with NATIVE clicks, so `browser_click` landed on
+  // `<div class="reticle-tour-scrim is-clear">` and timed out on every scenario. The whole
+  // Playwright column came back NOT MEASURED, and the gate refused to call an unmeasured column a
+  // pass -- correctly, because a green that means "we did not look" reads like one that means "we
+  // checked".
+  //
+  // Reticle's own arm never saw it: it dispatches through the SDK rather than through the page, so
+  // the scrim is not in its way. A defect only the competitor column can feel is exactly the shape
+  // this benchmark exists to keep us honest about.
+  //
+  // Set for EVERY arm, not just the ones that broke. The tour is Reticle's onboarding, not part of
+  // what is being measured, and an arm that carries it is not running the same page as one that
+  // does not.
+  u.searchParams.set(RETICLE_URL_PARAM.OPENED, '1');
+  if (sc.ambient !== undefined) u.searchParams.set('ambient', sc.ambient);
   return u.toString();
 }
 

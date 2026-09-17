@@ -28,14 +28,40 @@ import { installCommandHooks, readHookConfig } from './hook-commands.js';
 const HOOK_SPAWN_TIMEOUT_MS = 30_000;
 
 let root: string;
+let sink: string;
+
+/**
+ * A portable `cat > file`.
+ *
+ * These tests wrote `cat > out.json`, and `cat` does not exist on Windows: the product spawns with
+ * `shell: true`, so the shell there is cmd.exe, the child wrote nothing, and the assertion failed as
+ * `Unexpected end of JSON input` — a test asserting a POSIX coreutil, not the product. The product
+ * itself is fine, because a Windows user writes a Windows command.
+ *
+ * A node script rather than a one-liner: `node -e` needs quotes inside quotes, which cmd.exe and sh
+ * disagree about, and the point here is the payload arriving on stdin rather than anybody's quoting.
+ */
+const SINK_SOURCE = `import { writeFileSync } from 'node:fs';
+let data = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => { data += chunk; });
+process.stdin.on('end', () => { writeFileSync(process.argv[2], data); });
+`;
+
+const sinkTo = (out: string): string => `node ${JSON.stringify(sink)} ${JSON.stringify(out)}`;
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'reticle-hooks-'));
+  sink = join(root, 'sink.mjs');
+  writeFileSync(sink, SINK_SOURCE);
 });
 
 afterEach(() => {
   resetHooks();
-  rmSync(root, { recursive: true, force: true });
+  // Retries because the child may still hold the directory: Windows refuses to remove a directory
+  // with an open handle in it, and this suite spawns real processes on purpose. `EBUSY: resource
+  // busy or locked, rmdir` is what that looks like, and it failed the run rather than the assertion.
+  rmSync(root, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 });
 
 const writeConfig = (config: Record<string, string>): void => {
@@ -104,7 +130,7 @@ describe('running a hook command', () => {
     'hands the payload to the child on stdin, as JSON it can parse',
     async () => {
       const out = join(root, 'got.json');
-      writeConfig({ [HookEvent.BUG_FOUND]: `cat > ${JSON.stringify(out)}` });
+      writeConfig({ [HookEvent.BUG_FOUND]: sinkTo(out) });
       installCommandHooks(root);
       emitHook(bug());
       const written = await waitForFile(out);
@@ -120,7 +146,7 @@ describe('running a hook command', () => {
     'runs nothing for an event with no command',
     async () => {
       const out = join(root, 'should-not-exist');
-      writeConfig({ [HookEvent.VERDICT]: `cat > ${JSON.stringify(out)}` });
+      writeConfig({ [HookEvent.VERDICT]: sinkTo(out) });
       installCommandHooks(root);
       emitHook(bug()); // bug_found, not verdict
       await new Promise((r) => setTimeout(r, 300));
@@ -162,7 +188,7 @@ describe('running a hook command', () => {
     async () => {
       const out = join(root, 'got.json');
       const pwned = join(root, 'pwned');
-      writeConfig({ [HookEvent.BUG_FOUND]: `cat > ${JSON.stringify(out)}` });
+      writeConfig({ [HookEvent.BUG_FOUND]: sinkTo(out) });
       installCommandHooks(root);
       emitHook({ ...bug(), kind: `x"; touch ${JSON.stringify(pwned)}; echo "` } as HookPayload);
       await waitForFile(out);
