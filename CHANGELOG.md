@@ -4,63 +4,31 @@ All notable changes to the **`@reticlehq/*`** packages are documented here (each
 
 ## [Unreleased]
 
-### Added
+Nothing yet.
 
-- **`@reticlehq/engine` — `strongerGrade` and `weakerGrade` on `evidence/honesty.js`.** The grade ladder was already there and its ranking was private, so anything comparing two grades re-derived the order for itself. Both directions are exported because which one is correct is a fact about the claim rather than a preference: an AND greens only when every branch held, so the strongest branch is claimable; an OR greens on one branch and nothing records which, so only the weakest is.
+## [3.1.0] — 2026-09-17
 
-### Breaking
+**This is the first v3 on npm.** If you are coming from 2.x, everything you need to do is in **[MIGRATION.md](MIGRATION.md)** — it takes about five minutes, and for most people the answer is "nothing". You will also see a `[3.0.0]` section below: that version was tagged but never published, and everything in it is included here. You do not need to read it to upgrade.
 
-- **`reticle init` is ONBOARDING, and no longer drives.** Getting started is three stages — installation puts the CLI on the machine, onboarding wires the project, the first run proves a flow — and `init` was doing the middle one and half of the third. It ends at a connected session now, which is the whole proof that onboarding worked: the SDK is in the page and the tools have something to talk to. The first run is `reticle_verify { action: "explore", persona: "<who does what>" }`, or `npx @reticlehq/server verify <url> --explore --persona "…"`, which drives with a model inside the daemon and RECORDS what it drove, so later runs replay with no model in the loop. `--flow`, `--no-drive` and `--drive-model` are answered by name rather than as "unknown argument", because the agent instruction files we shipped still name them.
+### What this release is, in plain words
 
-  It drove by spawning a SECOND agent CLI (`claude -p`, `codex exec`, …), which **could never work on Windows**: npm installs those CLIs as `.cmd` shims, `spawnSync` without a shell cannot apply PATHEXT (ENOENT) and Node refuses to spawn `.cmd` directly since the CVE-2024-27980 fix (EINVAL). `driveWith` never read `child.error`, so both collapsed into "it produced no output at all" and were reported as **"No agent CLI could drive the app"** — while `driverAvailable()` correctly said one existed. A run whose wiring succeeded completely still printed `⚠ setup did not finish`. The child-agent driver is deleted rather than patched: `explore` needs no CLI on the box.
+Reticle checks whether a web app actually works, from the inside, while an AI agent builds it.
 
-### Fixed
+Two things changed that you will notice.
 
-- **`@reticlehq/server` — a sequence step takes its arguments the way `reticle_act` does.** A step IS one `reticle_act` call and that tool takes arguments flat, so `{ ref, action: "fill", value: "…" }` is the obvious way to write one — and the sequence dropped `value` on the floor. The browser then refused, correctly (a fill with no value wipes the field, dispatches a real input event so the framework commits the empty string, and reports ok), but the value was not missing, it was discarded a layer earlier, so a correct-looking call cost a round trip on "pass it nested, as `args: { value }`". Both spellings work now, and an explicit `args` still wins key by key.
+**Your agent now sees nine tools instead of seventeen.** The old ones were not deleted, they were grouped: four different "look at the page" tools became one `reticle_look` with four settings. This is not tidying. Every tool an agent is shown costs it attention on every single turn, and seventeen descriptions crowded out the app it was supposed to be looking at. Old names still work — Reticle answers with the new call instead of "tool not found" — but **if you keep a hand-written list of allowed tool names anywhere, you have to update it**, because that list refuses the call before Reticle ever hears about it.
 
-- **`@reticlehq/server` — a sequence reports one count for one plan, and does not claim it drove.** A two-step sequence refused before its first dispatch answered `"all 1 step(s) declared nothing, so the app was driven but not verified"` beside `coverage: { declared: 0, total: 2 }`: the headline counted the steps it reached while coverage counted the plan. "The app was driven" was also unconditional, said about a call whose own `dispatched` was `false` in the same object — and it sent the author of a malformed step off to add an `expect` instead of reading the `error` that refused it.
+**Reticle now writes your tests for you, and it no longer lies to itself while doing it.** Before, an agent had to remember to press record, and measurably it did not, so the tests that would have made the next run free were the ones nobody created. Now every drive is kept automatically and can be replayed later with no AI involved at all — the first run pays for a model to explore your app, and every run after it is free and deterministic.
 
-- **`@reticlehq/server` — a reloaded tab is no longer promised a new sessionId.** The disconnected-session recovery stated as fact that "a tab that reloaded comes back under a NEW sessionId". Measured on a real reload, it came back under the SAME id — so an agent told to look for a new one finds the old one still listed and concludes the reload never happened. It now says to match on url rather than on the id, and to re-query for refs either way, which is the part that is always true.
+The harder problem was making those saved tests actually strict. The obvious approach — "write down whatever happened and check it happens again" — always passes, because you are checking a recording against itself. So Reticle only turns an observation into a real check once that observation **stops** happening, which is evidence that something was fixed rather than a guess that something matters. Your tests get stricter the more you run them, and nobody writes an assertion.
 
-- **`@reticlehq/core` — a card number is no longer captured in the clear.** `SENSITIVE_KEY` matched `credit_card`, `card_number` and `cvv`, and bare `card` — what Stripe's own object is called, and the shortest thing anybody names the field — fell straight through. Measured on a walkthrough app: `POST /api/checkout` reached the agent as `{"planId":"team","card":"4111111111111111"}` with `password` redacted in the request beside it. It got there because Reticle's own verdict told the reader to turn body capture on ("a 200 describes the transport, not the result"). `card`, `pan` and the `card_no`/`card_num` spellings are now boundary-anchored, so `discard`, `cardinality` and `panel` stay visible.
-
-- **`@reticlehq/server` — the `/reticle` command no longer names tools nobody was given.** It sent the reader to `reticle_act_sequence`, which answers "no longer exists", and routed two of its three answers through `reticle_run`, which the default surface does not advertise: three of four lines in its cheapest-path list could not be followed. `live-call-text.ts` rewrites this class of thing at the result boundary, but a file written to disk once at install time never passes through it, so it is checked against the real tool table instead.
-
-- **`@reticlehq/server` — advice to save a flow no longer points at a tool the surface withholds.** A passing `reticle_act` answered "keep it as a regression flow with `reticle_flow_save`", and the `no-flow-intent` gap said to "save it again with intent"; calling it returns "not reachable on this tool surface — there is no dispatch tool here to route through". Three separate results told an agent to do the one thing the default surface cannot. They now redirect to `reticle_verify { action: "explore" }`, which drives and records the flow.
-
-- **`@reticlehq/server` — the hidden-tab recommendation is readable again.** Rewriting the lease escape hatch for a surface without `reticle_run` stopped at the call's closing `}`, so the backtick after it blocked the parenthetical from matching and the replacement landed inside the original quoting. An agent received ``with `the CLI: `reticle open <url>` (a human can equivalently run `reticle drive <url>`)` (a human can equivalently run `reticle drive <url>`)`` — the clause twice, backticks three deep. Every existing test passed the call bare, which is how the shipped string stayed broken; the guard now uses the constant itself.
-
-- **`@reticlehq/init` — `init` writes `plugins: [reticle(), react()]`, with the space.** It wrote `[reticle(),react()]` into the user's own config, in the one place the file already showed its style. `PLUGINS_ARRAY` has no capture group, so `String.replace` passes `(match, offset, source)`; the callback read them as `(match, _g, offset)` and indexed the source with a string, so the "next character" was always empty and the separator was always `''`. The comment above it described behaviour that had never once happened.
-
-- **`scripts/local-registry.sh` runs twice on Windows.** Verdaccio's config named `/tmp/...`, which a Windows verdaccio reads as `C:\tmp` and Git Bash's `rm -rf` reads as `AppData\Local\Temp` — so the advertised "FRESH … reset so user/token + versions are clean" never happened and every run after the first died on `username is already registered`. The state directory now sits beside the config and resolves identically everywhere, and the port is freed by PID where `pkill`/`lsof` do not exist.
-
-- **`docs/local-registry.md` — the `.npmrc` it gives you now works.** The scope-only line cannot: `@reticlehq/core` depends on the deliberately unscoped `open-verification`, so npm sends that one request to npmjs and the install dies on a 404. `init` then correctly reports `⚠ Install dependencies` and skips wiring the plugin, leaving the app un-instrumented by a registry mistake two steps earlier. There is no scoped form that fixes it — npm keys per-registry settings on a scope, and an unscoped package has none.
-
-- **`@reticlehq/server` — `reticle_look { action: "element" }` no longer blames a ref it was never given.** `reticle_inspect` declares `ref` as a required string, but merging it into `reticle_look` makes every action's parameters optional — `page`, `find`, `state` and `element` want different ones — so the requirement was lost exactly where an agent meets it, and the empty string travelled to the browser. It came back as `ref '' no longer resolves to an element` followed by "That ref is stale: refs are invalidated whenever the DOM re-renders", every word of which was wrong: nothing was stale, nothing had re-rendered, and there was no ref. The reader was sent to re-snapshot a page that was fine. Measured on bench-app with `{ action: "element", testid: "awkward-icon" }` — the natural call, since `testid` IS a parameter of `reticle_look` and the sibling `find` action takes one — so the refusal now names that case specifically and points at `reticle_query`, rather than saying "ref is required" at somebody who did name the element, just not the way this action wants.
-
-- **`@reticlehq/server` — a predicate wrapped in `allOf` is no longer graded as if it proved nothing.** `gradeOfPredicate` switched on the top-level kind, so every combinator fell through to `presence`, the weakest rung, however strong its branches were. The same state predicate reported `state` grade bare and `presence` grade inside a single-child `allOf`. That understated the shape [predicates](https://docs.reticle.sh/predicates) calls the workhorse, and `meetsHonestyBar`'s `minGrade` would have rejected a genuine `allOf[signal, net]` verdict — a false negative sitting inside the field whose job is to qualify a green. An `anyOf` is graded by its weakest branch, for the reason above.
-
-- **`@reticlehq/server` — `reticle verify --expect` honours `--session-id`.** The flag was parsed and printed in the help and never passed on, so with more than one tab connected the command failed with "multiple sessions connected — pass sessionId to target one": advice whose own remedy could not be followed through this path. With several tabs it also graded against whichever one the daemon picked.
-
-- **`@reticlehq/server` — a one-shot verdict no longer disagrees with itself.** `verify --expect` read the verdict from `structuredContent` only, so a daemon answering with it as text printed `verified: unknown` on the headline while the JSON underneath said `"verified":"no"`. The exit code was right either way; the line a reader acts on was not.
-
-- **`@reticlehq/browser` — a feature that mounts inside an unlabelled wrapper is no longer invisible.** The DOM observer dropped an added node whose role is `generic` and which carries no accessible name. As a filter on layout noise that is right, but a mount arrives as ONE childList record carrying the outermost node and everything the feature is made of comes along inside it — so dropping the wrapper dropped the whole subtree. Opening bench-app’s command palette (`div.palette-scrim` around `div.palette`) committed its store, fired the app’s own signal, ran its animations and emitted NOT ONE DOM event, while a raw `MutationObserver` with this observer’s exact config saw the mutation. Every absence-derived rule reads that stream, so `reticle_verify { action: "crawl" }` reported `state-vs-render` — “the store committed, nothing rendered” — against an app that had rendered correctly. The observer now looks inside the wrapper (bounded) and reports what actually arrived, naming it by the meaningful descendant rather than the div it came in. A wrapper carrying nothing meaningful is still ignored.
-
-- **`@reticlehq/engine` — the learned ambient map no longer carries per-session refs between sessions.** `regionKeyOf` prefers a region’s `data-testid` and falls back to its element ref, and a ref is a sequence number minted per session: `e404` addresses whatever that session handed out 404th. The map is persisted to `.reticle/ambient.json` and seeded into every new session, where that key means nothing. Measured on bench-app: all 43 persisted keys were ref-shaped, so the whole file addressed a numbering no later session uses. The map is read in one place — the `settled` predicate drops events on learned-ambient regions before deciding the page went quiet — so a poisoned map teaches the settle oracle to ignore regions that were never the churning ones. Only stable keys are written now, and a file from an older build degrades to its stable entries. In-session learning by ref is unchanged: within one session a ref IS an identity.
-
-- **`@reticlehq/engine` — a hidden tab can no longer manufacture a contradiction.** Every absence-derived finding rests on silence in the window, and a backgrounded tab has its rAF clamped — the DOM observer flushes on rAF, so real renders emit nothing. A crawl of a hidden tab reported `state-vs-render` on controls whose clicks demonstrably committed state AND mounted DOM. The caller now states the page was hidden (`pageHidden`, from the session the daemon already marks `throttled`) and absence-derived findings stand down; evidence-derived ones are untouched, since hiding can only manufacture absence. Stated rather than inferred from the window: `page.health` is a heartbeat every few seconds and a per-control window is a few hundred milliseconds, so whether the marker lands inside it is luck.
-
-- **`@reticlehq/init` — the port scan behind "nothing is listening" covers five more defaults.** That sentence states absence as a fact, so a port missing from the set is not a gap in the answer, it is a wrong answer delivered confidently — which is what the set's own comment says the previous additions were for. Run against Reticle's own bench-app it reported nothing listening while the app was serving. Added Parcel (1234), the common Node/GraphQL default (4000), bench-app's own port (4310), Storybook (6006) and Expo web (19006). The set also decides whether a `.reticle.json` bridge port looks like a dev-server port, and the multi-app bridge range people are told to use is untouched.
-
-- **`@reticlehq/browser` — the HUD says what it is looking for again.** Every lookup rendered `Finding [testid=]`, with nothing in the brackets. `str()` takes a `fallback = ''` and so never returns `undefined`, which made every `??` after it dead and every `!== undefined` after it always true: the testid branch always won, and the role/name/text fallbacks under it were unreachable. The same mistake printed `Inspecting ` with a trailing space and `Reading state: ` with nothing after the colon.
-
-## [3.1.0] — 2026-09-16
-
-The release that made a verification something the agent no longer has to author. v3.0.0 split the protocol out and rearranged the repository around it; this one spends that structure on the half that was measurably not working — an engine that catches nearly every bug it structurally can, pointed at flows that declared almost nothing worth catching.
+Alongside that: onboarding and proving-it-works are now two separate commands instead of one command doing both badly (see Breaking), Windows is a supported platform for the first time, and a credit-card number was being captured in the clear (see Fixed — this one is worth reading).
 
 ### Breaking
 
-- **The default MCP surface is the merged nine, not the seventeen.** `reticle_act`, `reticle_act_and_wait`, `reticle_assert`, `reticle_look`, `reticle_navigate`, `reticle_observe`, `reticle_session`, `reticle_tools`, `reticle_verify`. Ten names that 2.14.0 advertised now sit behind an action on one of those:
+Each of these says what you have to do. Full instructions in [MIGRATION.md](MIGRATION.md).
+
+- **The default tool surface is nine tools, not seventeen.** `reticle_act`, `reticle_act_and_wait`, `reticle_assert`, `reticle_look`, `reticle_navigate`, `reticle_observe`, `reticle_session`, `reticle_tools`, `reticle_verify`. Ten names that 2.14.0 advertised now sit behind an action on one of those:
 
   | 2.14.0                 | 3.1.0                                    |
   | ---------------------- | ---------------------------------------- |
@@ -75,9 +43,29 @@ The release that made a verification something the agent no longer has to author
   | `reticle_feedback`     | `reticle_session { action: "feedback" }` |
   | `reticle_act_sequence` | `reticle_act { steps: [...] }`           |
 
-  Calling an old name returns the new call rather than "not found", so an agent that guesses one is told where it went. **What a redirect cannot reach is a list that never makes the call**: an agent `allowedTools` allowlist, an MCP permission rule, or a prompt naming one of these refuses before Reticle is asked. Those need updating by hand. `reticle_tools` prints the live surface and every tombstone.
+  **You need to do nothing** if your agent just calls tools: an old name returns the new call rather than "not found". **You need to edit by hand** any list that filters tool names before the call — an agent `allowedTools` allowlist, an MCP permission rule, or a prompt naming one of these. Those refuse first and Reticle is never asked, so it looks broken when it is not. `reticle_tools` prints the live surface and every old name's new home.
 
-- **`RETICLE_TOOL_PROFILE` is retired; the surface is selected with `RETICLE_ADVERTISE_ALL_TOOLS=1`**, which advertises the full table — including `reticle_screenshot`, `reticle_visual_diff`, `reticle_storage`, `reticle_network_mock` and `reticle_clock`, which the default surface does not carry and which no longer have a `reticle_run` hatch to reach them. If you drive any of those, set that variable on the daemon.
+- **Twelve more tools are no longer callable at all by default, and they have no redirect.** `reticle_capabilities`, `reticle_clock`, `reticle_context`, `reticle_flow_replay`, `reticle_flow_save`, `reticle_intent`, `reticle_network_mock`, `reticle_record`, `reticle_run`, `reticle_screenshot`, `reticle_storage`, `reticle_visual_diff`.
+
+  In 2.x, `reticle_run` was a hatch that could invoke any tool by name whether or not it was advertised. **The default surface no longer carries it**, so it is not merely that these tools are un-advertised — they are unreachable. Naming a hatch that is not there is the same defect one level in, so the surface is honest about being closed.
+
+  **What to do:** start the daemon with `RETICLE_ADVERTISE_ALL_TOOLS=1`, which advertises all thirty with output schemas, and call them directly by name. It is read once at startup, so restart the daemon. It costs roughly seven times the per-turn schema budget, which is why it is opt-in and meant for suites that call by name rather than for a running agent. Saved flows still replay on the default surface with `reticle_verify { action: "flows" }`; it is only building a new one by hand that needs the variable.
+
+- **`reticle init` is ONBOARDING, and no longer drives your app.** Getting started is three stages — installation puts the CLI on the machine, onboarding wires the project, the first run proves a flow — and `init` was doing the middle one and half of the third. It ends at a connected session now, which is the whole proof that onboarding worked: the SDK is in the page and the tools have something to talk to.
+
+  **What to do:** run `reticle init`, then prove a flow separately with `reticle_verify { action: "explore", persona: "<who does what>" }`, or `npx @reticlehq/server verify <url> --explore --persona "…"`. That drives with a model inside the daemon and RECORDS what it drove, so later runs replay with no model in the loop. **`--flow`, `--no-drive` and `--drive-model` now exit non-zero** — each names its replacement rather than saying "unknown argument", because the agent instruction files we shipped in 2.x still mention them. If a CI job passes `--no-drive`, delete the flag; it asked `init` not to drive and `init` no longer drives. `--files-only` is unchanged and is still the write-only path.
+
+  Also note **`init`'s exit code changed meaning**: it used to exit non-zero if no _verdict_ was produced, and now exits non-zero if nothing _connected_.
+
+  Why it was removed rather than fixed: it drove by spawning a SECOND agent CLI (`claude -p`, `codex exec`, …), which **could never work on Windows**. npm installs those CLIs as `.cmd` shims, `spawnSync` without a shell cannot apply PATHEXT (ENOENT), and Node refuses to spawn `.cmd` directly since the CVE-2024-27980 fix (EINVAL). `driveWith` never read `child.error`, so both collapsed into "it produced no output at all" and were reported as **"No agent CLI could drive the app"** — while `driverAvailable()` correctly said one existed. A run whose wiring succeeded completely still printed `⚠ setup did not finish`. `explore` needs no CLI on the box.
+
+- **`@reticlehq/server` now needs Node 20.11 or newer** (`engines` moved from `>=20.0.0`). Every other package still accepts `>=20.0.0`. Node 20.11 is a patch release of the same LTS line, so this is usually one line in your `.nvmrc`, Dockerfile or CI matrix.
+
+- **Three packages declare a real SPDX licence identifier** where they used to declare a pointer to a file: `@reticlehq/server`, `@reticlehq/init` and `@reticlehq/test` moved from `SEE LICENSE IN LICENSE` to `FSL-1.1-ALv2`. **The terms are identical** — the old value is not a recognised SPDX identifier, so scanners reported it as unknown. If you run a licence allowlist in CI, add `FSL-1.1-ALv2`.
+
+- **Two new packages enter your dependency tree**: `open-verification` (the protocol itself — note it is deliberately **unscoped**) and `@reticlehq/engine`, both Apache-2.0. `open-verification` is a dependency of `@reticlehq/core`, so it arrives whether or not you ask. This matters only if you vendor or mirror dependencies: a scoped-only `.npmrc` rule such as `@reticlehq:registry=…` will **not** match `open-verification`, because npm keys registry settings on a scope and an unscoped package has none.
+
+- **`playwright` is now an optional peer dependency at `>=1.50`.** Pinning an older version produces a peer warning; nothing breaks. If you do not use Playwright, ignore it — the peer is optional.
 
 ### Added
 
@@ -93,6 +81,10 @@ The release that made a verification something the agent no longer has to author
 
 - **`@reticlehq/engine` — a predicate can assert a PROPERTY, not just equality.** An app whose output is a model's output is different every run and correct every time, and exact equality cannot express that. `nonEmpty`, `oneOf`, `withinTolerance`, `matchesPattern` and `type` can. Every one of them stays DETERMINISTIC on purpose: "ask a model whether it looks right" would make the verdict unfalsifiable, which is the exact failure `no-fault` exists to prevent.
 
+- **`@reticlehq/server` — `reticle_act` takes a `burst`**, a deliberate gap between step dispatches, so a race that only appears under fast repeated input can be provoked on purpose rather than hoped for.
+
+- **`@reticlehq/server` — a replay can sweep past a step that drifted** instead of stopping at the first one, when the drift is about a consequence rather than about a missing element. A run that halts on step one tells you about step one; a run that continues tells you whether the rest of the journey still holds.
+
 - **`@reticlehq/core` — a domain can register its own realm.** Mobile, game and service realms stop being aspirations in a document and become a shape the contract can carry.
 
 - **`@reticlehq/server` — `reticle_reconcile`: the observer outside the app becomes reachable, and disagrees out loud.** "The UI said saved and the witness saw no write" is not an inference — it is two independent observers contradicting each other, and it is the highest-grade evidence the protocol can produce.
@@ -103,41 +95,97 @@ The release that made a verification something the agent no longer has to author
 
 - **`@reticlehq/server` — `reticle_act` can name an element that does not exist yet**, so batching a sequence works across a step that creates its own target instead of failing on the ref that was not there when the batch was written.
 
-- **`@reticlehq/server` — `reticle_inspect` reports both scroll axes**, so clipped text is a number instead of a screenshot somebody has to look at. The regression that motivated it was caught without a pixel.
+- **`@reticlehq/server` — `reticle_look { action: "element" }` reports both scroll axes**, so clipped text is a number instead of a screenshot somebody has to look at. The regression that motivated it was caught without a pixel.
 
 - **`@reticlehq/engine` — a pass that proved something nobody named now says so**, and a route assertion survives being recorded — found on a real app, not in a test.
 
-- **`@reticlehq/engine` — three new published entry points, all of them shapes moving DOWN rather than new behaviour.** `disagreement/contradiction-types.js` (what a contradiction is, separated from the rules that find one), `question/predicate/predicate-eval-kit.js` (what an evaluation answers, and the four comparisons every oracle is written in) and `question/predicate/predicate-session.js` (the subset of a session the predicate engine needs, so a fake can be written without loading the evaluator). Each existed because a module that is CALLED by another had to import back out of its caller to declare its own signature. Adding a file under these directories is an import path somebody outside this repository may write, which is why it is recorded here and not only in the pinned list. Nothing moved out of an existing entry point: every previous import path still resolves to the same thing.
+- **`@reticlehq/engine` — `strongerGrade` and `weakerGrade` on `evidence/honesty.js`.** The grade ladder was already there and its ranking was private, so anything comparing two grades re-derived the order for itself. Both directions are exported because which one is correct is a fact about the claim rather than a preference: an AND greens only when every branch held, so the strongest branch is claimable; an OR greens on one branch and nothing records which, so only the weakest is.
+
+- **`@reticlehq/engine` — three new published entry points, all of them shapes moving DOWN rather than new behaviour.** `disagreement/contradiction-types.js` (what a contradiction is, separated from the rules that find one), `question/predicate/predicate-eval-kit.js` (what an evaluation answers, and the four comparisons every oracle is written in) and `question/predicate/predicate-session.js` (the subset of a session the predicate engine needs, so a fake can be written without loading the evaluator). Each existed because a module that is CALLED by another had to import back out of its caller to declare its own signature. Nothing moved out of an existing entry point: every previous import path still resolves to the same thing.
 
 ### Changed
 
 - **`@reticlehq/server` — the network observer stops billing the agent for the bundler's own traffic**, and returns a body when that body could decide a verdict. The saving is never silent: a truncated or withheld body says so, because a quiet omission is indistinguishable from evidence that did not exist.
 
-- **Every package in this repository is now free of import cycles except one, which is named and explained where it lives.** Nothing about what any package DOES changed — the fix in every case was to move a type or a small helper below the two modules that were reaching across each other for it. The one that stays is `reticle_verify { action: "explore" }`: a tool that drives the whole tool surface is reached from the registry that lists it, and the alternatives are a mutable registry holder (a load-order trap that would let the toolset's own test pass against an empty list) or a partial surface, which would contradict the rule that a harness run must drive exactly what an agent drives.
+- **Every package in this repository is now free of import cycles except one**, which is named and explained where it lives. Nothing about what any package DOES changed.
 
 ### Performance
 
 - **18% off every verdict, all of it route.** Identical evidence, fewer bytes — measured on a real drive rather than on a synthetic payload.
 
+- **A verdict stops paying twice for the same summary**, and for advice it has already given once.
+
 ### Fixed
+
+#### Your data
+
+- **`@reticlehq/core` — a card number is no longer captured in the clear.** This is the one to read. `SENSITIVE_KEY` matched `credit_card`, `card_number` and `cvv`, and bare `card` — what Stripe's own object is called, and the shortest thing anybody names the field — fell straight through. Measured on a walkthrough app: `POST /api/checkout` reached the agent as `{"planId":"team","card":"4111111111111111"}` with `password` correctly redacted in the request beside it. It got there because Reticle's own verdict told the reader to turn body capture on ("a 200 describes the transport, not the result"). `card`, `pan` and the `card_no`/`card_num` spellings are now boundary-anchored, so `discard`, `cardinality` and `panel` stay visible. **If you enabled network body capture on an app that handles payments, assume card numbers were in your agent's context, and upgrade.**
+
+- **Field measurements about the people using Reticle were shipping in source comments**, and the guard meant to stop them read lines instead of sentences.
+
+#### Windows
 
 - **Windows was not a supported platform and nothing said so.** An install there registered one agent in thirteen and reported the rest as manual; the installer could not see Claude Code, so nobody was ever shown the tour; every install printed a security warning at the user. Alongside them, nine guards and four gates that could never have passed on Windows — including a licence-boundary guard that was unchecked there and passing, and a first-load guard that looked for a bundler Windows cannot run.
 
-- **The onboarding tour was swallowing the agent's clicks**, dimming the thing its spotlight pointed at, and claiming five things its own screen did not support.
+- **`scripts/local-registry.sh` runs twice on Windows.** Verdaccio's config named `/tmp/...`, which a Windows verdaccio reads as `C:\tmp` and Git Bash's `rm -rf` reads as `AppData\Local\Temp` — so the advertised "FRESH … reset so user/token + versions are clean" never happened and every run after the first died on `username is already registered`.
 
-- **Five defects a real drive found in the flow path, and none of them were in the replay engine** — a testid anchor whose source was on disk the whole time and nobody read it among them.
+#### Things Reticle was telling you that were not true
+
+- **The onboarding tour was swallowing the agent's clicks**, dimming the thing its spotlight pointed at, and claiming five things its own screen did not support.
 
 - **A dev server nobody opened is no longer reported as an app that will never connect**, and a page refused on its token is no longer reported as a tab somebody closed. Both said the wrong thing about a state that was fine.
 
+- **A reloaded tab is no longer promised a new sessionId.** The disconnected-session recovery stated as fact that "a tab that reloaded comes back under a NEW sessionId". Measured on a real reload, it comes back under the SAME id — so an agent told to look for a new one finds the old one still listed and concludes the reload never happened. It now says to match on url.
+
+- **`reticle_look { action: "element" }` no longer blames a ref it was never given.** Merging `reticle_inspect` into `reticle_look` makes every action's parameters optional, so a required `ref` stopped being required exactly where an agent meets it, and the empty string travelled to the browser. It came back as `ref '' no longer resolves to an element` followed by "That ref is stale: refs are invalidated whenever the DOM re-renders", every word of which was wrong — nothing was stale, nothing had re-rendered, and there was no ref. The reader was sent to re-snapshot a page that was fine.
+
+- **A sequence reports one count for one plan, and does not claim it drove.** A two-step sequence that refused before its first dispatch answered "all 1 step(s) declared nothing, so the app was driven but not verified" beside `coverage: { declared: 0, total: 2 }` — and "the app was driven" was unconditional, said about a call whose own `dispatched` was `false` in the same object.
+
+- **A one-shot verdict no longer disagrees with itself.** `verify --expect` read the verdict from `structuredContent` only, so a daemon answering with it as text printed `verified: unknown` on the headline while the JSON underneath said `"verified":"no"`.
+
+- **The HUD says what it is looking for again.** Every lookup rendered `Finding [testid=]`, with nothing in the brackets: `str()` takes a `fallback = ''` and so never returns `undefined`, which made every `??` after it dead and every `!== undefined` after it always true.
+
+#### Calls the docs promised that could not be made
+
+- **The `/reticle` command no longer names tools nobody was given.** It sent the reader to `reticle_act_sequence`, which answers "no longer exists", and routed two of its three answers through `reticle_run`, which the default surface does not advertise: three of four lines in its cheapest-path list could not be followed.
+
+- **Advice to save a flow no longer points at a tool the surface withholds.** A passing `reticle_act` answered "keep it as a regression flow with `reticle_flow_save`", and calling it returns "not reachable on this tool surface". Three separate results told an agent to do the one thing the default surface cannot. They now redirect to `reticle_verify { action: "explore" }`.
+
+- **The shipped skills and docs no longer run `init --flow`**, which exits non-zero, and no longer describe a drive that `init` does not perform.
+
+- **`docs/local-registry.md` — the `.npmrc` it gives you now works.** The scope-only line cannot: `@reticlehq/core` depends on the deliberately unscoped `open-verification`, so npm sends that one request to npmjs and the install dies on a 404.
+
+- **`reticle verify --expect` honours `--session-id`.** The flag was parsed and printed in the help and never passed on, so with more than one tab connected the command failed with advice whose own remedy could not be followed through this path.
+
+- **The hidden-tab recommendation is readable again.** A rewrite stopped at the call's closing `}`, so an agent received the clause twice, backticks three deep.
+
+#### Verdicts that were wrong
+
+- **A sequence step takes its arguments the way `reticle_act` does.** A step IS one `reticle_act` call and that tool takes arguments flat, so `{ ref, action: "fill", value: "…" }` is the obvious way to write one — and the sequence dropped `value` on the floor. Both spellings work now.
+
+- **A feature that mounts inside an unlabelled wrapper is no longer invisible.** The DOM observer dropped an added node whose role is `generic` and which carries no accessible name — but a mount arrives as ONE record carrying the outermost node, so dropping the wrapper dropped the whole subtree. Opening a command palette committed its store, fired the app's own signal, ran its animations and emitted NOT ONE DOM event, so a crawl reported "the store committed, nothing rendered" against an app that had rendered correctly.
+
+- **A hidden tab can no longer manufacture a contradiction.** Every absence-derived finding rests on silence in the window, and a backgrounded tab has its rAF clamped, so real renders emit nothing. A crawl of a hidden tab reported faults on controls whose clicks demonstrably worked.
+
+- **The learned ambient map no longer carries per-session refs between sessions.** A ref is a sequence number minted per session, and the map is persisted and seeded into every new session where that key means nothing. Measured on a real app: all 43 persisted keys were ref-shaped, so the whole file addressed a numbering no later session uses — which teaches the settle oracle to ignore regions that were never the churning ones.
+
+- **A predicate wrapped in `allOf` is no longer graded as if it proved nothing.** `gradeOfPredicate` switched on the top-level kind, so every combinator fell through to the weakest rung however strong its branches were — a false negative sitting inside the field whose job is to qualify a green.
+
+- **Five defects a real drive found in the flow path, and none of them were in the replay engine** — a testid anchor whose source was on disk the whole time and nobody read it among them.
+
+- **The port scan behind "nothing is listening" covers five more defaults.** That sentence states absence as a fact, so a port missing from the set is not a gap in the answer, it is a wrong answer delivered confidently. Run against Reticle's own bench app it reported nothing listening while the app was serving. Added Parcel (1234), the common Node/GraphQL default (4000), Storybook (6006) and Expo web (19006).
+
+#### Everything else
+
+- **`@reticlehq/init` — `init` writes `plugins: [reticle(), react()]`, with the space.** It wrote `[reticle(),react()]` into the user's own config, in the one place the file already showed its style.
+
 - **A laptop publish shipped enterprise enforcement OFF and announced it on the wrong stream.**
-
-- **A documented call an agent could not actually make**, and the guard that was supposed to read the skills and never did.
-
-- **Field measurements about users were shipping in source comments**, and the guard meant to stop them read lines instead of sentences.
 
 - Three CodeQL findings that were real; three CI failures, two of which no local gate could have seen; and three harnesses that blamed the product for their own stale path.
 
 ## [3.0.0] — 2026-09-13
+
+> **Never published to npm.** This version was tagged in git and then superseded before release. Everything in it ships in 3.1.0 above, and [MIGRATION.md](MIGRATION.md) covers it. It is kept here as the record of when each change was made.
 
 A major, and the number is doing real work: the protocol a verdict is derived from is now its own published package, and the repository that implements it was rearranged around that fact.
 

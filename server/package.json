@@ -73,10 +73,13 @@
     "cli"
   ],
   "reticle": {
-    "changelog": "An MCP server that stays up when the daemon dies, one tool surface instead of five profiles (`RETICLE_TOOL_PROFILE` retired for `RETICLE_ADVERTISE_ALL_TOOLS`), and tools that refuse instead of answering wrongly.",
+    "changelog": "Reticle writes and tightens your regression flows for you: every drive is recorded automatically and replays with no model in the loop. The agent now sees nine tools instead of seventeen, `init` stops at a connected app and proving a flow is a separate first run, and Windows is supported. Upgrading from 2.x: see MIGRATION.md.",
     "breakingChanges": [
-      "The default MCP surface is the merged nine. reticle_snapshot/query/inspect/state -> reticle_look { action }, reticle_network/console -> reticle_observe { action }, reticle_sessions/feedback -> reticle_session { action }, reticle_wait_for -> reticle_assert { action: \"wait\" }, reticle_act_sequence -> reticle_act { steps }. Old names redirect when CALLED, but an allowedTools allowlist or an MCP permission rule naming one refuses first — update those by hand.",
-      "RETICLE_TOOL_PROFILE is retired. Set RETICLE_ADVERTISE_ALL_TOOLS=1 on the daemon to advertise the full table, which is the only way to reach reticle_screenshot, reticle_visual_diff, reticle_storage, reticle_network_mock and reticle_clock."
+      "The default MCP surface is the merged nine. reticle_snapshot/query/inspect/state -> reticle_look { action }, reticle_network/console -> reticle_observe { action }, reticle_sessions/feedback -> reticle_session { action }, reticle_wait_for -> reticle_assert { action: \"wait\" }, reticle_act_sequence -> reticle_act { steps }. Old names redirect when CALLED, but an allowedTools allowlist or an MCP permission rule naming one refuses first -- update those by hand.",
+      "Twelve tools are unreachable on the default surface and have NO redirect: reticle_capabilities, reticle_clock, reticle_context, reticle_flow_replay, reticle_flow_save, reticle_intent, reticle_network_mock, reticle_record, reticle_run, reticle_screenshot, reticle_storage, reticle_visual_diff. The default surface ships no reticle_run hatch. Start the daemon with RETICLE_ADVERTISE_ALL_TOOLS=1 (read once at startup) and call them by name. Saved flows still replay via reticle_verify { action: \"flows\" }.",
+      "`reticle init` no longer drives: it ends at a connected session. --flow, --no-drive and --drive-model now exit non-zero, each naming its replacement. Prove a flow with reticle_verify { action: \"explore\", persona: \"<who does what>\" }, or npx @reticlehq/server verify <url> --explore --persona \"...\". init's exit code now means \"nothing connected\" rather than \"no verdict\". --files-only is unchanged.",
+      "@reticlehq/server now requires Node >=20.11 (was >=20.0.0).",
+      "@reticlehq/server, @reticlehq/init and @reticlehq/test declare license FSL-1.1-ALv2 instead of \"SEE LICENSE IN LICENSE\". The terms are identical; add the SPDX id to a licence allowlist."
     ]
   },
   "publishConfig": {
