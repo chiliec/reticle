@@ -14,6 +14,13 @@
 # shims as /bin/sh scripts. Saying so here is better than pretending the number covers Windows.
 name: setup gates
 
+# Least privilege by default (OpenSSF Scorecard Token-Permissions). Scorecard has not flagged this
+# one, because it only reports on workflows it has scanned on the default branch — but it is the
+# same gap the two publish workflows had, and a rule applied only where a scanner happened to look
+# is not a rule. Nothing here writes to the repository.
+permissions:
+  contents: read
+
 on:
   pull_request:
     paths: ['break/**', 'install/**', '.github/workflows/break-gates.yml']
@@ -74,18 +81,23 @@ jobs:
         with: { node-version: 22 }
       - run: corepack enable && pnpm install --frozen-lockfile
       - run: pnpm exec turbo run build --filter=@reticlehq/server...
+      # `--no-drive` was removed from `init` by 7e698fea (onboarding stops at a connected app; the
+      # first run proves the flow). The CLI answers it by NAME rather than as an unknown argument,
+      # which is good for a human and fatal here: it exits non-zero before reaching the case under
+      # test, so all three of these steps failed on every OS. Verified after the edit: an empty
+      # directory still says "no package.json" and a malformed one still says "not valid JSON".
       - name: no package.json is refused, by path
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/empty" && cd "$RUNNER_TEMP/empty"
-          out=$(node "$GITHUB_WORKSPACE/server/dist/command/cli.js" init --timeout 2 --no-drive --no-open 2>&1 || true)
+          out=$(node "$GITHUB_WORKSPACE/server/dist/command/cli.js" init --timeout 2 --no-open 2>&1 || true)
           echo "$out" | grep -qi "no package.json" || { echo "$out"; exit 1; }
       - name: malformed package.json names the file, not a stack trace
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/bad" && cd "$RUNNER_TEMP/bad"
           printf '{ "name": "x", }' > package.json
-          out=$(node "$GITHUB_WORKSPACE/server/dist/command/cli.js" init --timeout 2 --no-drive --no-open 2>&1 || true)
+          out=$(node "$GITHUB_WORKSPACE/server/dist/command/cli.js" init --timeout 2 --no-open 2>&1 || true)
           echo "$out" | grep -q "not valid JSON" || { echo "$out"; exit 1; }
           echo "$out" | grep -qE "^\s+at .+:[0-9]+:[0-9]+" && { echo "leaked a stack trace"; exit 1; }
           exit 0
@@ -94,7 +106,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/nodev" && cd "$RUNNER_TEMP/nodev"
           printf '{"name":"x","version":"1.0.0","scripts":{"build":"true"}}' > package.json
-          out=$(node "$GITHUB_WORKSPACE/server/dist/command/cli.js" init --timeout 2 --no-drive --no-open 2>&1 || true)
+          out=$(node "$GITHUB_WORKSPACE/server/dist/command/cli.js" init --timeout 2 --no-open 2>&1 || true)
           echo "$out" | grep -q "rather than invent" || { echo "$out"; exit 1; }
 
   # POSIX-only, and labelled as such: the scenarios shim /bin/sh executables.
