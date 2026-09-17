@@ -30,7 +30,8 @@ function world(
     probePage: (): Promise<PageProbe> => Promise.resolve({ served: true, sdkInPage: true }),
     openBrowser: (u: string) => {
       opened.push(u);
-      return Promise.resolve();
+      // The default world has a working browser. A run that needs the other case overrides this.
+      return Promise.resolve(true);
     },
     listSessions: (): Promise<CandidateSession[]> => Promise.resolve([{ sessionId: 'new', url }]),
     now: () => (clock += 10),
@@ -218,6 +219,56 @@ describe('when it cannot continue, it says what is left', () => {
 
   it('does not claim a flow was saved, because it drove nothing', async () => {
     expect((await runSetupPhases(INPUT, world())).flowSaved).toBe(false);
+  });
+});
+
+/*
+ * A browser that FAILED to open is not a browser that opened.
+ *
+ * MEASURED on `install-gate (ubuntu, cra)` in 3.1.0, and reproduced locally for vite-react by
+ * putting an `open` on PATH that exits 3: on a machine with no browser -- CI, a container, an SSH
+ * session -- the launcher fails, `openBrowser` PRINTS that and resolves, and the caller set
+ * `openedBrowser = true` anyway. The run then waited the FULL connect budget for a session that
+ * nothing could ever create, and a Windows cell spent thirty minutes there before the job timed out.
+ *
+ * The code one line below already states the rule for the case it did handle: "declining to open it
+ * and then waiting as if we had is a promise to the reader that cannot be kept." Failing to open is
+ * the same promise, made by accident.
+ */
+describe('when the browser will not open', () => {
+  /** The same world twice, differing only in whether the launcher succeeded. */
+  async function sleptWaitingForASession(browserOpened: boolean): Promise<number> {
+    let slept = 0;
+    const fx = world({
+      listSessions: () => Promise.resolve([]),
+      openBrowser: () => Promise.resolve(browserOpened),
+      sleep: (ms: number) => {
+        slept += ms;
+        return Promise.resolve();
+      },
+    });
+    const r = await runSetupPhases({ ...INPUT, openBrowser: true }, fx);
+    expect(r.ok, 'no session either way, so both runs must fail').toBe(false);
+    return slept;
+  }
+
+  it('does not wait the full budget for a session nothing can create', async () => {
+    // No absolute figure: the budget belongs to the caller and the grace to a constant, so what is
+    // asserted is the RELATIONSHIP between the two runs. A duration compared against a number would
+    // be a statement about this machine, which is the flake this repository already documents.
+    const withoutBrowser = await sleptWaitingForASession(false);
+    const withBrowser = await sleptWaitingForASession(true);
+
+    expect(
+      withoutBrowser,
+      'a failed launch waited as long as a successful one — the failure is being swallowed',
+    ).toBeLessThan(withBrowser);
+  });
+
+  it('still spends the budget when the browser DID open', async () => {
+    // The control. Without it, "wait less" could be satisfied by making every run three seconds.
+    const withBrowser = await sleptWaitingForASession(true);
+    expect(withBrowser).toBeGreaterThan(0);
   });
 });
 

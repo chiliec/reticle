@@ -194,15 +194,23 @@ export async function runSetupCommand(
     probePage,
     openBrowser: async (url) => {
       const failure = await openInBrowser(url);
-      if (null !== failure) {
+      if (null === failure) return true;
+      {
         print(
-          `could not open a browser (${failure}). On a machine with none — CI, a container, an SSH ` +
-            // Was `reticle_run({ tool: "reticle_lease", ... })`. The default surface advertises
-            // NEITHER name and ships no dispatch hatch to reach the second, so the one instruction
-            // printed at a reader who has just been told the browser failed could not be followed.
-            `session — take a tab Reticle owns instead: \`reticle open ${url}\`.`,
+          `could not open a browser (${failure}). Nothing was opened, and nothing else here will ` +
+            // Three wordings have been wrong in a row, each naming a way out that does not exist on
+            // the machine being spoken to. It said `reticle_run({ tool: "reticle_lease", ... })`:
+            // the default surface advertises neither name and ships no hatch to reach the second.
+            // It then said `reticle open <url>`, which asks the OS to launch the default browser --
+            // the very thing that just failed -- so it returned the reader to the same wall.
+            // This one names no command: the missing piece is a browser, and the honest sentence
+            // says which url needs one rather than inventing a Reticle that can conjure it.
+            `open one: this asks the OS for your default browser, and it is a machine with none — ` +
+            `CI, a container, an SSH session, WSL with no host browser. Point any browser that can ` +
+            `reach it at ${url}; the session appears within a second of the page loading.`,
         );
       }
+      return false;
     },
     listSessions: () => listSessions(input.bridgePort),
     now: () => Date.now(),

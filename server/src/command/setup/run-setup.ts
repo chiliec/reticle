@@ -101,7 +101,15 @@ export interface SetupEffects {
   readonly observedPorts: () => number[];
   /** Fetch the url and report what came back. */
   readonly probePage: (url: string) => Promise<PageProbe>;
-  readonly openBrowser: (url: string) => Promise<void>;
+  /**
+   * Open the app, and say whether a window was actually opened.
+   *
+   * `Promise<void>` here was the whole of the defect: the launcher can fail -- CI, a container, an
+   * SSH session, WSL with no host browser -- and the only place that knew printed a sentence and
+   * resolved. The caller then waited the full connect budget for a session that nothing could
+   * create. A boolean is the smallest thing that makes the failure sayable.
+   */
+  readonly openBrowser: (url: string) => Promise<boolean>;
   readonly listSessions: () => Promise<CandidateSession[]>;
   readonly now: () => number;
   readonly sleep: (ms: number) => Promise<void>;
@@ -304,8 +312,9 @@ export async function runSetupPhases(input: SetupInput, fx: SetupEffects): Promi
       // Said BEFORE the window appears, so somebody watching a page that stays inert has already
       // been told which of the two it is.
       if (PageFinding.SDK_MISSING === finding) note(describePage(finding, url));
-      await fx.openBrowser(url);
-      openedBrowser = true;
+      // Not `= true`: a launcher that failed leaves nothing to create a session, and the deadline
+      // below is chosen on exactly this.
+      openedBrowser = await fx.openBrowser(url);
     }
   }
   // Waiting the full budget for a session when nothing was opened to create one is dead time, and
