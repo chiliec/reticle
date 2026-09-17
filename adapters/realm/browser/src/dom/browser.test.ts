@@ -456,9 +456,9 @@ describe('query: open shadow roots and attribute projection', () => {
 // help MarkText either — its controls carry no testid.
 //
 // What actually fixed MarkText is `leanSkipped`: the count turns an empty tree into "look again in
-// full mode", and it costs one number. The testid still supplies a NAME and a ref where an element
-// has no accessible name, so a display element remains addressable in `full` — read it there, or
-// query it directly.
+// full mode", and it costs one number. A testid does NOT supply a name or a ref in `full` either —
+// see the A/B on the last test in this block — so a display element marked only by a testid is
+// reached with `reticle_look { action: "find", testid }` rather than read out of the tree.
 describe('interactive mode stays the actionable view', () => {
   it('excludes a role-less div that only carries a data-testid', () => {
     document.body.innerHTML = `<div data-testid="kpi-deploys">40</div><div>just text</div>`;

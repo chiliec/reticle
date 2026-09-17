@@ -204,9 +204,17 @@ function formatLine(
 ): string {
   const indent = '  '.repeat(depth);
   const value = getValue(el);
-  // A testid stands in for the accessible name when there is none. Including a role-less control and
-  // then printing it as a bare `- generic` is worse than leaving it out: it is visible and it cannot
-  // be addressed. This is the name its author gave it.
+  // The label is the ACCESSIBLE NAME, and only that. A testid deliberately does not stand in for it.
+  //
+  // It read the other way for a while — "a testid stands in for the accessible name when there is
+  // none" — describing a version that was measured and reverted. Naming testid-bearing generics and
+  // minting refs for them costs +15% on the most-called read (65 nodes / 622 tokens against 58 / 540
+  // on the bench app's dashboard), for handles the caller usually already has. `browser.test.ts`
+  // holds that line and carries the numbers.
+  //
+  // So a display element with a testid and no name is not addressable FROM THE TREE, on purpose.
+  // `reticle_look { action: "find", testid }` reaches it directly for ~31 tokens, which is the right
+  // tool for something you want to assert on rather than drive.
   const label = name;
   const namePart = label.length > 0 ? ` "${label}"` : '';
   const refPart = INTERACTIVE.has(role) || label.length > 0 ? ` (ref=${refs.refFor(el)})` : '';
@@ -360,8 +368,15 @@ function visit(child: Element, depth: number, ctx: WalkCtx, inLive: boolean): vo
   // wrapper div inside a clickable row matched. A signal that cannot tell a control from its
   // ancestors cannot decide what a control is.
   const actionable = interactive;
-  // A testid still makes an element MEANINGFUL, so `full` keeps it and can name and address it. It
-  // just is not evidence that the element is ACTIONABLE, which is the only question lean mode asks.
+  // A testid is not in this expression, and that is the decision rather than an omission.
+  //
+  // This comment used to say "a testid still makes an element MEANINGFUL, so `full` keeps it and can
+  // name and address it", which was true of a version that no longer exists. Adding it back was tried
+  // again on the strength of that sentence and measured the same way it was the first time: +15% on
+  // `full`, which is the DEFAULT mode and therefore the most-called read in the product. An element
+  // marked only by a testid, with no role, name or text, is reached with
+  // `reticle_look { action: "find", testid }` instead. See `browser.test.ts`, which guards this and
+  // carries the A/B.
   const meaningful =
     actionable || role !== 'generic' || name.length > 0 || text.length > 0 || layout.length > 0;
   const include = lean ? actionable : meaningful;
