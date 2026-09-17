@@ -109,6 +109,24 @@ export default defineConfig(buildOptions());
  * into a diff against the user's own style.
  */
 describe('patchViteConfig — the edit reads like the file it lands in', () => {
+  /**
+   * The other half of the same rule, which never worked.
+   *
+   * MEASURED by running the shipped patcher over a real app's config: it wrote
+   * `plugins: [reticle(),react(), devApi()]` — no space, in the one place the file already showed
+   * its own style. `PLUGINS_ARRAY` has no capture group, so `String.replace` calls back with
+   * `(match, offset, source)`; the callback read those as `(match, _g, offset)`, so `offset` held
+   * the whole SOURCE STRING. `source[<string> + match.length]` is `undefined`, the "next character"
+   * was therefore always empty, and the separator was always ''. The comment above it described
+   * behaviour that had never once happened.
+   */
+  it('keeps the space a single-line plugins array already uses', () => {
+    const src = `import { defineConfig } from 'vite';\nexport default defineConfig({\n  plugins: [react(), devApi()],\n});\n`;
+    const r = patchViteConfig(src);
+    if (r.kind !== VitePatchKind.APPLY) throw new Error('expected apply');
+    expect(r.code).toContain('reticle(), react()');
+  });
+
   it('leaves no trailing whitespace on the plugins line', () => {
     const src = `import { defineConfig } from 'vite';\nexport default defineConfig({\n  plugins: [\n    react(),\n  ],\n});\n`;
     const r = patchViteConfig(src);

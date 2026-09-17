@@ -45,4 +45,25 @@ describe('grading a plan by what it declared', () => {
   it('grades an empty plan unknown rather than vacuously true', () => {
     expect(gradeSequence([]).verified).toBe(Verified.UNKNOWN);
   });
+
+  /**
+   * The headline counted the steps it REACHED while `coverage` counted the plan, and they disagreed
+   * in the same payload.
+   *
+   * MEASURED on a real install: a two-step sequence whose first step was refused before dispatch
+   * answered `"all 1 step(s) declared nothing, so the app was driven but not verified"` beside
+   * `coverage: { declared: 0, total: 2 }`. Two numbers for one plan, and "the app was driven" about
+   * a call where `dispatched` was `false` in the same object.
+   */
+  it('counts the plan, not the steps it got to', () => {
+    const grade = gradeSequence([silent()], { planned: 2, dispatched: false });
+    expect(grade.total).toBe(2);
+    expect(grade.because).toContain('2 step(s)');
+  });
+
+  it('does not claim the app was driven when nothing dispatched', () => {
+    const grade = gradeSequence([silent()], { planned: 2, dispatched: false });
+    expect(grade.because).not.toContain('was driven');
+    expect(grade.because).toContain('nothing was dispatched');
+  });
 });

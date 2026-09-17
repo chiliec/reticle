@@ -36,6 +36,22 @@ describe('the default rule is untouched by the feature existing', () => {
     'creditCard',
     'cvv',
     'ssn',
+    /*
+     * Bare `card`, and the spellings a real checkout form uses.
+     *
+     * MEASURED on a walkthrough app: `POST /api/checkout` was captured as
+     * `{"planId":"team","card":"4111111111111111"}` and handed to the agent in full, while
+     * `password` beside it was redacted. The pattern required `credit_card` or `card_number`, and
+     * `card` alone — which is what Stripe's own object is called, and the shortest thing anybody
+     * names the field — fell straight through.
+     *
+     * It reached the agent's context because Reticle's OWN verdict told the reader to turn body
+     * capture on: "a 200 describes the transport, not the result … `captureNetworkBodies: true`".
+     */
+    'card',
+    'cardNumber',
+    'card_no',
+    'pan',
   ];
   const LEGITIMATE = [
     'colorToken',

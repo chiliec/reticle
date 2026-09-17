@@ -63,18 +63,15 @@ const INIT_DEFAULTS = {
   dryRun: false,
   install: true,
   app: undefined,
-  flow: undefined,
   env: [] as string[],
   filesOnly: false,
   captureBodies: false,
   json: false,
-  drive: true,
   open: true,
   relaunch: false,
   agents: true,
   url: undefined,
   timeoutSeconds: undefined,
-  driveModel: undefined,
   licenseKey: undefined,
 };
 
@@ -388,24 +385,11 @@ describe('parseCliArgs', () => {
    * and equals signs — a connection string, a base64 token — and inventing a quoting rule for them
    * is how a variable arrives truncated and the app fails for a reason nobody can see.
    */
-  it('takes the answers only an agent has: the flow, the app env, and files-only', () => {
+  it('takes the answers only an agent has: the app env, and files-only', () => {
     expect(
-      parseCliArgs(
-        [
-          'init',
-          '--flow',
-          'add to cart and check the badge',
-          '--env',
-          'API=http://x',
-          '--env',
-          'TOKEN=a=b',
-          '--files-only',
-        ],
-        PORT,
-      ),
+      parseCliArgs(['init', '--env', 'API=http://x', '--env', 'TOKEN=a=b', '--files-only'], PORT),
     ).toEqual({
       ...INIT_DEFAULTS,
-      flow: 'add to cart and check the badge',
       env: ['API=http://x', 'TOKEN=a=b'],
       filesOnly: true,
       captureBodies: false,
@@ -413,8 +397,25 @@ describe('parseCliArgs', () => {
   });
 
   it('refuses a flag that names no value, rather than swallowing the next one', () => {
-    expect(parseCliArgs(['init', '--flow'], PORT)).toMatchObject({ kind: 'error' });
     expect(parseCliArgs(['init', '--env'], PORT)).toMatchObject({ kind: 'error' });
+  });
+
+  /**
+   * `--flow` named the journey for a drive `init` no longer does, and the agent instruction files
+   * we shipped still name it. "unknown argument" reads as a typo; the stage it moved to is the
+   * answer. Same for the two dials that configured that drive.
+   */
+  it('answers the retired drive flags by naming the stage they moved to', () => {
+    for (const argv of [
+      ['init', '--flow', 'x'],
+      ['init', '--no-drive'],
+      ['init', '--drive-model', 'm'],
+    ]) {
+      const r = parseCliArgs(argv, PORT);
+      expect(r.kind, argv.join(' ')).toBe('error');
+      if (r.kind !== 'error') throw new Error('unreachable');
+      expect(r.message).toContain('explore');
+    }
   });
 
   /**

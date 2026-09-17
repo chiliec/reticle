@@ -14,6 +14,7 @@ import {
   missingOperand,
   missingValue,
   notANumber,
+  retiredFlag,
   unknownArgument,
   type ParseError,
 } from './cli-parse-grammar.js';
@@ -42,11 +43,12 @@ export {
 export const CLI_USAGE = `usage:  npx @reticlehq/server <command>   (or \`reticle <command>\` once the bin is on your PATH)
 
   reticle init  [--dry-run] [--port N] [--no-mcp] [--no-install] [--app <dir>]
-                [--flow "<what to drive>"] [--env KEY=VALUE]... [--files-only]  (wire Reticle into the project in this directory)
+                [--env KEY=VALUE]... [--files-only]  (wire Reticle into the project in this directory)
+                init is ONBOARDING: it wires the project, boots the app and proves a session
+                connected. It does not drive. The FIRST RUN is the stage that proves a flow:
+                reticle verify <url> --explore --persona "<who does what>", or the same thing
+                from an agent as reticle_verify { action: "explore", persona: "…" }
                 --app picks WHICH app in a monorepo, when several are found
-                --flow names the journey worth proving, in your own words. Only you know
-                which one matters, and naming it is the difference between a drive that
-                finishes and one that spends its budget looking for something to do
                 --env is what the app needs to reach a usable state: the key from
                 .env.example, the mock backend, the variable that skips an auth wall.
                 Repeatable, and a value may contain spaces and equals signs
@@ -59,8 +61,8 @@ export const CLI_USAGE = `usage:  npx @reticlehq/server <command>   (or \`reticl
                 success. Works with --files-only
                 --license writes the key to .env and keeps .env out of git
                 --json puts the result on stdout, so an agent reads one object
-                --no-drive / --no-open / --no-agents / --url / --timeout / --drive-model
-                are the runtime dials: CI, a headless box, or an app you already run
+                --no-open / --no-agents / --url / --timeout are the runtime dials: CI, a
+                headless box, or an app you already run
                 --no-mcp skips MORE than the server registration: also the agent rule files
                 (CLAUDE.md / AGENTS.md / .cursor) and the /reticle command, because all three
                 only make sense once the tools are reachable.
@@ -238,6 +240,9 @@ const APP_FLAG = '--app';
  * `--files-only` is the escape hatch for a caller that wants what init used to do and nothing more.
  */
 const FLOW_FLAG = '--flow';
+/** Where the drive went, named in full because the reader passing one of these is following us. */
+const FIRST_RUN_MOVED =
+  'onboarding wires the project, the FIRST RUN proves a flow. Drive one with reticle_verify { action: "explore", persona: "<who does what>" }, or npx @reticlehq/server verify <url> --explore --persona "<who does what>"';
 const ENV_FLAG = '--env';
 const FILES_ONLY_FLAG = '--files-only';
 /**
@@ -300,18 +305,15 @@ export type CliResult =
       dryRun: boolean;
       install: boolean;
       app: string | undefined;
-      flow: string | undefined;
       env: string[];
       filesOnly: boolean;
       captureBodies: boolean;
       json: boolean;
-      drive: boolean;
       relaunch: boolean;
       open: boolean;
       agents: boolean;
       url: string | undefined;
       timeoutSeconds: number | undefined;
-      driveModel: string | undefined;
       licenseKey: string | undefined;
     }
   | {
@@ -525,18 +527,15 @@ type InitFlags =
       dryRun: boolean;
       install: boolean;
       app: string | undefined;
-      flow: string | undefined;
       env: string[];
       filesOnly: boolean;
       captureBodies: boolean;
       json: boolean;
-      drive: boolean;
       relaunch: boolean;
       open: boolean;
       agents: boolean;
       url: string | undefined;
       timeoutSeconds: number | undefined;
-      driveModel: string | undefined;
       licenseKey: string | undefined;
     }
   | { kind: 'error'; message: string };
@@ -547,19 +546,16 @@ function parseInitFlags(args: string[]): InitFlags {
   let dryRun = false;
   let install = true;
   let app: string | undefined;
-  let flow: string | undefined;
   // Repeatable: one variable per flag, so a value containing spaces or `=` needs no quoting rules.
   const env: string[] = [];
   let filesOnly = false;
   let captureBodies = false;
   let json = false;
-  let drive = true;
   let open = true;
   let relaunch = false;
   let agents = true;
   let url: string | undefined;
   let timeoutSeconds: number | undefined;
-  let driveModel: string | undefined;
   let licenseKey: string | undefined;
   let i = 0;
   while (i < args.length) {
@@ -579,11 +575,8 @@ function parseInitFlags(args: string[]): InitFlags {
       const value = args[i];
       if (value === undefined) return missingValue(APP_FLAG);
       app = value;
-    } else if (arg === FLOW_FLAG) {
-      i++;
-      const value = args[i];
-      if (value === undefined) return missingValue(FLOW_FLAG);
-      flow = value;
+    } else if (arg === FLOW_FLAG || arg === NO_DRIVE_FLAG || arg === DRIVE_MODEL_FLAG) {
+      return retiredFlag(arg, FIRST_RUN_MOVED);
     } else if (arg === ENV_FLAG) {
       i++;
       const value = args[i];
@@ -595,8 +588,6 @@ function parseInitFlags(args: string[]): InitFlags {
       captureBodies = true;
     } else if (arg === JSON_FLAG) {
       json = true;
-    } else if (arg === NO_DRIVE_FLAG) {
-      drive = false;
     } else if (arg === NO_OPEN_FLAG) {
       open = false;
     } else if (arg === RELAUNCH_FLAG) {
@@ -613,11 +604,6 @@ function parseInitFlags(args: string[]): InitFlags {
       const value = args[i];
       if (value === undefined) return missingValue(LICENSE_FLAG);
       licenseKey = value;
-    } else if (arg === DRIVE_MODEL_FLAG) {
-      i++;
-      const value = args[i];
-      if (value === undefined) return missingValue(DRIVE_MODEL_FLAG);
-      driveModel = value;
     } else if (arg === TIMEOUT_FLAG_INIT) {
       i++;
       const value = args[i];
@@ -645,18 +631,15 @@ function parseInitFlags(args: string[]): InitFlags {
     dryRun,
     install,
     app,
-    flow,
     env,
     filesOnly,
     captureBodies,
     json,
-    drive,
     open,
     relaunch,
     agents,
     url,
     timeoutSeconds,
-    driveModel,
     licenseKey,
   };
 }
@@ -742,18 +725,15 @@ export function parseCliArgs(
         dryRun: r.dryRun,
         install: r.install,
         app: r.app,
-        flow: r.flow,
         env: r.env,
         filesOnly: r.filesOnly,
         captureBodies: r.captureBodies,
         json: r.json,
-        drive: r.drive,
         open: r.open,
         relaunch: r.relaunch,
         agents: r.agents,
         url: r.url,
         timeoutSeconds: r.timeoutSeconds,
-        driveModel: r.driveModel,
         licenseKey: r.licenseKey,
       };
     }

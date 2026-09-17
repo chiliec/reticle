@@ -39,8 +39,14 @@ const NO_TOOL_EQUIVALENT: readonly {
     // `\\?"` throughout: this runs over the SERIALISED result, where every quote is escaped. The
     // first version matched only the unescaped shape, passed its unit test, and changed nothing at
     // all in the live daemon -- found by re-driving the real MCP server rather than by the suite.
+    // The backticks are part of the match, not decoration around it. The shipped constant reads
+    // ``with `reticle_run { \u2026 }` (a human can equivalently run `reticle drive <url>`)``, and a
+    // pattern that stopped at `}` left the closing backtick sitting between it and the parenthetical
+    // \u2014 so the optional group could not match, the clause survived, and the replacement landed
+    // inside the original quoting. What an agent read was the human-equivalent clause twice over,
+    // with backticks nested three deep.
     pattern:
-      /reticle_run\s*\{\s*tool:\s*\\?"reticle_lease\\?"[^}]*\}(\s*\([^)]*\))?(\s*[-\u2014]+\s*reticle_lease is[^.]*\.)?/g,
+      /`?reticle_run\s*\{\s*tool:\s*\\?"reticle_lease\\?"[^}]*\}`?(\s*\([^)]*\))?(\s*[-\u2014]+\s*reticle_lease is[^.]*\.)?/g,
     instead: 'the CLI: `reticle open <url>` (a human can equivalently run `reticle drive <url>`)',
   },
   {
@@ -55,6 +61,35 @@ const NO_TOOL_EQUIVALENT: readonly {
     // names every saved flow in its summary, which is what the advice was reaching for.
     pattern: /\breticle_flow\s*\{[^}]*\}/g,
     instead: 'reticle_verify { action: "flows" }, which names every saved flow',
+  },
+  /*
+   * Saving a flow is the PAYOFF the results keep advertising, and the default surface cannot do it.
+   *
+   * MEASURED while driving a real install: a passing `reticle_act` answered `keep: "… keep it as a
+   * regression flow with reticle_flow_save { saveAs: '<name>' }"`, and the `no-flow-intent` gap said
+   * to "save it again with intent". Calling it returns "reticle_flow_save exists in this build but
+   * is not reachable on this tool surface … there is no dispatch tool here to route through". Three
+   * separate results told the agent to do the one thing the surface withholds.
+   *
+   * `explore` is the reachable equivalent: it drives and RECORDS what it drove, which is what
+   * "keep this as a regression flow" was reaching for.
+   */
+  {
+    needs: [ReticleTool.RECORD, ReticleTool.FLOW_SAVE],
+    // The pair, first: rewriting the two names separately leaves "record one with X then X".
+    pattern:
+      /\breticle_record\b\s*(?:\{[^}]*\})?(?:\s*start\/stop)?\s*(?:and|then|→|->|,\s*then)\s*\breticle_flow_save\b\s*(?:\{[^}]*\})?/g,
+    instead: 'reticle_verify { action: "explore", persona }, which drives it and records the flow',
+  },
+  {
+    needs: [ReticleTool.FLOW_SAVE],
+    pattern: /\breticle_flow_save\b\s*(?:\{[^}]*\})?/g,
+    instead: 'reticle_verify { action: "explore", persona }',
+  },
+  {
+    needs: [ReticleTool.RECORD],
+    pattern: /\breticle_record\b\s*(?:\{[^}]*\})?/g,
+    instead: 'reticle_verify { action: "explore", persona }',
   },
 ];
 

@@ -13,6 +13,18 @@ export const unknownArgument = (arg: string): ParseError => ({
   kind: 'error',
   message: `unknown argument '${arg}'`,
 });
+/**
+ * A flag that used to exist, answered by name rather than as "unknown argument".
+ *
+ * Getting started is three stages — installation, onboarding, the first run — and `init` owns the
+ * middle one. The flags that configured the drive it used to do are still written down in agent
+ * instruction files and in scripts, so the reader who passes one is following what we told them.
+ * "unknown argument '--flow'" reads as a typo; naming the stage it moved to is the whole answer.
+ */
+export const retiredFlag = (flag: string, moved: string): ParseError => ({
+  kind: 'error',
+  message: `${flag} is no longer an \`init\` flag: ${moved}`,
+});
 export const missingValue = (flag: string): ParseError => ({
   kind: 'error',
   message: `${flag} needs a value`,

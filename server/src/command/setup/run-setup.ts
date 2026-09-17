@@ -1,11 +1,16 @@
 /**
  * The half of setup that happens after the files are written.
  *
- * `init` wires a project; this gets the app running with the SDK inside it, proves a session
- * connected, and drives one flow to a verdict. Measured against an agent doing the same steps by
- * hand from SKILL.md across five real applications: 176 model turns, $9.92, forty minutes, and a
- * verdict in two runs out of five — three ended by asking a human to restart their client, having
- * shown them nothing.
+ * `init` wires a project; this gets the app running with the SDK inside it and proves a session
+ * connected. That is where ONBOARDING ends — the first run, which proves a flow, is a separate
+ * stage and a separate command.
+ *
+ * This used to drive a flow too, by spawning a second agent CLI. Measured against an agent doing
+ * the steps by hand from SKILL.md across five real applications, that was worth it at the time:
+ * 176 model turns, $9.92, forty minutes, and a verdict in two runs out of five — three ended by
+ * asking a human to restart their client, having shown them nothing. What replaced it is better on
+ * both counts: `reticle_verify { action: "explore" }` drives with a model inside the daemon that
+ * already holds the tools, so no restart is needed and no second CLI has to exist on the machine.
  *
  * Every effect is injected. That is not ceremony: the sequence has five phases, each with its own
  * way of going wrong, and the alternative to injecting them is a test that boots a real dev server
@@ -57,19 +62,21 @@ const NO_BROWSER_GRACE_MS = 3_000;
 export const SetupPhase = {
   DEV_SERVER: 'dev-server',
   CONNECT: 'connect',
-  DRIVE: 'drive',
   DONE: 'done',
 } as const;
 export type SetupPhase = (typeof SetupPhase)[keyof typeof SetupPhase];
 
 export interface SetupOutcome {
-  /** True only when a flow was driven AND saved. Writing files is not an install. */
+  /** True when the app is running, instrumented and connected. Writing files alone is not that. */
   readonly ok: boolean;
   readonly reachedPhase: SetupPhase;
   readonly url?: string | undefined;
   readonly sessionId?: string | undefined;
-  /** The drive's own report, kept verbatim and never trusted as a pass on its own. */
-  readonly verdict?: string | undefined;
+  /**
+   * Always false here now, and kept because the callers that report progress still read it.
+   *
+   * Onboarding does not drive, so it cannot save a flow. The first run is what saves one.
+   */
   readonly flowSaved: boolean;
   /** What the caller should do next, when this did not finish. */
   readonly fallback: string[];
@@ -96,19 +103,6 @@ export interface SetupEffects {
   readonly probePage: (url: string) => Promise<PageProbe>;
   readonly openBrowser: (url: string) => Promise<void>;
   readonly listSessions: () => Promise<CandidateSession[]>;
-  /** Drive one flow. Returns the agent's report, or null when nobody could. */
-  readonly drive: (url: string, session: CandidateSession) => Promise<string | null>;
-  /**
-   * Whether this machine has an agent CLI at all.
-   *
-   * Separate from `drive` returning null, because those are different facts and only one of them is
-   * a failure. A drive that RAN and proved nothing is a result worth a non-zero exit. A drive that
-   * could not run is the absence of a tool on the machine, and reporting the install as failed for
-   * it told CI runners — where no agent CLI is ever installed — that a perfectly good install had
-   * not worked.
-   */
-  readonly driverAvailable: () => boolean;
-  readonly flowsSaved: () => boolean;
   readonly now: () => number;
   readonly sleep: (ms: number) => Promise<void>;
   readonly note: (line: string) => void;
@@ -130,7 +124,6 @@ export interface SetupInput {
    */
   readonly connectBudgetMs?: number | undefined;
   readonly openBrowser: boolean;
-  readonly drive: boolean;
   /** Web, Electron or Tauri. Desktop changes three things; see desktop-shape.ts. */
   readonly shape: AppShape;
   readonly phaseTimeoutMs: number;
@@ -351,58 +344,35 @@ export async function runSetupPhases(input: SetupInput, fx: SetupEffects): Promi
     return stop(input, SetupPhase.CONNECT, { url }, notes);
   }
 
-  // ── and it has to be driven, or nothing has been proved ──────────────────────────────────────
-  if (!input.drive) {
-    return {
-      ok: true,
-      reachedPhase: SetupPhase.CONNECT,
-      url,
-      sessionId: session.sessionId,
-      flowSaved: false,
-      notes,
-      fallback: [],
-    };
-  }
-  // Nothing to drive WITH is not the same as driving and proving nothing, and only the second is a
-  // failure of this command. The app is installed, instrumented, booted and connected; the one step
-  // left needs a tool this machine does not have, so it is reported and handed to the caller.
-  if (!fx.driverAvailable()) {
-    note(
-      'Installed and connected, but no agent CLI is on this machine (claude, codex, opencode, ' +
-        'cursor-agent or gemini), so nothing drove the app and no verdict was produced.',
-    );
-    return {
-      ok: true,
-      reachedPhase: SetupPhase.CONNECT,
-      url,
-      sessionId: session.sessionId,
-      flowSaved: false,
-      notes,
-      fallback: remainingSteps(
-        asProgress(input, { url, sessionId: session.sessionId, flowSaved: false }),
-      ),
-    };
-  }
-  const verdict = await fx.drive(url, session);
-  const flowSaved = fx.flowsSaved();
-  if (null === verdict) {
-    note('No agent CLI could drive the app, so nothing was proved.');
-  }
-  if (!flowSaved) {
-    return stop(
-      input,
-      SetupPhase.DRIVE,
-      { url, sessionId: session.sessionId, ...(null === verdict ? {} : { verdict }) },
-      notes,
-    );
-  }
+  // ── connected, which is where ONBOARDING ends ────────────────────────────────────────────────
+  //
+  // Getting started is three stages — installation puts the CLI on the machine, onboarding wires
+  // the project, the first run proves a flow — and this command owns the middle one. A connected
+  // session is the whole proof that onboarding worked: the SDK is in the page, the bridge paired,
+  // and the tools now have something to talk to.
+  //
+  // It used to spawn a SECOND agent CLI here to drive a flow, and report the entire install as
+  // unfinished when that failed. Two things were wrong with that. It could not work on Windows at
+  // all — npm installs those CLIs as `.cmd` shims, which Node refuses to spawn without a shell —
+  // so a run whose wiring had succeeded completely still printed "setup did not finish". And it
+  // duplicated a mechanism that is now better done in the daemon: `reticle_verify { action:
+  // "explore" }` drives with a model that already holds the tools, and RECORDS what it drove, so
+  // every later run replays with no model in the loop.
+  // `<url>` stays a placeholder in this string on purpose: `guidance-commands-run` feeds every
+  // command we print to the real parser, and an interpolated value reads there as a missing operand.
+  // The live url is named in the sentence instead, where a reader needs it anyway.
+  note(
+    `Connected, and the app at ${url} is instrumented. Onboarding is done. Nothing is PROVED ` +
+      'yet: that is the first run. Drive one flow with `reticle_verify { action: "explore", ' +
+      'persona: "<who does what>" }`, or from a terminal ' +
+      '`npx @reticlehq/server verify <url> --explore --persona "<who does what>"`.',
+  );
   return {
     ok: true,
-    reachedPhase: SetupPhase.DONE,
+    reachedPhase: SetupPhase.CONNECT,
     url,
     sessionId: session.sessionId,
-    ...(null === verdict ? {} : { verdict }),
-    flowSaved: true,
+    flowSaved: false,
     notes,
     fallback: [],
   };

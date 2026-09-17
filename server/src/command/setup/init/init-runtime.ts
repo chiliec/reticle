@@ -18,11 +18,7 @@ import { claudeTranscriptExists, codexSessionFor } from '@/command/setup/termina
 import { probePresence } from '@/command/daemon/binding/port-presence.js';
 import { probeDaemon } from '@/surface/mcp/proxy/proxy-daemon-probe.js';
 import { fetchStatus } from '@/command/cli/launch/cli-launch.js';
-import {
-  collectEnv,
-  DEFAULT_DRIVE_BUDGET_USD,
-  DEFAULT_PHASE_TIMEOUT_MS,
-} from '@/command/setup/setup-options.js';
+import { collectEnv, DEFAULT_PHASE_TIMEOUT_MS } from '@/command/setup/setup-options.js';
 
 /** How often the runtime phases look again: fast enough not to be the wait, slow enough to be free. */
 const POLL_MS = 250;
@@ -166,10 +162,7 @@ export async function continueAfterInit(
       bridgePort: port,
       env: collectEnv(parsed.env ?? []),
       openBrowser: false !== parsed.open,
-      drive: false !== parsed.drive,
       registerAgents: wantsAgents(parsed),
-      escalateWeakFlow: true,
-      driveBudgetUsd: DEFAULT_DRIVE_BUDGET_USD,
       phaseTimeoutMs:
         undefined === parsed.timeoutSeconds
           ? DEFAULT_PHASE_TIMEOUT_MS
@@ -181,9 +174,7 @@ export async function continueAfterInit(
         : { connectBudgetMs: parsed.timeoutSeconds * 1000 }),
       pollMs: POLL_MS,
       ...(undefined === context.devCommand ? {} : { devCommand: context.devCommand }),
-      ...(undefined === parsed.flow ? {} : { flow: parsed.flow }),
       ...(undefined === parsed.url ? {} : { suppliedUrl: parsed.url }),
-      ...(undefined === parsed.driveModel ? {} : { driveModel: parsed.driveModel }),
     },
     (line) => io.print(line),
   ).then((outcome) => {
@@ -194,12 +185,6 @@ export async function continueAfterInit(
       return;
     }
     io.print('');
-    // The drive's own account, whether it ended well or not. Discarding it left a run that reached
-    // the drive, produced something, and told the reader nothing about what it found.
-    if (undefined !== outcome.verdict && '' !== outcome.verdict) {
-      io.print(outcome.verdict);
-      io.print('');
-    }
     if (outcome.ok && !outcome.flowSaved) {
       // Success, and no flow. Saying "a flow was driven" here would replace a wrong exit code with
       // a wrong sentence, which is the worse of the two: the exit code is read by CI and the

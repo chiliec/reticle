@@ -6,13 +6,19 @@ This file is the whole critical path and nothing else. Everything it leaves out 
 
 ## Your first action, before you read the rest
 
-Do not spend a turn working out which path you are on. The command knows.
+Do not spend a turn working out which path you are on.
 
 ```bash
-RETICLE_INSTALL_SOURCE=skill_file npx @reticlehq/server@latest init --flow "<the journey worth proving>"
+RETICLE_INSTALL_SOURCE=skill_file npx @reticlehq/server@latest init
 ```
 
-It is idempotent: on a project that is already wired it reports `·` for what is already there and goes straight to proving the app still works. Run it now, then read **SETUP** below for what to pass it and what to do with what it returns.
+That is ONBOARDING, and where it stops: wire, boot, wait for a session. Idempotent, reporting `·` for what is already there. Then the FIRST RUN, which proves anything at all:
+
+```
+reticle_verify { action: "explore", persona: "<the journey worth proving>" }
+```
+
+Name the journey: Reticle can list the buttons, not which one matters. `explore` SAVES what it drove, so later runs replay with no model.
 
 Everything between here and there is a rule the steps assume. Read it as you go, not before you act.
 
@@ -20,7 +26,7 @@ Everything between here and there is a rule the steps assume. Read it as you go,
 
 **Setup is not complete until you have driven one real flow in the user's app and produced a verdict.** Writing config files is not installed. Every earlier point looks like success and is not:
 
-- `init` exited 0. Files were written. Nothing connected.
+- `init` exited 0. Wired, and connected. Nothing is PROVED: that is the first run.
 - The `reticle_*` tools appeared. Your client can reach a daemon. The app is very likely still uninstrumented.
 - A session is listed. The app dialled in. The user has still seen nothing happen.
 
@@ -36,7 +42,7 @@ There are exactly three places you may stop, and none is a question about a pref
 
 1. **No recognisable dev script in `package.json`.** Say so; do not invent one.
 2. **Your host asks the human to approve a command.** That prompt belongs to the host. Never bypass or suppress it, and take a refusal as the answer. `init` writing a pre-approval rule for the `reticle` server is not that: it is a scoped, announced config change the human asked for by running the command, and it covers only Reticle's own tools.
-3. **Only if no agent CLI exists on the machine at all**, the client restart that loads the MCP tools (step 2). If `claude`, `codex`, `cursor-agent` or `gemini` is installed, you do NOT stop. Step 2 shows you how to drive from a child process instead, and that path is measured to be the difference between a verdict and a dead end.
+3. **The client restart that loads the MCP tools**, when your client has not got them yet: a client reads its server list once at startup. Coming back, you are on the first run. Start it without being asked.
 
 **On Claude Code and Codex, do not ask the human to restart at all.** `npx @reticlehq/server init --relaunch` prints the exact resume command for this conversation; run that command yourself rather than handing the person a chore. It refuses when the id has no transcript behind it, because `--resume` on an empty id opens a blank session that looks exactly like success. Everywhere else the restart genuinely is theirs: name the one step for their client and ask for that alone.
 
@@ -77,7 +83,7 @@ Every page arrives with the rules that matter prepended, so a single fetch orien
 
 ## Which path am I on
 
-You do not have to decide. `init` is idempotent and reports what is already wired, so running it is the cheapest way to find out, and on an installed project it goes straight to proving the app still works.
+You do not have to decide. `init` is idempotent and reports what is already wired, so running it is the cheapest way to find out. It never drives; the first run is yours to start.
 
 Read **VERIFY** below when the question is "does this still work?" rather than "is this set up?". If `reticle_session` returns an empty list on a project that is already wired, read `docs/troubleshooting.mdx` beside this file, or fetch `https://docs.reticle.sh/troubleshooting.md` if it is not there; do not restart setup. The on-disk copy is the same content and needs no network call, which matters most here: this is the page you reach for when something is already not working.
 
@@ -85,9 +91,9 @@ Read **VERIFY** below when the question is "does this still work?" rather than "
 
 # SETUP
 
-**One command, the one at the top of this file. It does all of it, and it ends with a verdict.**
+**Both stages are at the top of this file.** A connected app proves the SDK is in the page and nothing more: do not report Reticle as set up until the first run has produced a verdict.
 
-Read **[Setting Reticle up](https://docs.reticle.sh/skill-setup)** when it cannot. It also ships on disk beside this file, at `docs/skill-setup.md`, so you can open it without a network call. That page covers what to pass `reticle init`, how to read the report it gives back, what to do when it cannot finish the job on its own, who starts the dev server, and license keys.
+Read **[Setting Reticle up](https://docs.reticle.sh/skill-setup)** when it cannot. It ships on disk beside this file, at `docs/skill-setup.md`, so you can open it without a network call: what to pass `reticle init`, how to read its report, what to do when it cannot finish on its own, who starts the dev server, and license keys.
 
 You need it once, while setting a project up. If `reticle_session` already lists a session, skip straight to **VERIFY** below and never open it.
 

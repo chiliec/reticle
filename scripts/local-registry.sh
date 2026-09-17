@@ -15,9 +15,18 @@ REG="http://localhost:${PORT}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "==> Starting a FRESH Verdaccio on ${REG} (reset so user/token + versions are clean)"
+# `pkill`/`lsof` do not exist in Git Bash, and the `|| true` hides that — so on Windows the listener
+# is freed by its PID from netstat instead. Without this, a second run finds the port taken.
 pkill -f 'verdaccio --config' 2>/dev/null || true
 lsof -tiTCP:"${PORT}" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
-rm -rf /tmp/reticle-verdaccio-storage /tmp/reticle-verdaccio-htpasswd
+if command -v netstat >/dev/null 2>&1 && command -v taskkill >/dev/null 2>&1; then
+  netstat -ano 2>/dev/null | awk -v p=":${PORT}" '$0 ~ p && /LISTENING/ {print $5}' | sort -u |
+    while read -r pid; do [ -n "${pid}" ] && taskkill //PID "${pid}" //F >/dev/null 2>&1 || true; done
+fi
+# The state directory is RELATIVE to verdaccio.yaml (see the note in it): an absolute /tmp path is
+# two different directories here, so this reset silently cleaned one while verdaccio used the other
+# and every run after the first died on "username is already registered".
+rm -rf "${ROOT}/scripts/.local-registry"
 sleep 1
 npx --yes verdaccio@latest --config "${ROOT}/scripts/verdaccio.yaml" >/tmp/reticle-verdaccio.log 2>&1 &
 for _ in $(seq 1 30); do curl -s "${REG}/-/ping" >/dev/null 2>&1 && break; sleep 1; done

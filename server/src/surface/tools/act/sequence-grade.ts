@@ -46,8 +46,25 @@ export interface SequenceGrade {
   because: string;
 }
 
-export function gradeSequence(steps: readonly StepExpectation[]): SequenceGrade {
-  const total = steps.length;
+/**
+ * The plan this grade is about, which is not the same as the steps that were reached.
+ *
+ * `total` used to be `steps.length` — the steps that got far enough to carry an expectation — while
+ * the caller's `coverage.total` counted the plan. A two-step sequence refused at step one answered
+ * "all 1 step(s) declared nothing" beside `coverage: { total: 2 }`: two numbers for one plan.
+ */
+interface SequencePlan {
+  /** How many steps the caller asked for. */
+  readonly planned: number;
+  /** Whether anything actually reached the page. */
+  readonly dispatched: boolean;
+}
+
+export function gradeSequence(
+  steps: readonly StepExpectation[],
+  plan: SequencePlan = { planned: steps.length, dispatched: true },
+): SequenceGrade {
+  const total = Math.max(plan.planned, steps.length);
   const declaring = steps.filter((step) => step.declared);
   const declared = declaring.length;
   const missed = declaring.find((step) => true !== step.held);
@@ -72,7 +89,13 @@ export function gradeSequence(steps: readonly StepExpectation[]): SequenceGrade 
       because:
         0 === total
           ? 'the plan had no steps, so nothing was driven and nothing was proved'
-          : `all ${String(total)} step(s) declared nothing, so the app was driven but not verified — give each step an \`expect\` naming the consequence it causes`,
+          : // "the app was driven" was said unconditionally, including on a call whose own
+            // `dispatched` was false in the same object. A step refused before dispatch is a
+            // malformed call, and telling its author to add an `expect` sends them at the wrong
+            // thing entirely.
+            plan.dispatched
+            ? `all ${String(total)} step(s) declared nothing, so the app was driven but not verified — give each step an \`expect\` naming the consequence it causes`
+            : `nothing was dispatched, so none of the ${String(total)} step(s) ran — read the per-step \`error\` for the one that was refused, and fix that before adding an \`expect\``,
     };
   }
 

@@ -6,6 +6,13 @@ import {
   RETICLE_SKILL,
   type AgentWriterIo,
 } from './agent-writer.js';
+import { tableForSurface } from '@/surface/tools/tools.js';
+import { TOOL_SURFACE } from '@/surface/tools/tool-surface.js';
+
+/** Read from the real table, so the guard tracks the surface rather than a copy of it. */
+const DEFAULT_SURFACE = new Set(
+  tableForSurface(TOOL_SURFACE.MERGED).map((tool: { name: string }) => tool.name),
+);
 
 /** A pretend disk that records what was written. */
 function disk(
@@ -170,5 +177,21 @@ describe('the skill file', () => {
   it('says the two things that make a verdict real', () => {
     expect(RETICLE_SKILL).toContain('act_and_wait');
     expect(RETICLE_SKILL).toContain('is not a pass');
+  });
+
+  /**
+   * The `/reticle` command is the first thing an agent runs, and it named tools that are gone.
+   *
+   * MEASURED by installing 3.1.0 into a fresh app and driving the default surface: this text sent
+   * the reader to `reticle_act_sequence`, which answers "no longer exists — a sequence is now
+   * reticle_act { steps: [...] }", and routed two of its three answers through `reticle_run`, which
+   * that surface does not advertise at all. Three of the four lines in the cheapest-path list could
+   * not be followed. `live-call-text.ts` rewrites this class of thing at the RESULT boundary; a file
+   * written to disk once at install time never passes through it, so it needs its own check.
+   */
+  it('names only tools the default surface advertises', () => {
+    const named = new Set(RETICLE_SKILL.match(/reticle_[a-z_]+/g) ?? []);
+    const unreachable = [...named].filter((t) => !DEFAULT_SURFACE.has(t));
+    expect(unreachable, `the /reticle command names tools nobody was given`).toEqual([]);
   });
 });

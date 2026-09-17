@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { liveCallText, liveCallValues } from './live-call-text.js';
-import { ReticleTool } from '@reticlehq/core';
+import { HIDDEN_TAB_RECOMMENDATION, ReticleTool } from '@reticlehq/core';
 
 /**
  * Guidance that names a tool the reader was not given.
@@ -54,6 +54,32 @@ describe('advice names a call the reader can actually make', () => {
     expect(out).toContain('reticle open');
   });
 
+  /**
+   * The rewrite run against the STRING WE ACTUALLY SHIP, not a paraphrase of it.
+   *
+   * Every test above passes the call bare. The shipped constant wraps it in backticks, and the
+   * pattern stopped at the closing `}` — so the backtick after it blocked the optional parenthetical
+   * from matching, and the replacement landed INSIDE the original quoting. Driving a real session
+   * produced this, which is what an agent was asked to read:
+   *
+   *   with `the CLI: `reticle open <url>` (a human can equivalently run `reticle drive <url>`)`
+   *   (a human can equivalently run `reticle drive <url>`) — note that a lease is a SEPARATE …
+   *
+   * The clause twice, and backticks nested three deep. Using the constant is the point of the test:
+   * a paraphrase is how this passed while the shipped text was mangled.
+   */
+  it('rewrites the recommendation an agent really receives, once and cleanly', () => {
+    const out = liveCallText(HIDDEN_TAB_RECOMMENDATION, MERGED);
+    expect(out).not.toContain('reticle_run');
+    expect(out).not.toContain('reticle_lease');
+    expect(out).toContain('reticle open');
+    // The tell for both defects: the human-equivalent clause appearing more than once.
+    expect(out.match(/a human can equivalently run/g) ?? []).toHaveLength(1);
+    // The nesting tell: the replacement opening immediately after the original's opening backtick.
+    // Not "three backticks anywhere" — the replacement legitimately quotes two commands of its own.
+    expect(out, 'a replacement dropped inside the original backticks').not.toContain('`the CLI:');
+  });
+
   it('keeps the lease advice verbatim where the tools exist', () => {
     const text =
       'drive your own browser with reticle_run { tool: "reticle_lease", action: "acquire", url }';
@@ -73,6 +99,29 @@ describe('advice names a call the reader can actually make', () => {
     expect(out).not.toContain('reticle_lease');
     const parsed = JSON.parse(out) as { recovery: string };
     expect(parsed.recovery).toContain('reticle open');
+  });
+
+  /**
+   * The advice that sent an agent at the one thing the default surface cannot do.
+   *
+   * MEASURED on a real install: `reticle_act` answered `keep: "…keep it as a regression flow with
+   * reticle_flow_save { saveAs: '<name>' }"`, and calling it returned "not reachable on this tool
+   * surface … there is no dispatch tool here to route through".
+   */
+  it('redirects flow-saving advice on a surface that cannot save a flow', () => {
+    const out = liveCallText(
+      'keep it as a regression flow with reticle_flow_save { saveAs: "<name>" }',
+      MERGED,
+    );
+    expect(out).not.toContain('reticle_flow_save');
+    expect(out).toContain('reticle_verify { action: "explore"');
+  });
+
+  it('rewrites the record-then-save pair as one call, not two of the same', () => {
+    const out = liveCallText('record one with reticle_record then reticle_flow_save', MERGED);
+    expect(out).not.toContain('reticle_record');
+    expect(out).not.toContain('reticle_flow_save');
+    expect(out.match(/reticle_verify/g) ?? []).toHaveLength(1);
   });
 
   it('redirects flow management on a surface that has no flow tool and no CLI for it', () => {

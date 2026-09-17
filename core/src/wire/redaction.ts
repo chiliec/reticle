@@ -32,8 +32,13 @@ import { URL_RAW } from './net.js';
 // bundle the session credential and were the one wire payload reaching the journal + the agent
 // unredacted), NOT any key that merely contains the substring — `scopecookie`, `cookieConsent`,
 // `cookiePolicy` are legitimate app values an agent may need to read, and stay visible.
+// Bare `card` and `pan` are boundary-anchored for the same reason, and were added because they were
+// MISSING: a checkout POST was captured as `{"planId":"team","card":"4111111111111111"}` and handed
+// to an agent in full, with `password` redacted in the request beside it. `credit_card` and
+// `card_number` were covered; `card` — what Stripe's own object is called, and the shortest thing
+// anybody names the field — was not. The anchors keep `discard`, `cardinality` and `panel` visible.
 const SENSITIVE_KEY =
-  /password|passwd|passcode|pass[-_]?phrase|(?:otp|totp|mfa|recovery|backup)[-_]?codes?|(?:^|[-_])(?:otp|totp)(?=$|[-_])|secret|(?:(?:access|refresh|auth|bearer|api|id|session|csrf|client)[-_]?tokens?|(?:^|[-_])tokens?(?=$|[-_]))|session[-_]?id|(?:^|[-_])(?:sid|pwd|jwt)(?=$|[-_])|authorization|(?:^|[-_])(?:set[-_])?cookie(?=$|[-_])|api[-_]?key|access[-_]?key|private[-_]?key|client[-_]?secret|credit[-_]?card|card[-_]?number|cvv|cvc|ssn|(?:^|[-_])(?:signature|sig)$|(?:^|[-_])credential$|x-(?:amz|goog)-(?:signature|credential|security-token)$/i;
+  /password|passwd|passcode|pass[-_]?phrase|(?:otp|totp|mfa|recovery|backup)[-_]?codes?|(?:^|[-_])(?:otp|totp)(?=$|[-_])|secret|(?:(?:access|refresh|auth|bearer|api|id|session|csrf|client)[-_]?tokens?|(?:^|[-_])tokens?(?=$|[-_]))|session[-_]?id|(?:^|[-_])(?:sid|pwd|jwt)(?=$|[-_])|authorization|(?:^|[-_])(?:set[-_])?cookie(?=$|[-_])|api[-_]?key|access[-_]?key|private[-_]?key|client[-_]?secret|credit[-_]?card|card[-_]?(?:number|num|no|pan)(?=$|[-_])|(?:^|[-_])(?:card|pan)(?=$|[-_])|cvv|cvc|ssn|(?:^|[-_])(?:signature|sig)$|(?:^|[-_])credential$|x-(?:amz|goog)-(?:signature|credential|security-token)$/i;
 
 /**
  * The built-in rule, always available and never configurable.

@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { timeoutMsSchema } from './args/numeric-bounds.js';
 import { compileSequenceStep } from '@/language/flows/replay.js';
+import { sequenceStepArgs } from './act/act-preflight.js';
 import { ReticleTool } from '@reticlehq/core';
 import { healthEnvelope } from '@/portal/session/session-health.js';
 import {
@@ -91,7 +92,7 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
     steps: z
       .array(z.record(z.unknown()))
       .describe(
-        'Ordered list of { ref | target, action, args?, expect? } objects. Each step is equivalent to one reticle_act call — give `ref` from a snapshot/query, or `target` ({ testid } | { label } | { role, name } | { text }) to resolve in this call. Put confirmDangerous:true in a destructive step args object. `expect` is the same predicate shape as reticle_act_and_wait `until`, and it is what makes a step PROVE something: a step without one is driven, not verified, and the result says so. Naming the consequence is also FASTER — a named consequence is detected the instant it fires, where waiting for the page to settle can only conclude by waiting for silence.',
+        'Ordered list of { ref | target, action, args?, expect? } objects. Each step is equivalent to one reticle_act call, and takes its arguments either way: `{ ref, action: "fill", value: "…" }` flat, as reticle_act does, or nested as `args: { value }`. Give `ref` from a snapshot/query, or `target` ({ testid } | { label } | { role, name } | { text }) to resolve in this call. Put confirmDangerous:true in a destructive step args object. `expect` is the same predicate shape as reticle_act_and_wait `until`, and it is what makes a step PROVE something: a step without one is driven, not verified, and the result says so. Naming the consequence is also FASTER — a named consequence is detected the instant it fires, where waiting for the page to settle can only conclude by waiting for silence.',
       ),
     // A plain number, not boolean|number: a zod union serialises to a JSON-Schema `anyOf` that
     // cost 174 B on a surface re-sent every turn, against 81 B of headroom. One spelling is also
@@ -101,9 +102,7 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
       .min(0)
       .max(BURST_MAX_GAP_MS)
       .optional()
-      .describe(
-        'ms gap between step dispatches, to provoke an ordering race (try 50). Omit to settle fully.',
-      ),
+      .describe('ms gap between dispatches, to provoke an ordering race (try 50). Omit to settle.'),
     onDeviation: z
       .enum([DeviationMode.HALT, DeviationMode.CONTINUE])
       .optional()
@@ -196,18 +195,23 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
               if ('error' === resolved.kind) return { ok: false, error: resolved.message };
               // In burst mode every step carries a zero settle budget, so step N+1 is dispatched
               // while step N is still in flight. That overlap IS the test — see `burst` above.
-              const stepArgs = asRecord(step['args'] ?? {});
               return actCommand(
                 deps,
                 session,
                 {
                   ref: resolved.ref,
                   action: step['action'],
-                  // Return as soon as the dispatch is in: the gap below, not the settle, is what
-                  // paces the sequence. Leaving the default settle here would race rAF and return
-                  // early anyway — a budget is a CEILING, not a floor, which is why an earlier
-                  // attempt to pace with `settleMs` alone produced a 12ms step and no race.
-                  args: burstGapMs === undefined ? stepArgs : { ...stepArgs, settleMs: 0 },
+                  // `sequenceStepArgs` reads a step's arguments flat OR nested — keep it, it is the
+                  // fix for `{ ref, action: "fill", value }` silently losing `value`. Burst only
+                  // LAYERS on top: return as soon as the dispatch is in, because the gap below, not
+                  // the settle, is what paces the sequence. Leaving the default settle here would
+                  // race rAF and return early anyway — a budget is a CEILING, not a floor, which is
+                  // why an earlier attempt to pace with `settleMs` alone produced a 12ms step and
+                  // no race at all.
+                  args:
+                    burstGapMs === undefined
+                      ? sequenceStepArgs(step)
+                      : { ...sequenceStepArgs(step), settleMs: 0 },
                 },
                 perStepTimeout,
               );
@@ -325,7 +329,10 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
        * THOSE THREE and silent about nine. Reporting that as a pass is the arithmetic that buries the
        * nine, so `coverage` rides on every answer and `because` says it in words.
        */
-      const grade = gradeSequence(expectations);
+      const grade = gradeSequence(expectations, {
+        planned: inputSteps.length,
+        dispatched: completed > 0,
+      });
       const ran = stoppedAt ?? stalledAt ?? inputSteps.length;
       const tail = inputSteps.slice(ran + (stoppedAt === undefined ? 0 : 1));
       return withControl(session, {
@@ -341,7 +348,7 @@ export const ACT_SEQUENCE_TOOL: ToolDef = {
           const keep = offerToKeep(grade);
           return keep === undefined ? {} : { keep };
         })(),
-        coverage: { declared: grade.declared, total: inputSteps.length },
+        coverage: { declared: grade.declared, total: grade.total },
         // Verbatim and unmodified: the steps after the break are usually still correct, and handing
         // them back edited invites a caller to re-plan work that was never wrong.
         ...(tail.length > 0 ? { tail: tail.map((raw) => asRecord(raw)) } : {}),

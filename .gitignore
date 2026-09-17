@@ -158,3 +158,7 @@ apps/*/.reticle/
 # mistakes that produced each rule, and those belong to the people who made them, not to the repo.
 /GITHUB.md
 conformance/.handoff/
+
+# Local Verdaccio state (scripts/local-registry.sh). Beside its config so it resolves the same
+# on every OS; see the note in scripts/verdaccio.yaml.
+scripts/.local-registry/
