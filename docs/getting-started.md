@@ -4,7 +4,7 @@ description: 'Zero to your agent verifying your real app, step by step, with wor
 icon: rocket
 ---
 
-**To get started with Reticle: run `npx @reticlehq/server init --flow "<the journey worth proving>"` in your project root.** That one command wires your project, starts your dev server, opens the app, waits for it to connect, and drives that flow to a verdict. You do not restart anything and you do not drive it yourself. Reticle is a verification layer that embeds a dev-only SDK in your running web app so an AI coding agent can prove a change works instead of guessing. It needs Node 20 or newer, an app you run locally, and an agent that speaks MCP.
+**To get started with Reticle: run `npx @reticlehq/server init` in your project root.** Getting started is three stages, and that command is the middle one. **Installation** puts the CLI on the machine. **Onboarding** is `init`: it wires your project, starts your dev server, opens the app and waits for it to connect. **The first run** is what proves anything: `reticle_verify { action: "explore", persona: "<the journey worth proving>" }`, or from a terminal `npx @reticlehq/server verify <url> --explore --persona "<the journey worth proving>"`. A connected app is not a verified one. Reticle is a verification layer that embeds a dev-only SDK in your running web app so an AI coding agent can prove a change works instead of guessing. It needs Node 20 or newer, an app you run locally, and an agent that speaks MCP.
 
 > **Looking for the fast path?** [Quickstart](/quickstart) gets you to a real verdict in five minutes, and every response on it was captured live. [Agentic install](/install-agentic) and [Manual install](/install-manual) cover setup in detail, per agent and per framework.
 >
@@ -84,7 +84,7 @@ Three flags carry what the command cannot work out for itself:
 
 | Flag | What only you know |
 | --- | --- |
-| `--flow "<what>"` | Which journey proves the thing you care about. It can list the buttons on your page; it cannot know that checkout matters and the theme toggle does not. |
+| `persona: "<what>"` | Belongs to the first run, not to `init`. Which journey proves the thing you care about: Reticle can list the buttons on your page; it cannot know that checkout matters and the theme toggle does not. |
 | `--env KEY=VALUE` | What your app needs to reach a usable state: the key from `.env.example`, the mock backend, the variable that skips an auth wall. Repeatable. |
 | `--app <dir>` | Which app in a monorepo. It finds the servable ones; only you know which you are working in. |
 
@@ -348,7 +348,7 @@ If the list is empty, see [Troubleshooting](#troubleshooting).
 
 ## Step 5: Your first verification
 
-> `reticle init --flow "<what>"` drives this for you and saves the flow. This section is what it does, for when you want to do it yourself.
+> `reticle_verify { action: "explore", persona: "<what>" }` drives this for you and saves the flow. This section is what it does, for when you want to do it yourself.
 
 Now just talk to your agent in plain language. For example:
 

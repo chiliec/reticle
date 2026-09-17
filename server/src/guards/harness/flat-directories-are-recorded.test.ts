@@ -138,7 +138,10 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // configs they already keep) and `setup-install.ts` (the three steps only the shell could time).
   // Both are pure — their telemetry reporter is INJECTED, because this directory does not own a
   // telemetry client and the reach guard was right to say so.
-  'server/src/command/setup': 17,
+  // 15 since `drive-agent.ts` and `drive-plan.ts` left with the drive itself: onboarding stops at a
+  // connected app, and the stage that proves a flow runs a model inside the daemon rather than
+  // spawning a second agent CLI. Lowered in the same commit, which is what locks the gain in.
+  'server/src/command/setup': 15,
   // Crossed the line with `drive-url-stamp.ts`: the mark that tells a page Reticle opened it for
   // itself. Its own leaf because the SDK reads the same constant to decide not to show a human a
   // first-run tour over a page nobody is looking at -- a rule split across two packages is worth

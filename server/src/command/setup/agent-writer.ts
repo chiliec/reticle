@@ -117,9 +117,11 @@ check to make it pass.
 
 The cheapest path that answers the question:
 
-- "did my edit break anything?" -> \`reticle_run({ tool: "reticle_verify", args: { action: "change", files: [...] } })\`
-- "does this known journey still work?" -> \`reticle_run({ tool: "reticle_flow_replay", args: { flowName: "..." } })\`
-- "does this new behaviour work?" -> \`reticle_act_sequence\` for the setup, then ONE \`reticle_act_and_wait\`
+- "did my edit break anything?" -> \`reticle_verify { action: "change", files: [...] }\`
+- "does this known journey still work?" -> \`reticle_verify { action: "flows", names: ["..."] }\`
+- "does this new behaviour work?" -> \`reticle_act { steps: [...] }\` for the setup, then ONE \`reticle_act_and_wait\`
+- "nothing is recorded yet" -> \`reticle_verify { action: "explore", persona: "<who does what>" }\`, which
+  drives the app and SAVES what it drove, so the next run replays with no model in the loop
 `;
 
 interface SkillWriteResult {

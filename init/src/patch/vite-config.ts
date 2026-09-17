@@ -108,7 +108,10 @@ function insertImport(source: string): string {
  * single-line array needs the space, or the result reads `[reticle(),react()]`.
  */
 function insertPlugin(source: string, call: string): string {
-  return source.replace(PLUGINS_ARRAY, (match, _g, offset: number) => {
+  // `(match, offset, source)` — PLUGINS_ARRAY has no capture group. Reading the second argument as
+  // one put the whole source string in `offset`, so the index below was `undefined` and the
+  // separator was empty every single time.
+  return source.replace(PLUGINS_ARRAY, (match: string, offset: number) => {
     const next = source[offset + match.length] ?? '';
     const separator = '' === next || /\s/.test(next) ? '' : ' ';
     return `${match}${call},${separator}`;

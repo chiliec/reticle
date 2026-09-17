@@ -9,7 +9,7 @@ You only need this page while you are setting Reticle up, which happens once per
 **One command. It does all of it, and it ends with a verdict.**
 
 ```bash
-RETICLE_INSTALL_SOURCE=skill_file npx @reticlehq/server@latest init --flow "<the journey worth proving>"
+RETICLE_INSTALL_SOURCE=skill_file npx @reticlehq/server@latest init
 ```
 
 `@latest` is deliberate: `npx` caches, and a stale cached CLI is the most common silent setup failure. Never pin a version here.
@@ -22,7 +22,7 @@ The command reads the repository. It cannot read the request, and three things l
 
 | flag | what only you know |
 | --- | --- |
-| `--flow "<what>"` | which journey proves the thing the user asked for. Code can list the buttons; it cannot know checkout matters and the theme toggle does not. Naming it took one real app from a ten-minute timeout to 138 seconds, because the turns go into FINDING a flow. |
+| `persona: "<what>"` | Not an `init` flag. It belongs to the FIRST RUN, `reticle_verify { action: "explore", persona: "<the journey worth proving>" }`. Which journey proves the thing the user asked for: code can list the buttons; it cannot know checkout matters and the theme toggle does not. Naming it took one real app from a ten-minute timeout to 138 seconds, because the turns go into FINDING a flow. |
 | `--env KEY=VALUE` | what the app needs to reach a usable state: the key from `.env.example`, the mock backend in the README, the variable that skips an auth wall. Repeatable. Without it a real app sits on a login screen and there is no flow to drive at all. |
 | `--app <dir>` | which app in a monorepo. It can list the ones that are servable; only the request says which one is being worked on. |
 

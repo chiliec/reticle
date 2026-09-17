@@ -21,25 +21,14 @@ import { openInBrowser } from '@/command/cli/launch/cli-launch.js';
 import { readProjectId } from '@/command/cli/ports/resolve/cli-port.js';
 import { reticleStateHome } from '@/command/daemon/daemon.js';
 import { readDevServers } from '@/command/daemon/dev-servers.js';
-import { chooseDriver, DRIVERS, shouldEscalate } from './drive-plan.js';
-import { driveWith } from './drive-agent.js';
 import { urlOfExistingApp } from './probe/existing-app.js';
-import {
-  binaryExists,
-  flowsSaved,
-  listSessions,
-  OwnedDevServer,
-  probePage,
-} from './node-effects.js';
+import { listSessions, OwnedDevServer, probePage } from './node-effects.js';
 import {
   runSetupPhases,
   type SetupEffects,
   type SetupInput,
   type SetupOutcome,
 } from './run-setup.js';
-
-/** The capabilities file init scaffolds, in the order a project is likely to have it. */
-const CAPABILITY_FILES = ['reticle-dev.tsx', 'reticle-dev.ts', 'reticle-dev.jsx', 'reticle-dev.js'];
 
 /**
  * The dev server a crash should take with it, if one is running right now.
@@ -89,10 +78,6 @@ interface SetupCommandInput extends Omit<SetupInput, 'shape'> {
   readonly invokedAt: string;
   readonly bridgePort: number;
   readonly env: Readonly<Record<string, string>>;
-  readonly flow?: string | undefined;
-  readonly driveBudgetUsd: number;
-  readonly driveModel?: string | undefined;
-  readonly escalateWeakFlow: boolean;
   /** Register the MCP server with the coding agents init does not itself reach. */
   readonly registerAgents: boolean;
 }
@@ -153,12 +138,7 @@ export function registerOtherAgents(print: (line: string) => void): void {
   }
 }
 
-interface SetupCommandResult extends SetupOutcome {
-  /** Set when a weak flow was re-recorded with the stronger model. */
-  readonly escalated?: { readonly from: string; readonly to: string } | undefined;
-  readonly driveTurns?: number | undefined;
-  readonly driveCostUsd?: number | undefined;
-}
+type SetupCommandResult = SetupOutcome;
 
 /**
  * Run the phases against the real world.
@@ -193,10 +173,6 @@ export async function runSetupCommand(
   if (AppShape.WEB !== shape) print(`detected a ${shape} app`);
 
   const server = new OwnedDevServer();
-  // Both roots, because in a monorepo `.reticle/` sits at the app root rather than where setup ran.
-  const flowRoots = [input.invokedAt, input.appDir];
-  let lastDrive: ReturnType<typeof driveWith> | undefined;
-  let escalated: { from: string; to: string } | undefined;
 
   const effects: SetupEffects = {
     startDevServer: (command, cwd) => {
@@ -227,66 +203,6 @@ export async function runSetupCommand(
       }
     },
     listSessions: () => listSessions(input.bridgePort),
-    // Asked before the drive rather than inferred from its result: "nothing to drive with" and
-    // "drove and proved nothing" are different answers and only the second is a failure.
-    driverAvailable: () =>
-      null !==
-      chooseDriver(DRIVERS, (bin) => ({ present: binaryExists(bin), runs: binaryExists(bin) })),
-    drive: (url, session) => {
-      const driver = chooseDriver(DRIVERS, (bin) => ({
-        present: binaryExists(bin),
-        // Present is not enough: a CLI that does not run produces an empty session that looks
-        // exactly like success.
-        runs: binaryExists(bin),
-      }));
-      if (null === driver) return Promise.resolve(null);
-      // Only when the SESSION says they were never finished. init fills this file for a
-      // conventional app — it detects a state library and the testids — so opening it otherwise
-      // spends a turn on work already done, and grants write access nobody needed.
-      const capabilitiesFile =
-        false === session.hasCapabilities
-          ? CAPABILITY_FILES.map((f) => join(input.appDir, 'src', f)).find((p) => existsSync(p))
-          : undefined;
-      print('');
-      print(
-        `  ▸ WATCH ${url} NOW — the HUD is on, and you are about to see Reticle drive your app.`,
-      );
-      print('');
-      const request = {
-        url,
-        sessionId: session.sessionId,
-        tabThrottled: false,
-        budgetUsd: input.driveBudgetUsd,
-        ...(undefined === input.flow ? {} : { flow: input.flow }),
-        ...(undefined === input.driveModel ? {} : { model: input.driveModel }),
-        ...(undefined === capabilitiesFile ? {} : { unfinishedCapabilitiesFile: capabilitiesFile }),
-      };
-      lastDrive = driveWith(driver, request, input.appDir);
-
-      // A weak flow only ACTS, so it passes when the feature is broken — and setup replays saved
-      // flows, which turns one weak recording into a permanent green. Re-record it rather than
-      // hand the trade to the user.
-      if (
-        shouldEscalate({
-          escalationEnabled: input.escalateWeakFlow,
-          fasterModel: input.driveModel,
-          flowSaved: flowsSaved(flowRoots),
-          ...(undefined === lastDrive.grade ? { grade: undefined } : { grade: lastDrive.grade }),
-        })
-      ) {
-        print(
-          `the saved flow graded \`${lastDrive.grade ?? 'unknown'}\` — re-recording with the default model`,
-        );
-        const stronger = driveWith(driver, { ...request, model: undefined }, input.appDir);
-        escalated = { from: lastDrive.grade ?? 'unknown', to: stronger.grade ?? 'unknown' };
-        if (undefined !== stronger.grade) lastDrive = stronger;
-      }
-      if (undefined !== lastDrive.incomplete) {
-        print(`the drive did not finish, and ${lastDrive.incomplete}`);
-      }
-      return Promise.resolve('' === lastDrive.text ? null : lastDrive.text);
-    },
-    flowsSaved: () => flowsSaved(flowRoots),
     now: () => Date.now(),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
     note: print,
@@ -307,9 +223,6 @@ export async function runSetupCommand(
     if (outcome.ok) server.handOver();
     return {
       ...outcome,
-      ...(undefined === escalated ? {} : { escalated }),
-      ...(undefined === lastDrive?.turns ? {} : { driveTurns: lastDrive.turns }),
-      ...(undefined === lastDrive?.costUsd ? {} : { driveCostUsd: lastDrive.costUsd }),
     };
   } finally {
     releaseSignals();

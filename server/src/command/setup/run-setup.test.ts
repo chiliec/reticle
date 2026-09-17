@@ -8,7 +8,6 @@ const INPUT: SetupInput = {
   appDir: '/app',
   devCommand: 'npm run dev',
   openBrowser: true,
-  drive: true,
   shape: AppShape.WEB,
   phaseTimeoutMs: 1_000,
   pollMs: 1,
@@ -35,14 +34,6 @@ function world(
       return Promise.resolve();
     },
     listSessions: (): Promise<CandidateSession[]> => Promise.resolve([{ sessionId: 'new', url }]),
-    // The default world has an agent CLI: that is the ordinary developer machine, and the case
-    // where its absence matters says so explicitly.
-    driverAvailable: () => true,
-    drive: () => {
-      state.driven += 1;
-      return Promise.resolve('Flow: checkout. verified: yes. assertions.grade: asserted');
-    },
-    flowsSaved: () => true,
     now: () => (clock += 10),
     sleep: () => Promise.resolve(),
     note: () => undefined,
@@ -57,13 +48,28 @@ function world(
 }
 
 describe('the whole sequence, when everything works', () => {
-  it('ends with a verdict and a saved flow', async () => {
-    const r = await runSetupPhases(INPUT, world());
+  /*
+   * Onboarding ends at a connected app, and that IS the proof the install worked: the SDK is in
+   * the page, the bridge paired, and the tools have something to talk to.
+   *
+   * Proving a FLOW is the next stage and a different command. This one used to spawn a SECOND
+   * agent CLI to do it, which is why a run on Windows reported "⚠ setup did not finish" over
+   * wiring that had succeeded completely — the `.cmd` shim npm installs cannot be spawned without
+   * a shell, so the child never started.
+   */
+  it('ends when the app is connected, and drives nothing itself', async () => {
+    const fx = world();
+    const r = await runSetupPhases(INPUT, fx);
     expect(r.ok).toBe(true);
-    expect(r.reachedPhase).toBe(SetupPhase.DONE);
-    expect(r.flowSaved).toBe(true);
-    expect(r.verdict).toContain('asserted');
+    expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
+    expect(fx.driven, 'onboarding must not drive; that is the first run').toBe(0);
     expect(r.fallback).toEqual([]);
+  });
+
+  // The stage that DOES prove a flow has to be named, or "connected" reads as "finished".
+  it('names the first run, so the caller knows this is not the end', async () => {
+    const r = await runSetupPhases(INPUT, world());
+    expect(r.notes.join(' ')).toContain('explore');
   });
 
   it('opens the url the dev server announced, never one it composed', async () => {
@@ -114,7 +120,7 @@ describe('it never starts a second server for this project', () => {
       existingAppUrl: () => Promise.resolve(EXISTING),
       listSessions: () => Promise.resolve([{ sessionId: 'already-there', url: EXISTING }]),
     });
-    const r = await runSetupPhases({ ...INPUT, drive: false }, fx);
+    const r = await runSetupPhases(INPUT, fx);
     expect(fx.opened, 'a second tab is how three sessions appear').toEqual([]);
     expect(r.sessionId).toBe('already-there');
     expect(r.ok).toBe(true);
@@ -138,7 +144,7 @@ describe('it never starts a second server for this project', () => {
       existingAppUrl: () => Promise.resolve(EXISTING),
       listSessions: () => Promise.resolve([]),
     });
-    const r = await runSetupPhases({ ...INPUT, drive: false }, fx);
+    const r = await runSetupPhases(INPUT, fx);
     expect(fx.opened).toEqual([EXISTING]);
     expect(r.ok).toBe(false);
     expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
@@ -149,7 +155,7 @@ describe('it never starts a second server for this project', () => {
       existingAppUrl: () => Promise.resolve(EXISTING),
       listSessions: () => Promise.resolve([{ sessionId: 'other', url: 'http://localhost:9999/' }]),
     });
-    const r = await runSetupPhases({ ...INPUT, drive: false }, fx);
+    const r = await runSetupPhases(INPUT, fx);
     expect(r.ok).toBe(false);
     expect(r.sessionId).toBeUndefined();
   });
@@ -202,54 +208,23 @@ describe('when it cannot continue, it says what is left', () => {
     expect(r.sessionId).toBeUndefined();
   });
 
-  it('does not report success when the drive saved nothing', async () => {
-    const fx = world({ flowsSaved: () => false });
-    const r = await runSetupPhases(INPUT, fx);
-    expect(r.ok).toBe(false);
-    expect(r.reachedPhase).toBe(SetupPhase.DRIVE);
-    expect(r.fallback.join(' ')).toContain('asserted');
-  });
-
-  it('says plainly when no agent could drive', async () => {
-    const fx = world({ drive: () => Promise.resolve(null), flowsSaved: () => false });
-    const r = await runSetupPhases(INPUT, fx);
-    expect(r.notes.join(' ')).toContain('nothing was proved');
-  });
-
   /**
-   * An install with nothing to drive it is still an install.
+   * Onboarding stops at connected, so "the drive proved nothing" is no longer a thing this command
+   * can report. It used to: a CI runner has no `claude`, `codex`, `opencode`, `cursor-agent` or
+   * `gemini`, so `init` printed `⚠ setup did not finish` and exited 1 with every step ✓, the app
+   * booted and the daemon up. On Windows it was worse — the agent CLIs npm installs are `.cmd`
+   * shims, which cannot be spawned without a shell, so the drive failed on EVERY machine.
    *
-   * On a CI runner there is no `claude`, `codex`, `opencode`, `cursor-agent` or `gemini`, so the
-   * drive cannot happen — and `init` reported that as `⚠ setup did not finish` and exited 1, with
-   * every step ✓, the app booted and the daemon up. The install gate caught it on Linux, where
-   * nothing is installed; on a developer machine an agent CLI is always present, so nothing local
-   * could see it.
-   *
-   * The distinction is whether anything went WRONG. A drive that ran and proved nothing is a
-   * result. A drive that could not run is the absence of a tool, which is not a defect in the
-   * install and must not be reported as one — a non-zero exit says "this did not work", and it did.
+   * The stage that proves a flow now runs a model inside the daemon, which needs no CLI on the box.
    */
-  it('succeeds when the machine has no agent CLI to drive with', async () => {
-    const fx = world({ driverAvailable: () => false, flowsSaved: () => false });
-    const r = await runSetupPhases(INPUT, fx);
+  it('succeeds on a machine with no agent CLI at all', async () => {
+    const r = await runSetupPhases(INPUT, world());
     expect(r.ok).toBe(true);
-    expect(r.notes.join(' ')).toContain('no agent CLI');
+    expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
   });
 
-  it('still says how to finish the job by hand', async () => {
-    const fx = world({ driverAvailable: () => false, flowsSaved: () => false });
-    const r = await runSetupPhases(INPUT, fx);
-    expect(r.fallback.length).toBeGreaterThan(0);
-  });
-
-  it('still FAILS when a driver existed and the drive proved nothing', async () => {
-    // The negative control. Silencing the no-driver case must not silence a real miss.
-    const fx = world({
-      driverAvailable: () => true,
-      drive: () => Promise.resolve(null),
-      flowsSaved: () => false,
-    });
-    expect((await runSetupPhases(INPUT, fx)).ok).toBe(false);
+  it('does not claim a flow was saved, because it drove nothing', async () => {
+    expect((await runSetupPhases(INPUT, world())).flowSaved).toBe(false);
   });
 });
 
@@ -268,7 +243,7 @@ describe('a desktop app', () => {
     const fx = world({ probePage: () => Promise.resolve({ served: false, sdkInPage: false }) });
     const r = await runSetupPhases({ ...INPUT, shape: AppShape.TAURI }, fx);
     expect(r.ok).toBe(true);
-    expect(r.reachedPhase).toBe(SetupPhase.DONE);
+    expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
   });
 
   it('says why there is no browser and why the wait is long', async () => {
@@ -288,14 +263,6 @@ describe('a desktop app', () => {
 });
 
 describe('opting out', () => {
-  it('--no-drive stops at a connected session and calls that success', async () => {
-    const fx = world();
-    const r = await runSetupPhases({ ...INPUT, drive: false }, fx);
-    expect(r.ok).toBe(true);
-    expect(r.reachedPhase).toBe(SetupPhase.CONNECT);
-    expect(fx.driven).toBe(0);
-  });
-
   it('--no-open still requires something to connect', async () => {
     const fx = world({ listSessions: () => Promise.resolve([]) });
     const r = await runSetupPhases({ ...INPUT, openBrowser: false }, fx);
@@ -405,7 +372,7 @@ describe('a desktop setup is only satisfied by the desktop window', () => {
 
   it('does not accept a browser tab as an electron app', async () => {
     const outcome = await runSetupPhases(
-      { ...INPUT, shape: AppShape.ELECTRON, drive: false },
+      { ...INPUT, shape: AppShape.ELECTRON },
       world({ listSessions: () => Promise.resolve([onUrl('tab', 'web')]) }),
     );
     expect(outcome.ok).toBe(false);
@@ -414,7 +381,7 @@ describe('a desktop setup is only satisfied by the desktop window', () => {
 
   it('accepts the electron window', async () => {
     const outcome = await runSetupPhases(
-      { ...INPUT, shape: AppShape.ELECTRON, drive: false },
+      { ...INPUT, shape: AppShape.ELECTRON },
       world({ listSessions: () => Promise.resolve([onUrl('shell', 'electron')]) }),
     );
     expect(outcome.ok).toBe(true);
@@ -424,7 +391,7 @@ describe('a desktop setup is only satisfied by the desktop window', () => {
   // Web is unchanged: the runtime is not a distinction there.
   it('still accepts a browser tab for a web app', async () => {
     const outcome = await runSetupPhases(
-      { ...INPUT, shape: AppShape.WEB, drive: false },
+      { ...INPUT, shape: AppShape.WEB },
       world({ listSessions: () => Promise.resolve([onUrl('tab', 'web')]) }),
     );
     expect(outcome.ok).toBe(true);
@@ -470,7 +437,7 @@ describe('opening the browser at the moment the app can be driven', () => {
       // Served, forever without the SDK in the document — the Nuxt/React Router shape.
       probePage: () => Promise.resolve({ served: true, sdkInPage: false }),
     });
-    const outcome = await runSetupPhases({ ...INPUT, drive: false }, fx);
+    const outcome = await runSetupPhases(INPUT, fx);
     expect(fx.opened, 'the window that loads the bundle was never opened').toEqual([
       'http://localhost:5173',
     ]);
@@ -488,7 +455,7 @@ describe('opening the browser at the moment the app can be driven', () => {
     // A supplied url skips the dev-server phase, so `served: false` speaks only to the browser
     // decision under test rather than stalling the readiness wait ahead of it.
     const outcome = await runSetupPhases(
-      { ...INPUT, suppliedUrl: 'http://localhost:5173', connectBudgetMs: 600_000, drive: false },
+      { ...INPUT, suppliedUrl: 'http://localhost:5173', connectBudgetMs: 600_000 },
       fx,
     );
     expect(fx.opened, 'nothing should have been opened').toEqual([]);
