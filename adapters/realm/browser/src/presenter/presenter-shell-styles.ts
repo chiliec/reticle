@@ -130,6 +130,13 @@ export const SHELL_CSS = `
   flex:none;display:flex;align-items:center;gap:8px;padding:11px 44px 9px 14px;
   border-bottom:1px solid rgba(255,255,255,.06);}
 [${CHAT_PANEL}] .reticle-chat-brand{display:inline-flex;align-items:center;gap:7px;color:var(--reticle-fg);}
+/* The account capsule lives in the header, not the toolbar. The toolbar row is already 13px over its
+   own width, so a 20px avatar there pushed the close button outside the panel. The header has the
+   space, is visible under exactly the same condition, and is where an account avatar belongs anyway.
+   margin-left:auto right-aligns it; the head reserves 44px of right padding for the caret above it,
+   so the two never overlap. The :empty rule keeps the gap closed when no account state was sent. */
+[${CHAT_PANEL}] .reticle-head-account{margin-left:auto;display:inline-flex;align-items:center;}
+[${CHAT_PANEL}] .reticle-head-account:empty{display:none;}
 [${CHAT_PANEL}] .reticle-chat-brand .reticle-mark{height:14px;width:auto;}
 [${CHAT_PANEL}] .reticle-chat-brandname{font-size:12.5px;font-weight:600;letter-spacing:.01em;}
 /* No state word here: the activity strip immediately below already says "idle · 21s", and the
@@ -249,6 +256,7 @@ export const SHELL_CSS = `
   padding:2px;border-radius:999px;background:rgba(0,0,0,.2);}
 [${HUD}] .reticle-toolbar-chrome{display:inline-flex;align-items:center;gap:2px;flex:none;}
 [${HUD}] .reticle-tb-sep{width:1px;height:14px;background:rgba(255,255,255,.12);margin:0 4px;flex:none;align-self:center;}
+
 [${HUD}] .reticle-tb-wrap{position:relative;display:flex;align-items:center;justify-content:center;overflow:visible;}
 [${HUD}] .reticle-tb-btn{
   flex:none;display:inline-flex;align-items:center;justify-content:center;

@@ -1,6 +1,6 @@
 import { PresenterReport, reportPanelHtml } from './presenter-report.js';
 import type { AccountState } from '@reticlehq/core';
-import { paintWorkspaceAccount } from './presenter-workspace.js';
+import { paintToolbarAccount, TOOLBAR_ACCOUNT_ATTR } from './presenter-workspace.js';
 import { paintSettingsAccount } from './presenter-settings.js';
 import {
   CHAT_MIN_ATTR,
@@ -123,7 +123,7 @@ export class HudShell {
   paintAccount(account: AccountState | undefined, dashboardUrl: string | undefined): void {
     this.#pushedAccount = { account, dashboardUrl };
     if (this.#root === undefined) return;
-    paintWorkspaceAccount(this.#root, account, dashboardUrl);
+    paintToolbarAccount(this.#root, account, dashboardUrl);
     // The settings panel asks the same question and answers it from the same push, so the two can
     // never disagree about whether this machine is signed in.
     paintSettingsAccount(this.#root, account, dashboardUrl);
@@ -157,6 +157,7 @@ export class HudShell {
       <div ${CHAT_PANEL_ATTR} class="reticle-chat-panel ${HUD_SURFACE_CLASS}" role="region" aria-label="Reticle session" aria-hidden="true">
         <div class="reticle-chat-head">
           <span class="reticle-chat-brand">${MARK_SVG}<span class="reticle-chat-brandname">${BRAND_NAME}</span></span>
+          <span ${TOOLBAR_ACCOUNT_ATTR} class="reticle-head-account"></span>
         </div>
         <button type="button" ${CHAT_MIN_ATTR} class="reticle-chat-min" title="${CHAT_MIN_LABEL}" aria-label="${CHAT_MIN_LABEL}">${hiIconHtml(PresenterIcon.CARET_DOWN, PRESENTER_ICON_SIZE.TOOLBAR)}</button>
         ${actStripHtml}

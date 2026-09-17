@@ -17,7 +17,15 @@ const WORKSPACE_COPY_ATTR = 'data-reticle-workspace-copy';
  * row reserves the space and `paintWorkspaceAccount` fills it whenever a snapshot lands, the same
  * way the folder and project rows are painted rather than interpolated.
  */
-export const WORKSPACE_ACCOUNT_ATTR = 'data-reticle-workspace-account';
+/**
+ * The account capsule's slot, in the TOOLBAR rather than the workspace menu.
+ *
+ * It used to sit in the menu's head, which put it inside `.reticle-workspace-wrap` -- a wrapper that
+ * hides itself when no repo root and no leased project id are known. Account state has nothing to do
+ * with whether the checkout is identifiable, so on any app that injects neither, a signed-in user
+ * could never see that they were signed in.
+ */
+export const TOOLBAR_ACCOUNT_ATTR = 'data-reticle-toolbar-account';
 
 /** How long the Sign in control says "Copied" before returning to its label. */
 const COPIED_MS = 1_200;
@@ -75,7 +83,6 @@ export function workspaceRowHtml(): string {
       <div class="reticle-workspace-menu-head">
         <div class="reticle-workspace-menu-title">${WORKSPACE_LABEL}</div>
         <div class="reticle-workspace-menu-actions">
-          <span ${WORKSPACE_ACCOUNT_ATTR}></span>
           <button type="button" class="reticle-workspace-copy" ${WORKSPACE_COPY_ATTR} title="${COPY_PATH_LABEL}" aria-label="${COPY_PATH_LABEL}">${copyIcon}</button>
         </div>
       </div>
@@ -224,12 +231,12 @@ export function mountWorkspaceSelector(root: HTMLElement): () => void {
  * account avatar does in every other product. A panel is something somebody opened to read a
  * result, and interrupting that with a sign-in offer is the nag the report panel's own tests refuse.
  */
-export function paintWorkspaceAccount(
+export function paintToolbarAccount(
   root: HTMLElement,
   account: AccountState | undefined,
   dashboardUrl: string | undefined,
 ): void {
-  const slot = root.querySelector(`[${WORKSPACE_ACCOUNT_ATTR}]`);
+  const slot = root.querySelector(`[${TOOLBAR_ACCOUNT_ATTR}]`);
   if (!(slot instanceof HTMLElement)) return;
   slot.innerHTML = accountCapsuleHtml(account, dashboardUrl, true);
 }

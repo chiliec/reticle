@@ -74,3 +74,42 @@ describe('an account push that beats the mount', () => {
     root.remove();
   });
 });
+
+/**
+ * Where the capsule lives, asserted structurally.
+ *
+ * It used to sit in the workspace menu's head, inside `.reticle-workspace-wrap` — a wrapper that
+ * hides itself when neither a repo root nor a leased project id is known. Account state has nothing
+ * to do with whether the checkout is identifiable, so on any app injecting neither, a signed-in user
+ * could not see that they were signed in. It is not in the toolbar either: that row was already 13px
+ * wider than itself, and a 20px avatar there pushed the close button outside the panel.
+ */
+describe('where the account capsule lives', () => {
+  it('is not inside the self-hiding workspace wrapper', () => {
+    const root = dockRoot();
+    const slot = root.querySelector('[data-reticle-toolbar-account]');
+    expect(slot, 'the slot must exist in the dock markup').not.toBeNull();
+    expect(
+      slot?.closest('.reticle-workspace-wrap'),
+      'a capsule in here is invisible whenever the workspace is unidentifiable',
+    ).toBeNull();
+    root.remove();
+  });
+
+  it('sits in the header row, which is visible whenever the panel is', () => {
+    const root = dockRoot();
+    const slot = root.querySelector('[data-reticle-toolbar-account]');
+    expect(
+      slot?.closest('.reticle-chat-head'),
+      'the header is the always-visible row',
+    ).not.toBeNull();
+    root.remove();
+  });
+
+  it('does not add a fourth group to the toolbar, which has no room for one', () => {
+    const root = dockRoot();
+    const toolbar = root.querySelector('.reticle-toolbar');
+    expect(toolbar?.querySelector('[data-reticle-toolbar-account]')).toBeNull();
+    root.remove();
+  });
+});
