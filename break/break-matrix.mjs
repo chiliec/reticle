@@ -76,7 +76,7 @@ const quietSync = (c) => spawnSync('sh', ['-c', c], { encoding: 'utf8' }).stdout
 function runLauncher(dir, extraArgs = [], env = {}, timeoutMs = 90_000) {
   try {
     const out = execFileSync(
-      // No `--json --timeout --no-drive --no-open`: the installer takes none of them, it forwards
+      // No `--json --timeout --no-open`: the installer takes none of them, it forwards
       // what it is given to `reticle setup install`, and both scenarios here die in the Node guard
       // long before that. Passing them would only describe a command nobody types.
       '/bin/sh',
@@ -105,7 +105,7 @@ function run(dir, extraArgs = [], env = {}, timeoutMs = 90_000) {
     // real browser window at whoever is running the matrix.
     const out = execFileSync(
       process.execPath,
-      [CLI, 'init', '--json', '--timeout', '3', '--no-drive', '--no-open', ...extraArgs],
+      [CLI, 'init', '--json', '--timeout', '3', '--no-open', ...extraArgs],
       {
         cwd: dir,
         encoding: 'utf8',
@@ -350,16 +350,7 @@ const SCENARIOS = [
           code: 1,
           out: execFileSync(
             process.execPath,
-            [
-              CLI,
-              'init',
-              '--json',
-              '--timeout',
-              '3',
-              '--no-drive',
-              '--url',
-              'http://127.0.0.1:59992/',
-            ],
+            [CLI, 'init', '--json', '--timeout', '3', '--url', 'http://127.0.0.1:59992/'],
             {
               cwd: dir,
               encoding: 'utf8',
@@ -477,7 +468,7 @@ const SCENARIOS = [
     run: async (dir) => {
       const child = spawn(
         process.execPath,
-        [CLI, 'init', '--json', '--timeout', '30', '--no-drive', '--no-open'],
+        [CLI, 'init', '--json', '--timeout', '30', '--no-open'],
         {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
@@ -626,7 +617,6 @@ const SCENARIOS = [
               'init',
               '--timeout',
               '3',
-              '--no-drive',
               '--no-open',
               '--url',
               'http://127.0.0.1:59981/',

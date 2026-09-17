@@ -991,7 +991,7 @@ async function driveScaffold(scaffold, index) {
     try {
       report = run(
         'node',
-        [CLI, 'init', '--port', String(SELF_TEST ? bridgePort + 1 : bridgePort), '--no-mcp', '--no-drive'],
+        [CLI, 'init', '--port', String(SELF_TEST ? bridgePort + 1 : bridgePort), '--no-mcp'],
         initFrom,
         {
           npm_config_registry: REGISTRY,
