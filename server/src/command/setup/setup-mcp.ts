@@ -135,14 +135,24 @@ export function setupMcp(io: SetupMcpIo): SetupMcpResult {
   io.reportStep({
     phase: OnboardingPhase.INSTALL,
     step: 'mcp_registered',
-    // SKIPPED when there was nothing to register with — not failed. Nothing went wrong; there was
-    // simply no agent here, and counting that as our failure would hide the ones that are.
+    /*
+     * SKIPPED when there was nothing to register with — not failed. Nothing went wrong; there was
+     * simply no agent here, and counting that as our failure would hide the ones that are.
+     *
+     * FAILED when every client we found needs a hand. That case used to fall through to COMPLETED,
+     * so the cohort with the tools registered NOWHERE was counted among the successful installs, and
+     * the one number that says "did this machine get Reticle" read yes for the people it read no
+     * for. Registering some and not others is still COMPLETED: the agent they are using may well be
+     * one that worked, and a partial win is not a failed step.
+     */
     status:
       0 === detected.length
         ? OnboardingStepStatus.SKIPPED
         : 0 === registered.length && alreadyThere.length > 0
           ? OnboardingStepStatus.SKIPPED
-          : OnboardingStepStatus.COMPLETED,
+          : 0 === registered.length && 0 === alreadyThere.length && manual.length > 0
+            ? OnboardingStepStatus.FAILED
+            : OnboardingStepStatus.COMPLETED,
   });
 
   return { detected, registered, alreadyThere, manual };

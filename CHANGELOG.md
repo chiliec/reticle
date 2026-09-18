@@ -6,7 +6,7 @@ All notable changes to the **`@reticlehq/*`** packages are documented here (each
 
 Nothing yet.
 
-## [3.1.0] — 2026-09-17
+## [3.1.0] — 2026-09-18
 
 **This is the first v3 on npm.** If you are coming from 2.x, everything you need to do is in **[MIGRATION.md](MIGRATION.md)** — it takes about five minutes, and for most people the answer is "nothing". You will also see a `[3.0.0]` section below: that version was tagged but never published, and everything in it is included here. You do not need to read it to upgrade.
 
@@ -103,11 +103,17 @@ Each of these says what you have to do. Full instructions in [MIGRATION.md](MIGR
 
 - **`@reticlehq/engine` — three new published entry points, all of them shapes moving DOWN rather than new behaviour.** `disagreement/contradiction-types.js` (what a contradiction is, separated from the rules that find one), `question/predicate/predicate-eval-kit.js` (what an evaluation answers, and the four comparisons every oracle is written in) and `question/predicate/predicate-session.js` (the subset of a session the predicate engine needs, so a fake can be written without loading the evaluator). Each existed because a module that is CALLED by another had to import back out of its caller to declare its own signature. Nothing moved out of an existing entry point: every previous import path still resolves to the same thing.
 
+- **The HUD says which account you are signed in to, on every surface that shows it.** Clicking the avatar opens the account: the organisation, the host, the project, verdicts, defects found, and a link to the dashboard when the project is linked (or the command to link it when it is not). Everything in it comes off the snapshot the HUD already receives, so nothing is fetched and the page holds no credential. Signing in still happens in your terminal, because only the CLI can write `~/.reticle`, so the control copies `reticle login` rather than pretending to start something.
+
 ### Changed
 
 - **`@reticlehq/server` — the network observer stops billing the agent for the bundler's own traffic**, and returns a body when that body could decide a verdict. The saving is never silent: a truncated or withheld body says so, because a quiet omission is indistinguishable from evidence that did not exist.
 
 - **Every package in this repository is now free of import cycles except one**, which is named and explained where it lives. Nothing about what any package DOES changed.
+
+- **The installer is the install, and it runs in a terminal before you open your agent.** Previously the documented route was to paste a skill file into a running coding agent, which registered the MCP server and then had to restart that agent mid-setup, because a client reads its server list once at startup. That restart ended the agent's turn in the middle of the sequence, and the skill file carried a recovery protocol for it. The order is now stated the same way everywhere: run the install script, open your agent, then `npx @reticlehq/server init` in your project, which is the per-project step in the sense `npm init` is. Nothing to restart, because nothing was open. The script had appeared in two files and in no documentation page at all; it is now in eleven, and every page a newcomer can start from opens with it.
+
+- **The account capsule moved out of a wrapper that hides itself.** It sat inside the workspace chip, which hides whenever neither a repository root nor a linked project id is known, so on any app injecting neither, a signed-in user could never see that they were signed in.
 
 ### Performance
 
@@ -119,9 +125,19 @@ Each of these says what you have to do. Full instructions in [MIGRATION.md](MIGR
 
 #### Your data
 
+- **`@reticlehq/server` — a private repository's file listing was shipping inside the published package.** A doc comment in the flow store was written through an unquoted heredoc, so the shell evaluated the backticked code spans inside it: `git ls-files` expanded into the file and pasted 407 lines of a _different_, private monorepo's layout into shipped source, naming a production CA certificate, a licence-keypair script and a deploy secrets template. It also deleted every other identifier that comment named, so the paragraph explaining why a recorded sign-in must not write a password into a git-checked flow became unreadable. It compiled, it passed every gate, and it reached `dist`, which is what npm serves. Nothing in it was a credential; it was structure. Now capped by a lint rule: one block comment may not exceed 60 lines, where the accident was 423 and the longest real comment in the repository is 45.
+
 - **`@reticlehq/core` — a card number is no longer captured in the clear.** This is the one to read. `SENSITIVE_KEY` matched `credit_card`, `card_number` and `cvv`, and bare `card` — what Stripe's own object is called, and the shortest thing anybody names the field — fell straight through. Measured on a walkthrough app: `POST /api/checkout` reached the agent as `{"planId":"team","card":"4111111111111111"}` with `password` correctly redacted in the request beside it. It got there because Reticle's own verdict told the reader to turn body capture on ("a 200 describes the transport, not the result"). `card`, `pan` and the `card_no`/`card_num` spellings are now boundary-anchored, so `discard`, `cardinality` and `panel` stay visible. **If you enabled network body capture on an app that handles payments, assume card numbers were in your agent's context, and upgrade.**
 
 - **Field measurements about the people using Reticle were shipping in source comments**, and the guard meant to stop them read lines instead of sentences.
+
+#### Installing, and knowing whether it worked
+
+- **`reticle setup mcp` reported `registered codex` and registered nothing.** Codex CLI keeps a TOML config Reticle declines to rewrite, and the registration loop treated every outcome that was not "already there" as applied. With a config present the file gained nothing; with none present it created a **zero-byte `config.toml`**. Either way a Codex user was told they were set up, had no Reticle tools, and was never shown the snippet that would have fixed it. It now prints `BY HAND codex: add the reticle entry to <path>` with the documentation link, and writes nothing.
+
+- **A machine that got the tools NOWHERE was counted as an install.** The `mcp_registered` funnel step fell through to `completed` whenever any client was detected, so the cohort where every client needed a hand was reported as successful. It now reports `failed` when nothing was registered anywhere. Registering some clients and not others is still a completed step.
+
+- **Crash reports never reached us on the path that kills the daemon.** An uncaught exception reported the crash and then exited immediately; the send had a two-second budget and got microseconds. The one class of event nobody can be asked to reproduce was being dropped exactly when it fired. The same bug, found in the same sweep: every verdict and every defect from `reticle verify` (the one-shot and CI surface) was emitted the same way, microseconds before `process.exit`, so the two numbers this product is judged on were missing every unattended run. All three now hand the send to a process that outlives the exit.
 
 #### Windows
 
@@ -130,6 +146,10 @@ Each of these says what you have to do. Full instructions in [MIGRATION.md](MIGR
 - **`scripts/local-registry.sh` runs twice on Windows.** Verdaccio's config named `/tmp/...`, which a Windows verdaccio reads as `C:\tmp` and Git Bash's `rm -rf` reads as `AppData\Local\Temp` — so the advertised "FRESH … reset so user/token + versions are clean" never happened and every run after the first died on `username is already registered`.
 
 #### Things Reticle was telling you that were not true
+
+- **The HUD showed no account about two times in three, for a signed-in machine.** The daemon pushes its snapshot the instant a session connects, which races the HUD's own mount, and a dropped paint was only repaired by the next snapshot: on an idle page that never comes, because a snapshot is pushed by a tool call. Measured on the bench app before the fix, the account reached the page on 6 of 6 loads and reached the DOM on 2; after, 6 of 6. There were two races stacked, one in the SDK's command dispatch and one in the HUD shell, and the first silently answered `applied: false` to a daemon that did nothing with it.
+
+- **Comments in shipped source were carrying things a reader could not use, and a few they should not have been reading.** A competitor named alongside head-to-head token counts, which metric to show an investor, licensing strategy including an unshipped roadmap, and four real third parties with their observed defects attached, including a payments dashboard with the amount. Also 121 citations of measurements a reader cannot look up, 505 lines of history the reader has git for, and twelve doc comments attached to symbols that had moved or been deleted.
 
 - **The onboarding tour was swallowing the agent's clicks**, dimming the thing its spotlight pointed at, and claiming five things its own screen did not support.
 

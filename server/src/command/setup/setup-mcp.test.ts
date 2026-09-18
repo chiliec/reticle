@@ -209,3 +209,40 @@ describe('a config format we will not rewrite', () => {
     expect(result.manual.map((c) => c.id)).toContain('codex');
   });
 });
+
+/**
+ * The funnel must not count a machine with the tools NOWHERE as an install.
+ *
+ * `mcp_registered` fell through to COMPLETED whenever anything was detected, so a machine whose only
+ * client was one we decline to write for (Codex, TOML) was reported as registered. That is the one
+ * number that answers "did this machine get Reticle", and it read yes for exactly the people it read
+ * no for. Registering SOME clients is still a completed step; registering none of them is not.
+ */
+describe('what the funnel is told about registration', () => {
+  const statusOf = (steps: OnboardingStep[]): string | undefined =>
+    stepStatus(steps, 'mcp_registered');
+
+  it('reports FAILED when every client found needs a hand', () => {
+    const { io, steps } = machine({ files: { '.codex/config.toml': '[mcp_servers.other]\n' } });
+    setupMcp(io);
+    expect(
+      statusOf(steps),
+      'the tools are registered nowhere, so this is not a completed step',
+    ).toBe('failed');
+  });
+
+  it('still reports COMPLETED when at least one client was written', () => {
+    const { io, steps } = machine({
+      claudeInstalled: true,
+      files: { '.codex/config.toml': '[mcp_servers.other]\n' },
+    });
+    setupMcp(io);
+    expect(statusOf(steps), 'a partial win is not a failed step').toBe('completed');
+  });
+
+  it('still reports SKIPPED when there was no agent at all', () => {
+    const { io, steps } = machine();
+    setupMcp(io);
+    expect(statusOf(steps), 'no agent here is not our failure').toBe('skipped');
+  });
+});

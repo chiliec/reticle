@@ -37,6 +37,17 @@ export function reportRunTelemetry(run: ReticleVerificationRun): void {
     metrics.recordVerification();
 
     void getTelemetry().emit(TelemetryEventKind.VERIFICATION_COMPLETED, {
+      /*
+       * DETACHED, because `reticle verify` exits straight after this.
+       *
+       * `cli-verify.ts` calls `ports.exit(...)`, which is `process.exit`, and only microtasks sit
+       * between here and it. An in-process send carries a two-second budget and gets none of it, so
+       * the verdict from every unattended run -- CI, a scheduled gate, a one-shot check, which is the
+       * surface most likely to run at scale -- was dropped. The agent loop reports the same event
+       * from `invoke-tool.ts` and stays alive afterwards, so the number looked plausible while
+       * missing exactly the half nobody is watching.
+       */
+      detach: true,
       // A `reticle verify` was typed by a person or scheduled by their CI — either way it is not the
       // agent's own loop, which is the distinction `actor` exists to draw.
       actor: TelemetryActor.HUMAN,
@@ -57,6 +68,8 @@ export function reportRunTelemetry(run: ReticleVerificationRun): void {
       // fix far more often than it is forty.
       const first = metrics.recordBug('flow-regression');
       void getTelemetry().emit(TelemetryEventKind.BUG_FOUND, {
+        // Detached for the same reason as the verdict above: the process exits behind this loop.
+        detach: true,
         actor: TelemetryActor.HUMAN,
         bug: {
           source: BugSource.REPLAY,
