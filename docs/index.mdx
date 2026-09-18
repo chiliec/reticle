@@ -12,9 +12,27 @@ Reticle reads the program from **inside** your running app. Network, state, cons
 
 It answers the only question that matters: did the change actually work? On React it also tells your agent which file to open.
 
-## Install it: paste this into your coding agent
+## Install it
 
-You do not install Reticle by hand, and neither does your agent: it runs one command that does the whole thing. Copy the block below into Claude Code, Cursor, Copilot, Codex, Windsurf, OpenCode, or any MCP agent, and let it wire its own workspace. It ends with the only definition of "installed" that counts: one real flow driven, one real verdict returned.
+Two commands. The first goes in a terminal, before you open your coding agent:
+
+<CodeGroup>
+
+```bash macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh
+```
+
+```powershell Windows
+irm https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.ps1 | iex
+```
+
+</CodeGroup>
+
+That registers the MCP server with every coding agent it can reach, so the `reticle_*` tools are there the next time you open one. Then, in your project, `npx @reticlehq/server init` wires the app. The [quickstart](/quickstart) walks both.
+
+### Or hand the whole thing to your agent
+
+Copy the block below into Claude Code, Cursor, Copilot, Codex, Windsurf, OpenCode, or any MCP agent. It ends with the only definition of "installed" that counts: one real flow driven, one real verdict returned.
 
 ```text
 Reticle is the proof layer for AI coding agents. It runs a dev-only SDK inside my

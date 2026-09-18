@@ -4,7 +4,7 @@ description: 'Zero to your agent verifying your real app, step by step, with wor
 icon: rocket
 ---
 
-**To get started with Reticle: run `npx @reticlehq/server init` in your project root.** Getting started is three stages, and that command is the middle one. **Installation** puts the CLI on the machine. **Onboarding** is `init`: it wires your project, starts your dev server, opens the app and waits for it to connect. **The first run** is what proves anything: `reticle_verify { action: "explore", persona: "<the journey worth proving>" }`, or from a terminal `npx @reticlehq/server verify <url> --explore --persona "<the journey worth proving>"`. A connected app is not a verified one. Reticle is a verification layer that embeds a dev-only SDK in your running web app so an AI coding agent can prove a change works instead of guessing. It needs Node 20 or newer, an app you run locally, and an agent that speaks MCP.
+**To get started with Reticle: run the installer, open your coding agent, then run `npx @reticlehq/server init` in your project root.** Getting started is three stages. **Installation** is one command in a terminal, `curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh` (or `irm https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.ps1 | iex` on Windows): it puts the CLI on the machine and registers the MCP server with every agent it can reach, so the tools are there the next time you open your agent. **Onboarding** is `init`: it wires your project, starts your dev server, opens the app and waits for it to connect. **The first run** is what proves anything: `reticle_verify { action: "explore", persona: "<the journey worth proving>" }`, or from a terminal `npx @reticlehq/server verify <url> --explore --persona "<the journey worth proving>"`. A connected app is not a verified one. Reticle is a verification layer that embeds a dev-only SDK in your running web app so an AI coding agent can prove a change works instead of guessing. It needs Node 20 or newer, an app you run locally, and an agent that speaks MCP.
 
 > **Looking for the fast path?** [Quickstart](/quickstart) gets you to a real verdict in five minutes, and every response on it was captured live. [Agentic install](/install-agentic) and [Manual install](/install-manual) cover setup in detail, per agent and per framework.
 >
@@ -98,13 +98,22 @@ Then restart your dev server and skip to [Step 4](#step-4-run-it-and-verify-the-
 
 You don't start the server manually; your agent starts it via MCP. Register Reticle **once, at the user (global) scope** so every project picks it up. There's nothing to add per project.
 
+**The installer does this for every agent on the machine**, which is why it is the first thing on the [quickstart](/quickstart):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh     # macOS, Linux
+irm https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.ps1 | iex          # Windows PowerShell
+```
+
+Run it in a terminal before you open your agent and there is nothing to restart. The rest of this section is what it writes, for a machine where you would rather do it by hand.
+
 **Claude Code**, one command:
 
 ```bash
 claude mcp add reticle -s user -- npx @reticlehq/server mcp
 ```
 
-(`reticle init` runs exactly this for you. `-s user` is what makes it global; drop it for a project-local registration instead.)
+(`reticle setup mcp` and `reticle init` both run exactly this for you. `-s user` is what makes it global; drop it for a project-local registration instead.)
 
 **Cursor**: add to your global `~/.cursor/mcp.json` (not per-project; `reticle init` writes this for you):
 
@@ -116,7 +125,7 @@ claude mcp add reticle -s user -- npx @reticlehq/server mcp
 }
 ```
 
-Other MCP clients (Windsurf, Claude Desktop, …) use the same `command`/`args` shape. Restart the agent so it picks up the new server. When it launches Reticle, the bridge starts listening on `ws://localhost:4400`.
+Other MCP clients (Windsurf, Claude Desktop, …) use the same `command`/`args` shape. An agent that was already open reads its server list at startup, so reopen it once. When it launches Reticle, the bridge starts listening on `ws://localhost:4400`.
 
 > Want a different port? Set `RETICLE_PORT` in the server `env` and pass the same URL to `reticle.connect({ url })` in Step 2.
 

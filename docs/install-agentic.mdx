@@ -5,11 +5,20 @@ description: One command wires Reticle into your project, boots the app and prov
 icon: wand-magic-sparkles
 ---
 
-**Run `npx @reticlehq/server init` in your project root.** It registers the MCP server for every agent it finds, installs the SDK, wires your build config, writes the agent rule files, and prints a plan you can read. It is idempotent, so running it twice is safe.
+**Run `npx @reticlehq/server init` in your project root.** It installs the SDK, wires your build config, writes the agent rule files, boots the app, and prints a plan you can read. It is idempotent, so running it twice is safe.
 
 ```bash
 npx @reticlehq/server init
 ```
+
+<Note>
+  This is the PROJECT step. The machine step comes first and is one command in a terminal, `curl
+  -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh`, which
+  registers the MCP server with every agent it can reach so the tools are there when you open your
+  agent. `init` will register the server itself if nobody has, but doing it from inside an agent
+  that has already read its server list means the tools cannot appear until that agent restarts.
+  Terminal first, then open the agent, then `init`. See the [quickstart](/quickstart).
+</Note>
 
 The install is designed for the agent to run rather than you. The agent is about to be the primary user of this tool, so it may as well set up its own workspace.
 

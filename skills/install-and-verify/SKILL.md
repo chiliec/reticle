@@ -36,7 +36,14 @@ cat .reticle.json 2>/dev/null || echo NOT_FOUND
 - `NOT_FOUND` → **SETUP** below.
 - File exists → **VERIFY** below. If `reticle_sessions` then returns an empty list, go to [references/troubleshooting.md](references/troubleshooting.md); do not restart setup.
 
-Both paths are about THIS PROJECT. Installing Reticle on the machine is a separate, once-per-machine command that puts the CLI on PATH and registers the MCP server with every agent: `curl -fsSL https://reticle.sh/install.sh | sh`, or `irm https://reticle.sh/install.ps1 | iex` on Windows. A human may have run it already. You do not need it, because `init` registers the MCP server too when nobody has, which is why SETUP works whether or not that ever happened.
+Both paths are about THIS PROJECT. The machine step is separate and comes first: one command that puts the CLI on PATH and registers the MCP server with every agent it can reach.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh     # macOS, Linux
+irm https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.ps1 | iex          # Windows PowerShell
+```
+
+**If you can see `reticle_*` tools, that already happened and you can ignore it.** If you cannot, hand the user that one line to run in a terminal and stop there. `init` can register the MCP server itself, but doing it from inside a client that has already read its server list means the tools cannot appear until the client restarts, which ends your turn in the middle of setup. The terminal-first order is what removes that step, so do not work around it.
 
 ## Read this before you touch SETUP
 

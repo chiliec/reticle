@@ -35,13 +35,28 @@ describe('the sequence is named as a sequence', () => {
   });
 });
 
-describe('the one legitimate pause has a way back', () => {
+describe('the block does not teach the restart that is no longer on the path', () => {
   /**
-   * The restart is real and unavoidable on a first install. What must not be lost is what to do on
-   * the other side of it, because the terminal that said so is gone.
+   * This replaces a test that asserted the opposite, and the reason is a change in the product.
+   *
+   * It used to read: "the restart is real and unavoidable on a first install, so what must not be
+   * lost is what to do on the other side of it". That was true when the MCP server was registered
+   * from inside the client that then had to reload. The machine step now runs in a terminal BEFORE
+   * the client opens, so there is nothing to come back from, and guidance about resuming after a
+   * restart teaches a sequence that costs a user their install.
+   *
+   * It was also, by then, passing for the wrong reason: the phrase it matched had moved into an
+   * unrelated sentence about feedback ("then carry on with your task"), so it went green while the
+   * paragraph it was written to protect had already been rewritten. A test that survives the removal
+   * of its own subject is not evidence, which is why this asserts the ABSENCE instead.
    */
-  it('tells the agent to resume after a client restart rather than wait', () => {
-    expect(RULE_BODY).toMatch(/resume|pick (it |the sequence )?back up|carry on/i);
+  it('does not tell the agent to pause mid-setup for a client restart', () => {
+    const restartPause =
+      /(legitimate|one) pause[^.]*restart|restart[^.]*then resume|after the restart/i;
+    expect(
+      RULE_BODY,
+      'the installer registers the MCP server before the client opens, so a mid-setup restart is not a step',
+    ).not.toMatch(restartPause);
   });
 
   it('points at the full ladder rather than repeating it', () => {

@@ -168,6 +168,20 @@ function reportCrash(kind: CrashKind, value: unknown): void {
     // single commonest crash shape in a loopback-heavy tool.
     const cause = crashCause(value, knownPorts());
     void getTelemetry().emit(TelemetryEventKind.RUNTIME_CRASHED, {
+      /*
+       * DETACHED, because the fatal path exits immediately behind this call.
+       *
+       * `uncaughtException` reports the crash and then calls `onFatal`, which is
+       * `process.exit(1)` in `cli.ts`. An in-process send has a 2s budget and gets microseconds, so
+       * every crash report on the path that actually kills the daemon was being dropped: the one
+       * class of event you cannot ask the user to reproduce, lost precisely when it fired. A
+       * disowned child outlives the exit and sends it.
+       *
+       * This is the `daemon_stopped` bug again, one handler over. That one was emitted
+       * fire-and-forget before `process.exit(0)`, nothing threw, no test reddened, and the data was
+       * gone for months.
+       */
+      detach: true,
       // A crash is ALWAYS reached through something the agent asked for — the daemon does nothing on
       // its own — so attributing it to the agent is accurate rather than a guess.
       actor: TelemetryActor.AGENT,

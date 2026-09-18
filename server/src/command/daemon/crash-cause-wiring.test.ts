@@ -101,3 +101,62 @@ describe('a crash with no Reticle frames still reports where it was', () => {
     expect(serialized).not.toContain('4400');
   });
 });
+
+/**
+ * A crash report has to outlive the exit that caused it.
+ *
+ * `uncaughtException` reports the crash and then calls `onFatal`, which in `cli.ts` is
+ * `process.exit(1)`. An in-process send carries a 2s budget and gets microseconds, so every crash
+ * report on the one path that actually kills the daemon was dropped: nothing threw, no test
+ * reddened, and the events simply never arrived. `detach: true` hands the send to a disowned child
+ * that outlives the exit, which is the same fix `daemon_stopped` needed for the same reason.
+ *
+ * `unhandledRejection` deliberately does NOT exit, so it is the control: if the assertion below ever
+ * passes for both, it has stopped testing the exit path.
+ */
+describe('a crash report survives the exit it is reporting', () => {
+  beforeEach(() => {
+    emit.mockClear();
+  });
+
+  const crashExtra = (): TelemetryExtra | undefined =>
+    emit.mock.calls.find((c) => TelemetryEventKind.RUNTIME_CRASHED === c[0])?.[1];
+
+  it('is detached on the fatal path, because process.exit follows immediately', () => {
+    const proc = fakeProc();
+    let exited = false;
+    installDaemonResilience(
+      proc,
+      () => undefined,
+      () => {
+        exited = true;
+      },
+    );
+
+    proc.fire('uncaughtException', new Error('truly unexpected'));
+
+    expect(exited, 'the guard depends on this path exiting; if it stops, rewrite the test').toBe(
+      true,
+    );
+    expect(
+      crashExtra()?.detach,
+      'an in-process send gets microseconds before process.exit and never lands',
+    ).toBe(true);
+  });
+
+  it('still reports the crash at all, so the flag has something to carry', () => {
+    const proc = fakeProc();
+    installDaemonResilience(
+      proc,
+      () => undefined,
+      () => undefined,
+    );
+
+    proc.fire('uncaughtException', new Error('truly unexpected'));
+
+    expect(
+      emit.mock.calls.map((c) => c[0]),
+      'guards the guard: no emit means the assertion above passes for free',
+    ).toContain(TelemetryEventKind.RUNTIME_CRASHED);
+  });
+});

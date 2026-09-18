@@ -3,9 +3,18 @@
 This directory holds the only thing a person runs before Reticle exists on their machine:
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh
+irm https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.ps1 | iex
+```
+
+**The raw GitHub URL is the one the docs use today**, because `reticle.sh/install.sh` is not being served yet. When it is, the short form below becomes the published one and the raw URL keeps working:
+
+```bash
 curl -fsSL https://reticle.sh/install.sh | sh     # macOS, Linux, and Windows under Git Bash or WSL
 irm https://reticle.sh/install.ps1 | iex          # stock Windows PowerShell
 ```
+
+Both forms fetch this same file. If you change the published URL, change it in the docs too: a `git grep raw.githubusercontent.com/reticlehq/reticle/main/install` finds every copy.
 
 Both are LAUNCHERS. Between them they do only the three things that cannot be Node, because Node may not exist yet:
 

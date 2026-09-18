@@ -66,6 +66,13 @@ export function handleSetupMcp(reportStep: StepReporter, standalone = true): voi
   }
   for (const id of result.registered) io.print(`  registered  ${id}`);
   for (const id of result.alreadyThere) io.print(`  already     ${id}`);
+  // Said, not skipped. These are the clients whose format we will not rewrite, and they used to be
+  // counted as registered: the line below is the difference between a user who adds four lines to
+  // one file and a user who believes they are set up and has no tools.
+  for (const client of result.manual) {
+    io.print(`  BY HAND     ${client.id}: add the reticle entry to ${client.configPath}`);
+    if (client.docs !== undefined) io.print(`              see ${client.docs}`);
+  }
   /*
    * The OTHER agents, which `init` already reaches and this did not.
    *

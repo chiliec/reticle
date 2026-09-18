@@ -137,3 +137,75 @@ describe('file-backed clients still work', () => {
     expect(writes).toEqual([]);
   });
 });
+
+/**
+ * A format we decline to rewrite must not be reported as registered.
+ *
+ * Codex CLI keeps TOML, and `mergeClientConfig` answers MANUAL for it: the result's `content` is
+ * documented as byte-identical to the existing file in that case. The loop handled ALREADY and
+ * treated everything else as applied, so Codex was pushed onto `registered` and its config written
+ * back unchanged. Two ways that hurt, and both were reproduced against a sandboxed HOME before this
+ * test existed: with a config present the file gained nothing while the installer said
+ * `registered  codex`, and with none present it created a ZERO-BYTE `config.toml` and said the same.
+ * Either way a Codex user was told they were set up, had no Reticle tools, and was shown no snippet.
+ */
+describe('a config format we will not rewrite', () => {
+  const CODEX_CONFIG = '.codex/config.toml';
+  const EXISTING = '[mcp_servers.other]\ncommand = "foo"\n';
+
+  it('is reported as needing a hand, not as registered', () => {
+    const { io } = machine({ files: { [CODEX_CONFIG]: EXISTING } });
+    const result = setupMcp(io);
+
+    expect(result.detected, 'the marker was there, so it was seen').toContain('codex');
+    expect(
+      result.registered,
+      'claiming this leaves a Codex user with no tools and no instruction',
+    ).not.toContain('codex');
+    expect(result.manual.map((c) => c.id)).toContain('codex');
+  });
+
+  it('names the file to edit and where the shape is documented', () => {
+    const { io } = machine({ files: { [CODEX_CONFIG]: EXISTING } });
+    const entry = setupMcp(io).manual.find((c) => 'codex' === c.id);
+
+    expect(entry?.configPath, 'a manual step with no path is not actionable').toContain(
+      CODEX_CONFIG,
+    );
+    expect(entry?.docs, 'the TOML shape is the part nobody can guess').toBeDefined();
+  });
+
+  it('does not touch the file, so an existing config is never rewritten', () => {
+    const { io, writes } = machine({ files: { [CODEX_CONFIG]: EXISTING } });
+    setupMcp(io);
+
+    expect(
+      writes.filter((w) => w.path.includes('.codex')),
+      'writing byte-identical content is at best a no-op and at worst a truncation',
+    ).toEqual([]);
+  });
+
+  it('creates no file at all when there is none, rather than an empty one', () => {
+    // The marker is the DIRECTORY, so the client is detected with no config file present.
+    const { io, writes } = machine({ files: { '.codex/other.toml': 'x' } });
+    setupMcp(io);
+
+    expect(
+      writes.filter((w) => w.path.includes('config.toml')),
+      'an empty config.toml reads as a finished registration to everything that looks at it',
+    ).toEqual([]);
+  });
+
+  /* The rest of the machine must still register, or one manual client would cost every other one. */
+  it('does not stop the clients it CAN write', () => {
+    const { io } = machine({
+      claudeInstalled: true,
+      files: { [CODEX_CONFIG]: EXISTING, '.cursor/mcp.json': '{}' },
+    });
+    const result = setupMcp(io);
+
+    expect(result.registered).toContain('claude-code');
+    expect(result.registered).toContain('cursor');
+    expect(result.manual.map((c) => c.id)).toContain('codex');
+  });
+});

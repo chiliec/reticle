@@ -48,12 +48,32 @@ export interface SetupMcpResult {
   readonly detected: readonly string[];
   readonly registered: readonly string[];
   readonly alreadyThere: readonly string[];
+  /**
+   * Clients whose config this will NOT rewrite, and which therefore still need a human.
+   *
+   * Separate from `registered` because it used to be inside it. `mergeClientConfig` answers MANUAL
+   * for a format we decline to rewrite, and documents its `content` as byte-identical to the
+   * existing file in that case, so writing it is a no-op when the file exists and creates an EMPTY
+   * one when it does not. The loop below handled ALREADY and treated everything else as applied, so
+   * Codex CLI was reported `registered` while its `config.toml` gained nothing: a false success in
+   * the install path, and the user got no tools and no snippet either. Reproduced with an empty HOME
+   * and a pre-seeded `~/.codex/config.toml`; the file came back byte-identical both times.
+   */
+  readonly manual: readonly ManualClient[];
+}
+
+/** A client the caller has to tell somebody about, with the two facts they need to act. */
+export interface ManualClient {
+  readonly id: string;
+  readonly configPath: string;
+  readonly docs: string | undefined;
 }
 
 export function setupMcp(io: SetupMcpIo): SetupMcpResult {
   const detected: string[] = [];
   const registered: string[] = [];
   const alreadyThere: string[] = [];
+  const manual: ManualClient[] = [];
 
   /*
    * Claude Code first, because nothing else can find it.
@@ -89,6 +109,13 @@ export function setupMcp(io: SetupMcpIo): SetupMcpResult {
       alreadyThere.push(client.id);
       continue;
     }
+    // A format we decline to rewrite is not a registration. Writing `content` here would be a no-op
+    // on an existing file and would CREATE an empty one otherwise, and either way claiming success
+    // sends somebody to an agent that has no Reticle tools in it.
+    if (ClientMergeStatus.MANUAL === merged.status) {
+      manual.push({ id: client.id, configPath: client.configPath, docs: spec.docs });
+      continue;
+    }
     io.writeFile(client.configPath, merged.content);
     registered.push(client.id);
   }
@@ -118,7 +145,7 @@ export function setupMcp(io: SetupMcpIo): SetupMcpResult {
           : OnboardingStepStatus.COMPLETED,
   });
 
-  return { detected, registered, alreadyThere };
+  return { detected, registered, alreadyThere, manual };
 }
 
 /** Everything this machine could be asked about, for the report when nothing was found. */

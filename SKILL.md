@@ -8,11 +8,22 @@ This file is the whole critical path and nothing else. Everything it leaves out 
 
 Do not spend a turn working out which path you are on.
 
+**`reticle_*` tools visible?** The machine is set up. Go straight to the project:
+
 ```bash
 RETICLE_INSTALL_SOURCE=skill_file npx @reticlehq/server@latest init
 ```
 
-That is ONBOARDING, and where it stops: wire, boot, wait for a session. Idempotent, reporting `·` for what is already there. Then the FIRST RUN, which proves anything at all:
+**Not visible?** Hand the user one line to run in a terminal, outside this client, and stop there:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh
+irm https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.ps1 | iex   # Windows
+```
+
+It registers the MCP server with every agent it can reach; they reopen this client and the tools are there. Do not instead register it yourself and then work around your client not having reloaded: that is the sequence that breaks.
+
+`init` is ONBOARDING, and where it stops: wire, boot, wait for a session. Idempotent, reporting `·` for what is already there. Then the FIRST RUN, which proves anything at all:
 
 ```
 reticle_verify { action: "explore", persona: "<the journey worth proving>" }
@@ -38,17 +49,12 @@ Everything between here and there is a rule the steps assume. Read it as you go,
 
 Questions you must not ask, because the repo you are sitting in already answers them: which framework, which package manager, which port, which editor or MCP client, whether to start the dev server, whether to open the browser, whether to carry on. Decide, act, and say what you did in one line.
 
-There are exactly three places you may stop, and none is a question about a preference:
+There are exactly two places you may stop, and neither is a question about a preference:
 
 1. **No recognisable dev script in `package.json`.** Say so; do not invent one.
 2. **Your host asks the human to approve a command.** That prompt belongs to the host. Never bypass or suppress it, and take a refusal as the answer. `init` writing a pre-approval rule for the `reticle` server is not that: it is a scoped, announced config change the human asked for by running the command, and it covers only Reticle's own tools.
-3. **The client restart that loads the MCP tools**, when your client has not got them yet: a client reads its server list once at startup. Coming back, you are on the first run. Start it without being asked.
 
-**On Claude Code and Codex, do not ask the human to restart at all.** `npx @reticlehq/server init --relaunch` prints the exact resume command for this conversation; run that command yourself rather than handing the person a chore. It refuses when the id has no transcript behind it, because `--resume` on an empty id opens a blank session that looks exactly like success. Everywhere else the restart genuinely is theirs: name the one step for their client and ask for that alone.
-
-If you do have to stop, the restart ends your turn. This file was fetched into the context that just ended, so nothing carries it across unless you make it. **Before you trigger the restart, write the remaining steps into `RETICLE-SETUP.md` at the repo root**, one line each, with the step you stopped at marked. That file is what you re-read afterwards. Delete it once step 5 has produced a verdict.
-
-**After the restart, resume at the step you were on.** Do not start over, and do not skip forward.
+**A client restart is not one of them, and that is the point.** Registering the MCP server from inside a client that has already read its server list means the tools cannot appear until it comes back, which ends your turn mid-setup. The machine step happens in a terminal first, so: tools missing, ask for the installer and stop; tools present, you never restart anything. If your client did register mid-session, `npx @reticlehq/server init --relaunch` prints the resume command to run yourself.
 
 ## Feedback is first-class
 
