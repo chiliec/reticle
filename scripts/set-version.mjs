@@ -46,6 +46,22 @@ const tracked = (...patterns) =>
     .split('\n')
     .filter((line) => line.length > 0);
 
+/**
+ * Manifests this script must NOT touch, however the glob widens.
+ *
+ * `open-verification` is the protocol, published unscoped so somebody other than us can implement
+ * it, and its version answers to the SPECIFICATION rather than to this repository's release train.
+ * It was born at `2.14.0` purely because this glob reached it on the day it was created, rode to
+ * `3.1.0` the same way, and shipped an rc claiming two majors of breaking changes to an API that
+ * had never been published — while `OVP_VERSION` stood at `1.0` throughout. The number is the
+ * first thing an implementer reads about maturity, so it is now theirs, not ours:
+ * `package-version-is-not-the-monorepo.test.ts` holds package major to protocol major.
+ *
+ * The lockstep rule in RELEASING.md is written about `@reticlehq/*`, and this package deliberately
+ * carries no scope. Everything else here still moves together.
+ */
+const NOT_LOCKSTEPPED = new Set(['open-verification/package.json']);
+
 const current = JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')).version;
 
 /**
@@ -59,7 +75,9 @@ const RULES = [
   {
     what: 'package.json version field',
     files: () =>
-      tracked('package.json', '*/package.json', '*/*/package.json', '*/*/*/package.json'),
+      tracked('package.json', '*/package.json', '*/*/package.json', '*/*/*/package.json').filter(
+        (f) => !NOT_LOCKSTEPPED.has(f),
+      ),
     edit: (text, from, to) => text.replace(`"version": "${from}"`, `"version": "${to}"`),
   },
   {

@@ -4,6 +4,16 @@ Notable changes to the **`open-verification`** package and to the **Open Verific
 
 Two numbers appear in every heading and they are not the same number. The **package** version is semver over the published TypeScript distribution. The **protocol** version, stamped as `OVP_VERSION`, is the specification an artifact was produced under. A package major may break the code an implementer imports while the protocol stands still, and most implementers import nothing. [VERSIONING.md](./VERSIONING.md) names all four numbers in play.
 
+## [1.0.0] — 2026-09-18 · protocol 1.0 · wire 1 · flow grammar 2
+
+**The package version is renumbered from `3.1.0` to `1.0.0`, and nothing in the protocol changed.**
+
+This package is created inside a monorepo whose release script stamps one version across every manifest, so it was born at `2.14.0`, rode to `3.1.0`, and published one rc — `3.1.0-rc.0` — while `OVP_VERSION` stood at `1.0` and the schema `$id` said `/schema/v1`. Two majors of breaking changes to a JS API that had never been published. The number was inherited, not earned, and on a specification somebody else is meant to implement the number is the first thing they read about its maturity.
+
+`1.0.0` is the first stable release, and its major now matches the protocol's. The package is out of the monorepo's lockstep (`scripts/set-version.mjs` skips it) and moves on its own from here — a breaking change to the published JS API is still a package major even if the specification stands still, which is what the four numbers in [VERSIONING.md](./VERSIONING.md) exist to keep apart.
+
+Nothing to migrate: `3.1.0-rc.0` was a prerelease, and the exported API, the schemas and the adjudication order are unchanged.
+
 ## [Unreleased]
 
 Nothing yet. Changes arrive through [CHANGE-PROCESS.md](./CHANGE-PROCESS.md), and one touching the adjudication order arrives with the test vector proving an implementation can still agree with it.

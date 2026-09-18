@@ -12,10 +12,16 @@ A reader who sees "version 1" here cannot otherwise tell which is meant. They ar
 | --- | --- | --- |
 | **Protocol version** | `OVP_VERSION = '1.0'` (`src/vocabulary/run.ts`) | The specification an artifact was produced under. Stamped on a `VerificationRun`. |
 | **Wire version** | SPEC §12, "the current wire protocol version is 1" | The framing of the four reference-transport messages, nothing else. §12 is non-normative, so it binds only implementations that chose that transport. |
-| **Package version** | `open-verification` on npm, currently `3.1.0` | The TypeScript distribution: exported code, generated schemas, tests. Semver over the published JS API. |
+| **Package version** | `open-verification` on npm, currently `1.0.0` | The TypeScript distribution: exported code, generated schemas, tests. Semver over the published JS API. |
 | **Flow grammar version** | `OVP_FLOW_GRAMMAR_VERSION = 2` (`src/vocabulary/memory.ts`) | The Flow document grammar only, so a reader can tell "predates that field" from "omitted it". |
 
-Package `3.1.0` carries protocol `1.0`, wire `1` and flow grammar `2`. The package has moved two majors while the protocol stayed at one, which is expected: a package major breaks the code an implementer imports, and most implementers import nothing. The schema `$id` base is `https://open-verification.dev/schema/v1`, and the `v1` there is the PROTOCOL major.
+Package `1.0.0` carries protocol `1.0`, wire `1` and flow grammar `2`. The schema `$id` base is `https://open-verification.dev/schema/v1`, and the `v1` there is the PROTOCOL major.
+
+This line used to read "the package has moved two majors while the protocol stayed at one, which is expected" — and it described a history that never happened. The package was created inside a monorepo whose release script stamps one version across every manifest, so it was born at `2.14.0`, rode to `3.1.0`, and published an rc claiming two majors of breaking changes to an API that had never shipped at all. Nothing had broken; a number had been inherited, and the sentence was written to explain it rather than to fix it. The package is out of that lockstep now (`scripts/set-version.mjs` skips it) and its major tracks the protocol's, so the four numbers above are the only thing a reader has to keep apart.
+
+The package is expected to leave this repository eventually and be developed on its own. That is the reason to settle the number NOW rather than after the move: a version is the one thing that cannot be corrected later, because npm is immutable and every install in the wild resolves against it. Moving a repository is a day's work; unwinding a published `3.x` that claimed a history it never had is not possible at all.
+
+The majors moving together is a convenience, not a rule: a breaking change to the published JS API with no change to the specification would still be a package major, and is exactly what the four-number split exists to allow.
 
 ## Which artifact is authoritative for what
 

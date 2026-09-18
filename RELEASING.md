@@ -6,6 +6,8 @@ How versions are decided, cut, and announced. If you're contributing, the only p
 
 Every published `@reticlehq/*` package shares **one version, bumped in lockstep** — `core`, `browser`, and `server` speak the same wire contract, so a user pairing `browser@2.2.1` with `server@2.3.0` is a support question we don't want. One number means "these were tested together".
 
+**`open-verification` is deliberately outside that.** It carries no scope because it is the protocol, not our implementation of it, and its version answers to the specification rather than to this release train — package major tracks `OVP_VERSION`, held there by a test in the package and by the `NOT_LOCKSTEPPED` exclusion in `scripts/set-version.mjs`. It rode the lockstep until 3.1.0 and published an rc claiming two majors it had never taken; it is `1.0.0` now and moves on its own. Bumping the monorepo does not bump it, and `pnpm -r publish` still publishes it because the dependents pin it by exact version at pack time. The package is expected to move to its own repository; when it does, this exclusion and the guard beside it are what make that a relocation rather than a renumbering.
+
 [SemVer](https://semver.org), where the public surface is: the MCP tool names and their input/output shapes, the wire contract in `@reticlehq/core`, the exported API of each package, the `reticle` CLI flags, and the on-disk flow/journal format.
 
 - **patch** — bug fix, a new false-green class caught, docs, perf.
