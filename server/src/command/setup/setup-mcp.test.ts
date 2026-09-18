@@ -169,9 +169,15 @@ describe('a config format we will not rewrite', () => {
     const { io } = machine({ files: { [CODEX_CONFIG]: EXISTING } });
     const entry = setupMcp(io).manual.find((c) => 'codex' === c.id);
 
-    expect(entry?.configPath, 'a manual step with no path is not actionable').toContain(
-      CODEX_CONFIG,
-    );
+    // Compared with forward slashes because `configPath` is built by `join()`, which emits `\` on
+    // Windows: the raw value there is `...\.codex\config.toml` and a POSIX-spelled `toContain`
+    // can never match it. The product is right -- that IS the actionable path on that machine --
+    // so it is the assertion that has to stop being platform-specific. This went red on the
+    // `windows` CI job, which had been green on the three runs before it.
+    expect(
+      entry?.configPath.replaceAll('\\', '/'),
+      'a manual step with no path is not actionable',
+    ).toContain(CODEX_CONFIG);
     expect(entry?.docs, 'the TOML shape is the part nobody can guess').toBeDefined();
   });
 
