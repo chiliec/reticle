@@ -406,6 +406,26 @@ describe('shipped docs never name a tool a reader cannot call', () => {
     expect(shippedReadmes().length).toBeGreaterThan(3);
   });
 
+  /**
+   * `llms.txt`, which is the file most likely to be read without a way to check it.
+   *
+   * It exists to be pasted whole into a model, and `SKILL.md` tells an agent to fetch it FIRST, so a
+   * dead tool name there is repeated with total confidence by something that cannot look it up. It
+   * was outside every check on this list: at the v3 release it still advertised `reticle_query` and
+   * `reticle_act_sequence`, both retired when seventeen tools were merged into nine, and claimed the
+   * default surface was 18 tools when `defaultAdvertisedNames` returns 9. Three wrong facts in the
+   * one document whose whole purpose is being quoted verbatim.
+   */
+  function briefingFiles(): string[] {
+    return [join(REPO, 'llms.txt')].filter(existsSync);
+  }
+
+  it('finds the LLM briefing to check', () => {
+    expect(briefingFiles().length, 'llms.txt moved or vanished, so this guard checks nothing').toBe(
+      1,
+    );
+  });
+
   it('every declared tool name in the docs is one a reader can actually call', () => {
     const dead: string[] = [];
     for (const file of [
@@ -413,6 +433,7 @@ describe('shipped docs never name a tool a reader cannot call', () => {
       ...shippedReadmes(),
       join(REPO, 'SKILL.md'),
       ...skillFiles(),
+      ...briefingFiles(),
     ]) {
       const text = readFileSync(file, 'utf8');
       for (const match of text.match(ANY_TOOL_MENTION) ?? []) {

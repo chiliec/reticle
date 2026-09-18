@@ -142,12 +142,19 @@ describe('every install-gate scaffold runs in CI', () => {
     return Object.keys(JSON.parse(raw) as Record<string, unknown>).sort();
   };
 
+  /*
+   * The scaffold list moved out of `strategy.matrix` and into the `install_matrix` step that builds
+   * the matrix, because WHICH cells run now depends on the event: a pull request runs three Windows
+   * scaffolds and everything else runs ten. `ALL` is still the one list of every scaffold CI knows
+   * about, which is what this guard is asking after — so it reads that, and still returns nothing
+   * (failing loudly below) if the shape changes again.
+   */
   const matrixIds = (): string[] => {
     const yml = readFileSync(join(REPO, '.github/workflows/ci.yml'), 'utf8');
-    const block = /scaffold:\s*\[([^\]]+)\]/s.exec(yml);
+    const block = /^\s*ALL='([^']+)'/m.exec(yml);
     if (null === block) return [];
     return (block[1] ?? '')
-      .split(',')
+      .split(/\s+/)
       .map((entry) => entry.trim())
       .filter((entry) => entry.length > 0)
       .sort();

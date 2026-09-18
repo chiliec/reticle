@@ -11,6 +11,17 @@ on:
   # behind it UNMERGEABLE. Nothing had ever merged through the queue, and the backlog read as
   # "stale contributor PRs" rather than as a workflow that was never wired to the thing gating it.
   merge_group:
+  # The full Windows install matrix, once a day, off the critical path.
+  #
+  # A PR runs THREE Windows scaffolds, not ten (see `install_matrix` in the `changes` job). Ten
+  # windows-latest runners requested at once is more than the pool hands out: measured on run
+  # 35297084015, nine cells started immediately and the tenth waited 37 minutes for a machine, then
+  # ran for 8 and ended the build. A third of that run's 56-minute wall clock was one cell queuing.
+  # Coverage is not reduced, it is rescheduled: every scaffold still runs on Windows every day, and
+  # `workflow_dispatch` runs the full matrix on demand when a change deserves it before merge.
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
 
 # One run per branch, and the older one loses.
 #
@@ -36,6 +47,33 @@ env:
   CARGO_AUDIT_VERSION: 0.22.2
 
 jobs:
+  # The one check the expensive gates wait on, split out so they stop waiting on all four.
+  #
+  # `verify` is `format:check && lint && typecheck && test:unit` and takes ~9 minutes, and seven
+  # jobs -- every install-gate cell, e2e, desktop-e2e, conformance, bench, multi-agent -- sat behind
+  # the whole of it. Only the FIRST of the four is a reason to hold them: CLAUDE.md records a release
+  # branch, green on all four heavy gates locally, turning CI red on six prettier warnings, and
+  # `verify` being a dependency meant one unformatted file skipped every expensive gate behind it.
+  # That is the protection worth keeping, and it costs about a minute.
+  #
+  # The other three are NOT reasons to wait. `lint` and `typecheck` both `dependsOn: ["^build"]`, so
+  # a "cheap half" containing them still pays the full build -- there is no cheaper split. And a
+  # broken typecheck fails the expensive job anyway, a few minutes later, while `verify` fails it in
+  # parallel regardless. `gate` still requires the full `verify`, so nothing merges without it.
+  format-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # No build: prettier reads the tree, which is the entire reason this can run ahead of `verify`.
+      - run: pnpm format:check
+
   verify:
     runs-on: ubuntu-latest
     # The only job that was missing a cap, and the only one that has ever hung. On the v2.5.0 merge
@@ -384,7 +422,7 @@ jobs:
   # Until step 1 exists the job logs that it is unconfigured and exits 0.
   fixtures-dispatch:
     runs-on: ubuntu-latest
-    needs: verify
+    needs: format-check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
     steps:
@@ -430,6 +468,8 @@ jobs:
       desktop: ${{ steps.filter.outputs.desktop }}
       conformance: ${{ steps.filter.outputs.conformance }}
       rust: ${{ steps.filter.outputs.rust }}
+      # WHICH scaffolds run on WHICH os, decided per event rather than hard-coded in the matrix.
+      install_matrix: ${{ steps.install_matrix.outputs.value }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -535,6 +575,33 @@ jobs:
           else
             echo "rust=false" >> "$GITHUB_OUTPUT"
           fi
+      # WHICH install-gate cells to run, as an explicit os/scaffold list.
+      #
+      # Ubuntu always runs all ten: it is the cheap platform, a cell takes 6-7 minutes, and ten of
+      # them start at once without queuing. Windows is the opposite on every count -- 8 to 28
+      # minutes for the same work -- so a PULL REQUEST runs three of them and everything else runs
+      # all ten. The three are chosen to cover the distinct install shapes rather than to be
+      # representative: `cra` owns its own HTML and is the heaviest tree (the 28-minute cell),
+      # `next-app-router` is the framework whose Windows install shipped broken in 2.3.0, and
+      # `vite-react` is the plain plugin path most projects take.
+      #
+      # This is a SCHEDULE change, not a coverage cut. Every scaffold still runs on Windows daily
+      # via the cron above, and `workflow_dispatch` runs the full matrix before merge when a change
+      # deserves it -- an edit under `init/` or `install/`, say.
+      - id: install_matrix
+        run: |
+          ALL='vite-react vite-vue next-app-router next-pages-router monorepo-subdir astro sveltekit cra nuxt react-router'
+          WINDOWS_ON_A_PR='cra next-app-router vite-react'
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            WINDOWS="$WINDOWS_ON_A_PR"
+          else
+            WINDOWS="$ALL"
+          fi
+          entries=''
+          for s in $ALL; do entries="$entries{\"os\":\"ubuntu-latest\",\"scaffold\":\"$s\"},"; done
+          for s in $WINDOWS; do entries="$entries{\"os\":\"windows-latest\",\"scaffold\":\"$s\"},"; done
+          echo "value={\"include\":[${entries%,}]}" >> "$GITHUB_OUTPUT"
+          echo "install matrix: ubuntu=$(echo $ALL | wc -w) windows=$(echo $WINDOWS | wc -w)"
 
   # The bot half of the client-matrix flow. A submitted record is EVIDENCE, and evidence that
   # cannot be placed — no version, no host, no error text on a failure — is decoration. Validating
@@ -603,33 +670,29 @@ jobs:
   install-gate:
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        # astro, sveltekit and cra are the frameworks that own their own HTML (or have no bundler
-        # hook at all) and had no install coverage until now — the class where an all-green `init`
-        # produced zero sessions twice (#678, #741). Nuxt and React Router are the same class and
-        # are still absent on purpose: `init` ends both with a `[⚠]` by design, so a cell for
-        # either would be red on every run. See the note above SCAFFOLDS in install-gate.mjs.
-        scaffold:
-          [
-            vite-react,
-            vite-vue,
-            next-app-router,
-            next-pages-router,
-            monorepo-subdir,
-            astro,
-            sveltekit,
-            cra,
-            nuxt,
-            react-router,
-          ]
+      # Computed in `changes`, not listed here: a PULL REQUEST runs three Windows scaffolds and
+      # everything else runs ten. Ten windows-latest runners requested at once is more than the pool
+      # gives out -- on run 35297084015 the tenth cell waited 37 minutes for a machine, ran for 8,
+      # and ended a 56-minute build on its own. The scaffold list itself lives there too, so the two
+      # halves of the decision (which scaffolds exist, which run today) are not in separate files.
+      #
+      # astro, sveltekit and cra are the frameworks that own their own HTML (or have no bundler hook
+      # at all) and had no install coverage until 3.x -- the class where an all-green `init` produced
+      # zero sessions twice (#678, #741). Nuxt and React Router joined once `init` stopped handing
+      # them a MANUAL step; both are in the list above.
+      matrix: ${{ fromJSON(needs.changes.outputs.install_matrix) }}
     runs-on: ${{ matrix.os }}
-    needs: [verify, changes]
+    needs: [format-check, changes]
     if: needs.changes.outputs.install == 'true'
     # One scaffold, twice (negative control then the real run), plus the workspace install and build
-    # every cell pays. Windows npm-installs a real app appreciably slower than Linux does, so the cap
-    # keeps generous headroom over the ~7 minutes this measures at.
-    timeout-minutes: 30
+    # every cell pays.
+    #
+    # 45, not 30, and the old number was measured on the wrong platform. "~7 minutes" is UBUNTU;
+    # Windows runs the same cell in 8 to 28 (run 35297084015, `cra` at 28m). A 30-minute cap put the
+    # heaviest cell two minutes from the ceiling, and it did hit it -- GitHub reports a timed-out job
+    # as `cancelled`, which reads like somebody pressed stop rather than like a gate failing. A cap
+    # exists to stop a HANG, not to punish a slow runner, so it now sits clear of the real number.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
@@ -682,7 +745,7 @@ jobs:
   # gated on `changes` — daemon lifecycle can break from almost anywhere.
   multi-agent:
     runs-on: ubuntu-latest
-    needs: [verify]
+    needs: [format-check]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -710,7 +773,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    needs: verify
+    needs: format-check
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -806,7 +869,7 @@ jobs:
   # without this ever starting.
   desktop-e2e:
     runs-on: ubuntu-latest
-    needs: [verify, changes]
+    needs: [format-check, changes]
     if: needs.changes.outputs.desktop == 'true'
     timeout-minutes: 40
     steps:
@@ -871,7 +934,7 @@ jobs:
   # `desktop-e2e` the slowest job in this file.
   conformance:
     runs-on: ubuntu-latest
-    needs: [verify, changes]
+    needs: [format-check, changes]
     if: needs.changes.outputs.conformance == 'true'
     timeout-minutes: 20
     steps:
@@ -914,7 +977,7 @@ jobs:
   # the observation raws first so there is something real to grade.
   bench:
     runs-on: ubuntu-latest
-    needs: [verify, changes]
+    needs: [format-check, changes]
     if: needs.changes.outputs.bench == 'true'
     timeout-minutes: 45
     steps:
@@ -980,6 +1043,7 @@ jobs:
     needs:
       [
         changes,
+        format-check,
         verify,
         e2e,
         install-gate,
