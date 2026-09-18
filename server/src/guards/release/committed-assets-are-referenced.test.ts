@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { basename, extname, join } from 'node:path';
+import { basename, extname } from 'node:path';
 import { REPO_ROOT } from '@/machine/repo-root.js';
 
 const REPO = REPO_ROOT;
@@ -47,40 +46,74 @@ const tracked = (): string[] =>
     .filter((line) => line.length > 0)
     .filter((file) => IMAGE_EXTENSIONS.has(extname(file).toLowerCase()));
 
-/**
- * Every tracked text file that could plausibly embed an image, as one blob.
- *
- * `git grep` would be faster, but it answers "is this string anywhere" including inside the asset
- * directories themselves — and one dead PNG naming another dead PNG is not a reference. Reading the
- * candidates directly keeps the question honest.
- */
-const referencingText = (): string => {
-  const files = execFileSync(
-    'git',
-    ['ls-files', '*.md', '*.mdx', '*.html', '*.json', '*.ts', '*.tsx', '*.mjs', '*.yml', '*.yaml'],
-    { cwd: REPO, encoding: 'utf8' },
-  )
-    .split('\n')
-    .filter((line) => line.length > 0)
-    .filter((file) => !GUARDED_DIRS.some((dir) => file.startsWith(`${dir}/`)))
-    // `git ls-files` reports the INDEX, so a file deleted in the working tree and not yet staged is
-    // still listed. Reading it throws ENOENT and takes the whole guard down with an errno instead of
-    // an answer — which is what happened while a package was being split out and every moved file
-    // was a pending deletion. A path that is not there references no image.
-    .filter((file) => existsSync(join(REPO, file)));
+/** The text files that could plausibly embed an image. */
+const TEXT_PATHSPECS = [
+  '*.md',
+  '*.mdx',
+  '*.html',
+  '*.json',
+  '*.ts',
+  '*.tsx',
+  '*.mjs',
+  '*.yml',
+  '*.yaml',
+] as const;
 
-  return files.map((file) => readFileSync(join(REPO, file), 'utf8')).join('\n');
+/**
+ * Which of these basenames appear in tracked text, in ONE pass.
+ *
+ * This used to read every tracked text file into a single blob and run `includes` over it per
+ * image. The note here said `git grep` "would be faster, but it answers 'is this string anywhere'
+ * including inside the asset directories themselves — and one dead PNG naming another dead PNG is
+ * not a reference". The objection is right and a pathspec settles it: `:(exclude)` drops the
+ * guarded directories from the search, which is the same exclusion the blob did by filtering paths.
+ *
+ * It had to change because the blob was not merely slow, it was RED. MEASURED on Windows: the test
+ * timed out at its 60 s bound inside the full guard suite, where the file reads compete with every
+ * other package's workers; the same search as one `git grep` answers in 0.3 s. Raising the bound
+ * was the other option, and this guard was already the slowest thing in the suite.
+ *
+ * `--cached` searches the INDEX rather than the working tree, which also removes the hazard the old
+ * code needed an `existsSync` filter for: `git ls-files` lists a file deleted-but-not-staged, and
+ * reading it threw ENOENT and took the whole guard down with an errno instead of an answer.
+ */
+const referencedAmong = (names: readonly string[]): ReadonlySet<string> => {
+  if (0 === names.length) return new Set();
+  try {
+    const out = execFileSync(
+      'git',
+      [
+        'grep',
+        '--cached',
+        '-h',
+        '-o',
+        '-F',
+        ...names.flatMap((name) => ['-e', name]),
+        '--',
+        ...TEXT_PATHSPECS,
+        ...GUARDED_DIRS.map((dir) => `:(exclude)${dir}/*`),
+      ],
+      { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+    );
+    return new Set(out.split('\n').filter((line) => line.length > 0));
+  } catch (thrown) {
+    // `git grep` exits 1 when nothing matched at all, which is an answer and not a failure.
+    if (1 === (thrown as { status?: number }).status) return new Set();
+    throw thrown;
+  }
 };
 
-// Reads every tracked text file in the repository, so it is slow by nature and slower still when
-// every package's suite is running at once. See the note in vitest-worktree-exclude.test.ts.
+// One `git grep` over the index, which is why the bound below is now generous rather than tight:
+// the work it covers takes a fraction of a second. It was 60 s of reading every tracked text file,
+// and that went red under the full suite. See the note on `referencedAmong`.
 describe('committed images are referenced', { timeout: 60_000 }, () => {
   it('every tracked image under the guarded directories is named by some text file', () => {
-    const haystack = referencingText();
+    const images = tracked();
+    const referenced = referencedAmong([...new Set(images.map((file) => basename(file)))]);
 
-    const orphans = tracked().filter((file) => {
+    const orphans = images.filter((file) => {
       if (UNREFERENCED_BY_DESIGN.has(file)) return false;
-      return !haystack.includes(basename(file));
+      return !referenced.has(basename(file));
     });
 
     expect(
