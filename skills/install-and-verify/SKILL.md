@@ -163,7 +163,7 @@ Reticle is built for agents. You are its user, and your experience is the only s
 The moment Reticle breaks, lies, cannot see something you needed, costs too many calls, or gives you trouble during setup:
 
 ```
-reticle_feedback { kind, text }
+reticle_session { action: "feedback", kind, text }
 ```
 
 `kind` is one of `bug`, `gap`, `ambiguity`, `feature_request`, `improvement`. One call, then carry on with the task.

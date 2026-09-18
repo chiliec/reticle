@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { planAgentConfigs, type PlatformPaths } from './agent-configs.js';
 import { AppShape, readShape } from './desktop-shape.js';
 import { stopOnInterrupt } from './terminal/interrupt.js';
-import { stopOnCrash } from './terminal/crash.js';
+import { stopOnCrash, crashSentence } from './terminal/crash.js';
 import { applyAgentPlan, applyAgentSkills } from './agent-writer.js';
 import { ApprovalOutcome, grantAutoApproval } from './auto-approve.js';
 import { agentIo } from './agent-io.js';
@@ -67,9 +67,7 @@ export function installCrashGuard(): () => void {
     } catch {
       /* an unwritable directory is not worth a second crash */
     }
-    process.stderr.write(
-      `reticle hit a bug of its own and stopped: ${message}. Anything it had already done is done, and re-running is safe. Please report it — the trace is in ${crashLog}.\n`,
-    );
+    process.stderr.write(`${crashSentence(message, crashLog)}\n`);
   });
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stopOnCrash, type CrashTarget } from './crash.js';
+import { stopOnCrash, crashSentence, CRASH_REPORT_ASK, type CrashTarget } from './crash.js';
 
 /**
  * The behaviour this restores, and how it went missing.
@@ -119,5 +119,30 @@ describe('a bug of our own is one sentence and a tidy machine', () => {
     fire('uncaughtException', new Error('after release'));
     expect(stopped).toEqual([]);
     expect(target.handlers.get('uncaughtException') ?? []).toEqual([]);
+  });
+});
+
+/*
+ * "Please report it" is not a way to report it.
+ *
+ * This is the one moment where a report is worth most -- Reticle crashed, in somebody's project,
+ * and the agent holding the evidence is about to lose its context. The sentence said "Please report
+ * it" and named no command, while `git grep -c feedback` over server/src/command/setup returned
+ * ZERO. An agent cannot act on a request with no call in it, and the shell form is the one that
+ * works here: the process is dying, so there is no daemon and no tool surface left to file through.
+ */
+describe('the crash sentence', () => {
+  it('names the command that files the report, not just the wish for one', () => {
+    expect(CRASH_REPORT_ASK).toContain('feedback --agent --kind');
+  });
+
+  it('still opens with the phrase the break-matrix scenario greps for', () => {
+    // `a-bug-of-our-own-is-not-a-stack-trace` matches on this. Changing the sentence without it
+    // would leave that scenario green against a crash handler that had stopped saying anything.
+    expect(crashSentence('boom', '/tmp/x.log')).toContain('hit a bug of its own');
+  });
+
+  it('names where the trace went, so the report can carry it', () => {
+    expect(crashSentence('boom', '/tmp/reticle-crash.log')).toContain('/tmp/reticle-crash.log');
   });
 });

@@ -66,6 +66,33 @@ describe('picking up where setup stopped', () => {
     );
   });
 
+  /*
+   * Every one of these lists is printed BECAUSE something did not finish, and none of them asked
+   * for a word about it.
+   *
+   * The ask lives in `init`, which prints it after the file writes and BEFORE the dev server, the
+   * page probe and the wait for a session -- i.e. before everything most likely to break. Measured
+   * on the cra install-gate cell: the ask is line 27 of the run and `⚠ setup did not finish` is the
+   * last thing printed, with the whole runtime stage in between. `git grep -c feedback` over
+   * server/src/command/setup returned ZERO before this.
+   *
+   * So the reader who has just been told what went wrong is the one reader guaranteed to have
+   * something worth reporting, and was the one reader never asked.
+   */
+  it('asks for a word about what went wrong, because this list only prints when it did', () => {
+    const steps = remainingSteps(at({ initDone: true, devServerUp: true })).join(' ');
+    expect(steps).toContain('feedback --agent --kind');
+  });
+
+  it('asks on a run that connected but proved nothing, too', () => {
+    // The other incomplete ending. It prints the same fallback, and "connected but NOT verified" is
+    // exactly the state somebody gives up in without saying why.
+    const steps = remainingSteps(
+      at({ initDone: true, devServerUp: true, sessionConnected: true }),
+    ).join(' ');
+    expect(steps).toContain('feedback --agent --kind');
+  });
+
   it('leaves only the docs pointer when everything succeeded', () => {
     const steps = remainingSteps(
       at({ initDone: true, devServerUp: true, sessionConnected: true, flowSaved: true }),

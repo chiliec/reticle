@@ -29,6 +29,35 @@ export interface CrashTarget {
  */
 export type CrashReporter = (message: string, stack: string) => void;
 
+/**
+ * How to report the crash, in the only form that works while the process is dying.
+ *
+ * The shell command, never `reticle_session { action: "feedback" }`: this handler runs BECAUSE
+ * Reticle is going down, so there is no daemon to accept a tool call and no session to file
+ * through. `feedback --agent` needs neither.
+ *
+ * The sentence used to end "Please report it." -- a wish with no call in it, which an agent cannot
+ * act on and a human has to go and look up. This is the moment a report is worth most: a defect in
+ * OUR code, in somebody else's project, held by an agent whose context is about to end.
+ */
+export const CRASH_REPORT_ASK =
+  'Please report it — a crash is always our bug, and this is the one we most want to hear about: ' +
+  'npx @reticlehq/server feedback --agent --kind bug "what you ran, and the message above"';
+
+/**
+ * The one line a crash is allowed to print. Exported so it can be asserted without throwing.
+ *
+ * `hit a bug of its own` is load-bearing: the break-matrix scenario
+ * `a-bug-of-our-own-is-not-a-stack-trace` greps for exactly that, and it is what tells a reader
+ * this is not their fault before they start debugging their own project.
+ */
+export function crashSentence(message: string, crashLog: string): string {
+  return (
+    `reticle hit a bug of its own and stopped: ${message}. Anything it had already done is done, ` +
+    `and re-running is safe. The trace is in ${crashLog}. ${CRASH_REPORT_ASK}`
+  );
+}
+
 /** Long enough to identify the fault, short enough that it cannot become the output. */
 const MESSAGE_MAX = 300;
 
