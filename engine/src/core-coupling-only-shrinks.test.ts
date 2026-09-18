@@ -30,18 +30,24 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Ceilings, not targets. Measured 2026-09-18 over shipped (non-test) sources. */
 const MAX_FILES_IMPORTING_CORE = 41;
 const MAX_DISTINCT_SYMBOLS = 54;
 
+/*
+ * `node:path`'s dirname, not a hand-rolled one.
+ *
+ * This file shipped with `p.slice(0, p.lastIndexOf('/'))`, which is POSIX-only: on Windows
+ * `fileURLToPath` hands back `D:\a\...\engine\src\<file>.ts`, there is no `/` in it, and the
+ * whole expression collapses to `''`. `PACKAGE_ROOT` became `..`, `git ls-files` ran somewhere else
+ * and returned nothing, and every ceiling below passed over an empty list. The `windows` CI job
+ * caught it on the first run -- via the two negative controls in this file, which is the entire
+ * reason they are here.
+ */
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-
-function dirname(p: string): string {
-  return p.slice(0, Math.max(0, p.lastIndexOf('/')));
-}
 
 /** Shipped sources only: a test may lean on core to build a fixture without binding the product. */
 function shippedSources(): string[] {
