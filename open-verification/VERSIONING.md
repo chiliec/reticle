@@ -12,10 +12,10 @@ A reader who sees "version 1" here cannot otherwise tell which is meant. They ar
 | --- | --- | --- |
 | **Protocol version** | `OVP_VERSION = '1.0'` (`src/vocabulary/run.ts`) | The specification an artifact was produced under. Stamped on a `VerificationRun`. |
 | **Wire version** | SPEC §12, "the current wire protocol version is 1" | The framing of the four reference-transport messages, nothing else. §12 is non-normative, so it binds only implementations that chose that transport. |
-| **Package version** | `open-verification` on npm, currently `3.0.0` | The TypeScript distribution: exported code, generated schemas, tests. Semver over the published JS API. |
+| **Package version** | `open-verification` on npm, currently `3.1.0` | The TypeScript distribution: exported code, generated schemas, tests. Semver over the published JS API. |
 | **Flow grammar version** | `OVP_FLOW_GRAMMAR_VERSION = 2` (`src/vocabulary/memory.ts`) | The Flow document grammar only, so a reader can tell "predates that field" from "omitted it". |
 
-Package `3.0.0` carries protocol `1.0`, wire `1` and flow grammar `2`. The package has moved two majors while the protocol stayed at one, which is expected: a package major breaks the code an implementer imports, and most implementers import nothing. The schema `$id` base is `https://open-verification.dev/schema/v1`, and the `v1` there is the PROTOCOL major.
+Package `3.1.0` carries protocol `1.0`, wire `1` and flow grammar `2`. The package has moved two majors while the protocol stayed at one, which is expected: a package major breaks the code an implementer imports, and most implementers import nothing. The schema `$id` base is `https://open-verification.dev/schema/v1`, and the `v1` there is the PROTOCOL major.
 
 ## Which artifact is authoritative for what
 
